@@ -3,7 +3,7 @@ from network import *
 
 class Strategy(ABC):
     @abstractmethod
-    def execute(self, server, arguments=None):
+    def execute(self, arguments=None):
         pass
 
 
