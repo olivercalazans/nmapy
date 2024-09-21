@@ -18,10 +18,10 @@ class Command_List_Strategy(Strategy):
 class Portscan_Strategy(Strategy):
     def execute(self, arguments:str):
         result = Network._portscan(arguments)
-        return ('svc', result)
+        return result
     
 
 class IP_Strategy(Strategy):
     def execute(self, arguments:str):
         result = Network._ip(arguments)
-        return ('svc', result)
+        return result
