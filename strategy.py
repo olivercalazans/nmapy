@@ -9,8 +9,10 @@ class Strategy(ABC):
 
 class Command_List_Strategy(Strategy):
     def execute(self, arguments:str):
-        result = server._get_command_list()
-        return ('svc', result)
+        return (
+            'pscan - Portscan',
+            'ip - Get IP by name'
+        )
 
 
 class Portscan_Strategy(Strategy):
