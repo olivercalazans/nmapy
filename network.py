@@ -1,11 +1,6 @@
 import socket
 
-class Network_MixIn:
-    @staticmethod
-    def _ip(host_name:str) -> str:
-        return Network_MixIn._get_ip_by_name(host_name)
-
-
+class Network:
     @staticmethod
     def _get_ip_by_name(host_name:str) -> str:
         try:    ip = socket.gethostbyname(host_name)
@@ -13,14 +8,18 @@ class Network_MixIn:
         return  ip
 
 
-    # PORTSCAN --------------------------------------------------------------------------------------------------
     @staticmethod
-    def _portscan(host:str) -> str:
-        ip = Network_MixIn._get_ip_by_name(host)
-        try:   result = Network_MixIn._convert_to_string(Network_MixIn._scan( ip, Network_MixIn._ports()))
-        except socket.gaierror: result = '<single>:ERROR: problems with DNS'
-        except socket.error: result = '<single>:ERROR: It was not possible to connect to the server'
-        else:  result = f'<mult>:{result}'
+    def _ip(host_name:str) -> str:
+        return Network._get_ip_by_name(host_name)
+
+
+    # PORTSCAN -------------------------------------------------------------------------------------------------
+    @staticmethod
+    def _portscan(host:str) -> list[str]:
+        ip = Network._get_ip_by_name(host)
+        try:   result = Network._scan( ip, Network._ports())
+        except socket.gaierror: result = 'ERROR: An error occurred in resolving the host'
+        except socket.error: result = f'ERROR: It was not possible to connect to {host}'
         return result
     
 
