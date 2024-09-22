@@ -17,7 +17,7 @@ class Main:
 
     def __init__(self) -> None:
         self._stop_flag = False
-        self._create_directory()
+        self._create_directory(self._get_directory)
 
 
     @staticmethod
@@ -43,26 +43,32 @@ class Main:
         self._stop_flag = True
 
 
-    def _handle_client(self) -> None:
+    def _handle_user(self) -> None:
         print(pyfiglet.figlet_format("watcher"))
+        print('Write "help" to see the commands')
+        try:   self._loop()
+        except Exception as error: print(f'Error: {error}') 
+
+
+    def _loop(self) -> None:
         while not self._stop_flag:
-            ...
+            command = input('> ')
 
 
     @staticmethod
-    def _separate_function_from_arguments(string:str) -> tuple[str, str]:
+    def _separate_command_key_from_arguments(string:str) -> tuple[str, str, str]:
         ...
 
 
-    def _check_if_the_method_exists(self) -> tuple[str, str]:
+    def _check_if_the_method_exists(self) -> bool:
         ...
 
 
-    def _get_result(self) -> tuple[str, str]:
+    def _get_result(self) -> None:
        ...
 
 
 
 if __name__ == '__main__':
-    server = Main()
-    server.receive_client()
+    user = Main()
+    user._handle_user()
