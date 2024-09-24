@@ -1,5 +1,4 @@
 import os, platform
-import pyfiglet
 from strategy import *
 
 class Main:
@@ -44,28 +43,35 @@ class Main:
 
 
     def _handle_user(self) -> None:
-        print(pyfiglet.figlet_format("watcher"))
-        print('Write "help" to see the commands')
         try:   self._loop()
         except Exception as error: print(f'Error: {error}') 
 
 
     def _loop(self) -> None:
         while not self._stop_flag:
-            command = input('> ')
+            print('Write "help" to see the commands')
+            input_data = input('> ')
+            command = self._separate_command_key_from_arguments(input_data)
+            result  = self._get_result(command)
 
 
     @staticmethod
-    def _separate_command_key_from_arguments(string:str) -> tuple[str, str, str]:
+    def _separate_command_key_from_arguments(input_data:str) -> tuple[str, str, str]:
+        command = input_data.split(' ')
+        return command
+
+
+    def _check_if_the_method_exists(self, command) -> None:
+        if command in self._get_strategy_dictionary():
+            result = self._get_result(command)
+        else:
+            result = 'Command not found'
+        return result
+
+
+    def _get_result(self, command) -> None:
         ...
-
-
-    def _check_if_the_method_exists(self) -> bool:
-        ...
-
-
-    def _get_result(self) -> None:
-       ...
+       
 
 
 
