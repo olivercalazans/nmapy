@@ -49,11 +49,11 @@ class Main:
 
     def _loop(self) -> None:
         while not self._stop_flag:
-            print('Write "help" to see the commands ' + '=' * 20)
-            input_data = input('> ')
+            print('\nWrite "help" to see the commands ' + '=' * 20)
+            input_data = input('>> ')
             command = self._separate_command_key_from_arguments(input_data)
             result  = self._check_if_the_method_exists(command)
-            for line in result: print(line)
+            self._display(result)
 
 
     @staticmethod
@@ -74,6 +74,10 @@ class Main:
         strategy = self._get_strategy_dictionary().get(command)
         return strategy.execute(arguments)
        
+
+    @staticmethod
+    def _display(data:list) -> None:
+        for line in data: print(line)
 
 
 
