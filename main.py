@@ -44,27 +44,28 @@ class Main:
 
     def _handle_user(self) -> None:
         try:   self._loop()
-        except Exception as error: print(f'Error: {error}') 
+        except Exception as error: print(f'ERROR: {error}') 
 
 
     def _loop(self) -> None:
         while not self._stop_flag:
             print('\nWrite "help" to see the commands ' + '=' * 20)
-            input_data = input('>> ')
-            command = self._separate_command_key_from_arguments(input_data)
-            result  = self._check_if_the_method_exists(command)
+            input_data         = input('>> ').split(' ')
+            command, arguments = self._separates_command_from_arguments(input_data)
+            result             = self._check_if_the_method_exists(command, arguments)
             self._display(result)
 
 
     @staticmethod
-    def _separate_command_key_from_arguments(input_data:str) -> str:
-        command = input_data.split(' ')
-        return command[0]
+    def _separates_command_from_arguments(input_data) -> tuple[str, tuple]:
+        command   = input_data[0]
+        arguments = (input_data[1:] + [None])
+        return (command, arguments)
 
 
-    def _check_if_the_method_exists(self, command:str) -> str:
+    def _check_if_the_method_exists(self, command:str, arguments:tuple) -> str:
         if command in self._get_strategy_dictionary():
-            result = self._get_result(command)
+            result = self._get_result()
         else:
             result = 'Invalid command'
         return result
