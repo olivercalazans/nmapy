@@ -65,7 +65,7 @@ class Main:
 
     def _check_if_the_method_exists(self, command:str, arguments:tuple) -> str:
         if command in self._get_strategy_dictionary():
-            result = self._get_result()
+            result = self._get_result(command, arguments)
         else:
             result = 'Invalid command'
         return result
