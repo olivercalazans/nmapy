@@ -36,11 +36,11 @@ class Strategy(ABC): # ---------------------------------------------------------
 
 class Command_List_Strategy(Strategy): # --------------------------------------------
     def execute(self, arguments:str = None):
-        return (
+        commands = (
             'pscan...: Portscan',
             'ip......: Get IP by name'
         )
-
+        for i in commands: print(i)
 
 
 class Portscan_Strategy(Strategy): # ------------------------------------------------
@@ -62,12 +62,20 @@ class Portscan_Strategy(Strategy): # -------------------------------------------
 
 
     def execute(self, arguments:str):
-        parser = argparse.ArgumentParser()
-        result = Network._portscan(arguments)
-        return result
+        Network._portscan(arguments, self._ports())
     
 
-class IP_Strategy(Strategy):
+    @staticmethod
+    def _get_argument_and_flags(data) -> list:
+        parser = argparse.ArgumentParser(description='Portscan of an IP/Host')
+        parser.add_argument('argument', type=str, help='Host name')
+        parser.add_argument('-p', '--port', type=int, help='Especify a port to scan')
+        options = parser.parse_args(data)
+        return (options)
+
+    
+
+class IP_Strategy(Strategy): # -----------------------------------------------------
     def execute(self, arguments:str):
         result = Network._ip(arguments)
         return result
