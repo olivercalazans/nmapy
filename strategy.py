@@ -21,6 +21,21 @@ class Command_List_Strategy(Strategy): # =======================================
 
 
 
+class IP_Strategy(Strategy): # ========================================================
+    def execute(self, argument:str):
+        try:   Network._ip(self._validate_input(argument))
+        except Exception as error: print(f'ERROR: {error}')
+
+
+    @staticmethod
+    def _validate_input(argument:list):
+        parser = argparse.ArgumentParser(prog='ip', description='Get the IP of a host')
+        parser.add_argument('argument', type=str, help='Hostname')
+        hostname = parser.parse_args(argument)
+        return hostname.argument
+    
+
+
 class Portscan_Strategy(Strategy): # ===================================================
     def execute(self, data:list):
         self._validate_input(data)
@@ -34,11 +49,11 @@ class Portscan_Strategy(Strategy): # ===========================================
 
     @staticmethod
     def _get_argument_and_flags(data:list) -> tuple[str, dict]:
-        parser = argparse.ArgumentParser(description='Portscan of an IP/Host')
+        parser = argparse.ArgumentParser(prog='pscan', description='Portscan of an IP/Host')
         parser.add_argument('argument', type=str, help='Host name')
         parser.add_argument('-p', '--port', type=int, help='Especify a port to scan')
-        options = parser.parse_args(data)
-        return (options.argument, options.port)
+        arguments = parser.parse_args(data)
+        return (arguments.argument, arguments.port)
     
 
     def _prepare_ports(self, argument:str, port:int) -> None:
@@ -47,7 +62,7 @@ class Portscan_Strategy(Strategy): # ===========================================
             port_dictionary = {port: 'Generic port'}
         elif port in port_dictionary: 
             port_dictionary = {port: port_dictionary[port]}
-        self._get_result(argument, port_dictionary)
+        self._result(argument, port_dictionary)
 
 
     @staticmethod
@@ -68,12 +83,5 @@ class Portscan_Strategy(Strategy): # ===========================================
 
 
     @staticmethod
-    def _get_result(arguments:str, ports:dict) -> None:
+    def _result(arguments:str, ports:dict) -> None:
         Network._portscan(arguments, ports)
-
-
-
-class IP_Strategy(Strategy): # ========================================================
-    def execute(self, arguments:str):
-        result = Network._ip(arguments)
-        return result
