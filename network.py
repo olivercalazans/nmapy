@@ -8,19 +8,20 @@ class Network:
         return  ip
 
 
+    # IP BY NAME ---------------------------------------------------------------------------------------------
     @staticmethod
     def _ip(host_name:str) -> str:
-        return Network._get_ip_by_name(host_name)
+        print(Network._get_ip_by_name(host_name))
 
 
-    # PORTSCAN -------------------------------------------------------------------------------------------------
+    # PORTSCAN -----------------------------------------------------------------------------------------------
     @staticmethod
-    def _portscan(host:str) -> list[str]:
+    def _portscan(host:str, ports:list) -> None:
         ip = Network._get_ip_by_name(host)
-        try:   result = Network._scan( ip, Network._ports())
-        except socket.gaierror: result =  'ERROR: An error occurred in resolving the host'
-        except socket.error:    result = f'ERROR: It was not possible to connect to {host}'
-        return result
+        try:   Network._scan(ip, ports)
+        except socket.gaierror: print('ERROR: An error occurred in resolving the host')
+        except socket.error:    print(f'ERROR: It was not possible to connect to {host}')
+        except Exception as error: print(f'ERROR: {error}') 
 
     
     @staticmethod
@@ -32,6 +33,8 @@ class Network:
             result = portscan_socket.connect_ex((ip, port))
             status = 'Closed'
             if result == 0: status = 'Opened'
-            data.append(f' Port {port:>4} : {ports[port]} (STATUS -> {status})')
+            message = f' Port {port:>4} : {ports[port]} (STATUS -> {status})'
+            print(message)
+            data.append(message)
             portscan_socket.close()
         return data
