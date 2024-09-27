@@ -1,41 +1,18 @@
 from abc import ABC, abstractmethod
-import argparse, os, platform
+import argparse
 from network import *
 
 
-class Strategy(ABC): # ---------------------------------------------------------------
-    DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-    if platform.system() == 'Windows': DIRECTORY += '\\wfiles\\'
-    elif platform.system() == 'Linux': DIRECTORY += '/wfiles/'
+class Strategy(ABC): # ===============================================================
 
     @abstractmethod
     def execute(self, arguments=None):
         pass
 
 
-    @classmethod
-    def _get_directory(cls) -> str:
-        return cls.DIRECTORY
-    
 
-    @staticmethod
-    def _create_directory() -> None:
-        try:   os.mkdir(Strategy._get_directory())
-        except FileExistsError: print('The directory already exists')
-        except Exception as error: print(f'Error creating directory: {error}')
-        else:  print('Directory created')
-
-
-    @staticmethod
-    def _write_file(file_name, data):
-        with open(Strategy._get_directory() + file_name, 'wb') as file:
-            for line in data:
-                file.write(line)
-
-
-
-class Command_List_Strategy(Strategy): # --------------------------------------------
-    def execute(self, arguments:str = None):
+class Command_List_Strategy(Strategy): # ============================================
+    def execute(self, arguments:str):
         commands = (
             'pscan...: Portscan',
             'ip......: Get IP by name'
@@ -43,10 +20,36 @@ class Command_List_Strategy(Strategy): # ---------------------------------------
         for i in commands: print(i)
 
 
-class Portscan_Strategy(Strategy): # ------------------------------------------------
+class Portscan_Strategy(Strategy): # ================================================
+    def execute(self, data:list):
+        self._check_if_the_infomation_is_valid(data)
+    
+
+    def _check_if_the_infomation_is_valid(self, data:list) -> None:
+        try:   argument, flags = self._get_argument_and_flags(data)
+        except Exception as error: print(f'Error with the infomation:\nERROR: {error}')
+        else:  self._prepare_infomation_to_execute(argument, flags)
+
+
     @staticmethod
-    def _ports() -> dict:
-        ports = { 
+    def _get_argument_and_flags(data:list) -> tuple[str, dict]:
+        parser = argparse.ArgumentParser(description='Portscan of an IP/Host')
+        parser.add_argument('argument', type=str, help='Host name')
+        parser.add_argument('-p', '--port', type=int, help='Especify a port to scan')
+        options = parser.parse_args(data)
+        return (options.argument, options.port)
+    
+
+    def _prepare_infomation_to_execute(self, argument:str, port:int) -> None:
+        port_dictionary = self._get_ports()
+        if port is not None and port not in port_dictionary: port_dictionary = {port: 'Generic port'}
+        elif port in port_dictionary: port_dictionary = {port: port_dictionary[port]}
+        self._get_result(argument, port_dictionary)
+
+
+    @staticmethod
+    def _get_ports() -> dict:
+        PORTS = { 
             21  : 'FTP - File Transfer Protocol',  
             22  : 'SSH - Secure Shell',  
             23  : 'Telnet',  
@@ -57,25 +60,16 @@ class Portscan_Strategy(Strategy): # -------------------------------------------
             443 : 'HTTPS - HTTP Protocol over TLS/SSL', 
             5432: 'PostgreSQL database system', 
             8080: 'Jakarta Tomcat'
-            }
-        return ports
+        }
+        return PORTS
 
-
-    def execute(self, arguments:str):
-        Network._portscan(arguments, self._ports())
-    
 
     @staticmethod
-    def _get_argument_and_flags(data) -> list:
-        parser = argparse.ArgumentParser(description='Portscan of an IP/Host')
-        parser.add_argument('argument', type=str, help='Host name')
-        parser.add_argument('-p', '--port', type=int, help='Especify a port to scan')
-        options = parser.parse_args(data)
-        return (options)
+    def _get_result(arguments:str, ports:dict) -> None:
+        Network._portscan(arguments, ports)
 
-    
 
-class IP_Strategy(Strategy): # -----------------------------------------------------
+class IP_Strategy(Strategy): # =====================================================
     def execute(self, arguments:str):
         result = Network._ip(arguments)
         return result
