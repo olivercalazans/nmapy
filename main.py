@@ -1,4 +1,3 @@
-import os, platform
 from strategy import *
 
 class Main:
@@ -11,7 +10,6 @@ class Main:
 
     def __init__(self) -> None:
         self._stop_flag = False
-        Strategy._create_directory()
     
 
     @classmethod
