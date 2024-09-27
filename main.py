@@ -11,6 +11,7 @@ class Main:
 
     def __init__(self) -> None:
         self._stop_flag = False
+        Strategy._create_directory()
     
 
     @classmethod
@@ -19,18 +20,18 @@ class Main:
 
 
     @property
-    def stop(self) -> None:
+    def _stop(self) -> None:
         self._stop_flag = True
 
 
     def _handle_user(self) -> None:
         try:   self._loop()
-        except Exception as error: print(f'ERROR: {error}') 
+        except Exception as error: print(f'ERROR: {error}')
 
 
     def _loop(self) -> None:
         while not self._stop_flag:
-            print('\nWrite "help" to see the commands ' + '=' * 20)
+            print('\nWrite "help" to see the commands ' + '=' * 40)
             input_data         = input('>> ').split(' ')
             command, arguments = self._separates_command_from_arguments(input_data)
             self._check_if_the_method_exists(command, arguments)
@@ -46,6 +47,8 @@ class Main:
     def _check_if_the_method_exists(self, command:str, arguments:tuple) -> None:
         if command in self._get_strategy_dictionary():
             self._get_result(command, arguments)
+        elif command == 'exit':
+            self._stop
         else:
             print('Invalid command')
 
