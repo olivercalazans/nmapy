@@ -38,9 +38,9 @@ class Main:
 
 
     @staticmethod
-    def _separates_command_from_arguments(input_data) -> tuple[str, tuple]:
+    def _separates_command_from_arguments(input_data) -> tuple[str, list]:
         command   = input_data[0]
-        arguments = (input_data[1:] + [None])
+        arguments = input_data[1:] or [None]
         return (command, arguments)
 
 
