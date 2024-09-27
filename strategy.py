@@ -58,10 +58,10 @@ class Portscan_Strategy(Strategy): # ===========================================
 
     def _prepare_ports(self, argument:str, port:int) -> None:
         port_dictionary = self._get_ports()
-        if   port is not None and port not in port_dictionary: 
-            port_dictionary = {port: 'Generic port'}
-        elif port in port_dictionary: 
+        if port in port_dictionary: 
             port_dictionary = {port: port_dictionary[port]}
+        elif port is not None: 
+            port_dictionary = {port: 'Generic port'}
         self._result(argument, port_dictionary)
 
 
