@@ -55,7 +55,8 @@ class Main:
 
     def _get_result(self, command:str, arguments:str) -> None:
         strategy = self._get_strategy_dictionary().get(command)
-        strategy.execute(arguments)
+        try:   strategy.execute(arguments)
+        except Exception as error: print(f'Error while trying to call a "execute" method.\nERROR: {error}')
 
 
 
