@@ -3,7 +3,7 @@ import argparse
 from network import *
 
 
-class Strategy(ABC): # ===============================================================
+class Strategy(ABC): # =================================================================
 
     @abstractmethod
     def execute(self, arguments=None):
@@ -11,7 +11,7 @@ class Strategy(ABC): # =========================================================
 
 
 
-class Command_List_Strategy(Strategy): # ============================================
+class Command_List_Strategy(Strategy): # ===============================================
     def execute(self, arguments:str):
         commands = (
             'pscan...: Portscan',
@@ -20,15 +20,16 @@ class Command_List_Strategy(Strategy): # =======================================
         for i in commands: print(i)
 
 
-class Portscan_Strategy(Strategy): # ================================================
+
+class Portscan_Strategy(Strategy): # ===================================================
     def execute(self, data:list):
-        self._check_if_the_infomation_is_valid(data)
+        self._validate_input(data)
     
 
-    def _check_if_the_infomation_is_valid(self, data:list) -> None:
+    def _validate_input(self, data:list) -> None:
         try:   argument, flags = self._get_argument_and_flags(data)
         except Exception as error: print(f'Error with the infomation:\nERROR: {error}')
-        else:  self._prepare_infomation_to_execute(argument, flags)
+        else:  self._prepare_ports(argument, flags)
 
 
     @staticmethod
@@ -40,10 +41,12 @@ class Portscan_Strategy(Strategy): # ===========================================
         return (options.argument, options.port)
     
 
-    def _prepare_infomation_to_execute(self, argument:str, port:int) -> None:
+    def _prepare_ports(self, argument:str, port:int) -> None:
         port_dictionary = self._get_ports()
-        if port is not None and port not in port_dictionary: port_dictionary = {port: 'Generic port'}
-        elif port in port_dictionary: port_dictionary = {port: port_dictionary[port]}
+        if   port is not None and port not in port_dictionary: 
+            port_dictionary = {port: 'Generic port'}
+        elif port in port_dictionary: 
+            port_dictionary = {port: port_dictionary[port]}
         self._get_result(argument, port_dictionary)
 
 
@@ -69,7 +72,8 @@ class Portscan_Strategy(Strategy): # ===========================================
         Network._portscan(arguments, ports)
 
 
-class IP_Strategy(Strategy): # =====================================================
+
+class IP_Strategy(Strategy): # ========================================================
     def execute(self, arguments:str):
         result = Network._ip(arguments)
         return result
