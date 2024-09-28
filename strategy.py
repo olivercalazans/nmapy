@@ -43,25 +43,31 @@ class Portscan_Strategy(Strategy): # ===========================================
 
     def _validate_input(self, data:list) -> None:
         try:   argument, flags = self._get_argument_and_flags(data)
-        except Exception as error: print(f'Error with the infomation:\nERROR: {error}')
+        except ValueError as error: print(error)
+        except Exception as error:  print(f'Unexpected error:\nERROR: {error}')
         else:  self._prepare_ports(argument, flags)
 
 
     @staticmethod
-    def _get_argument_and_flags(data:list) -> tuple[str, dict]:
+    def _argparser_information():
         parser = argparse.ArgumentParser(prog='pscan', description='Portscan of an IP/Host')
         parser.add_argument('argument', type=str, help='Host name')
         parser.add_argument('-p', '--port', type=int, help='Especify a port to scan')
-        arguments = parser.parse_args(data)
+        return parser
+
+
+    def _get_argument_and_flags(self, data:list) -> tuple[str, dict]:
+        parser = self._argparser_information()
+        try:   arguments = parser.parse_args(data)
+        except argparse.ArgumentError: raise ValueError('Invalid/Missed argument. Please, check --help')
+        except SystemExit: raise ValueError(f'Invalid flag or missed value. Please, check --help')
         return (arguments.argument, arguments.port)
     
 
     def _prepare_ports(self, argument:str, port:int) -> None:
         port_dictionary = self._get_ports()
-        if port in port_dictionary: 
-            port_dictionary = {port: port_dictionary[port]}
-        elif port is not None: 
-            port_dictionary = {port: 'Generic port'}
+        if port in port_dictionary: port_dictionary = {port: port_dictionary[port]}
+        elif port is not None:      port_dictionary = {port: 'Generic port'}
         self._result(argument, port_dictionary)
 
 
