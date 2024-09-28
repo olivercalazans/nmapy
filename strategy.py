@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 import argparse
 from network import *
+from auxiliary import *
 
 
 class Strategy(ABC): # ============================================================
-
     @abstractmethod
     def execute(self, arguments=None):
         pass
@@ -14,8 +14,8 @@ class Strategy(ABC): # =========================================================
 class Command_List(Strategy): # ==================================================
     def execute(self, arguments:str):
         commands = (
-            'pscan...: Portscan',
-            'ip......: Get IP by name'
+            f'{Aux._green("pscan")}...: Portscan',
+            f'{Aux._green("ip")}......: Get IP by name'
         )
         for i in commands: print(i)
 
@@ -24,7 +24,7 @@ class Command_List(Strategy): # ================================================
 class Get_IP(Strategy): # ========================================================
     def execute(self, argument:str):
         try:   Network._ip(self._validate_input(argument))
-        except Exception as error: print(f'ERROR: {error}')
+        except Exception as error: print(f'{Aux._red("ERROR")}: {error}')
 
 
     @staticmethod
@@ -44,7 +44,7 @@ class Portscan(Strategy): # ====================================================
     def _validate_input(self, data:list) -> None:
         try:   argument, flags = self._get_argument_and_flags(data)
         except ValueError as error: print(error)
-        except Exception as error:  print(f'Unexpected error:\nERROR: {error}')
+        except Exception as error:  print(f'{Aux._red("Unexpected error")}:\nERROR: {error}')
         else:  self._prepare_ports(argument, flags)
 
 
@@ -59,8 +59,8 @@ class Portscan(Strategy): # ====================================================
     def _get_argument_and_flags(self, data:list) -> tuple[str, dict]:
         parser = self._argparser_information()
         try:   arguments = parser.parse_args(data)
-        except SystemExit: raise ValueError(f'Invalid argument/flag or missed value. Please, check --help')
-        except Exception:  raise ValueError(f'Unknown error, check --help')
+        except SystemExit: raise ValueError(f'{Aux._yellow("Invalid argument/flag or missed value")}. Please, check --help')
+        except Exception:  raise ValueError(f'{Aux._red("Unknown error")}, check --help')
         return (arguments.argument, arguments.port)
     
 
