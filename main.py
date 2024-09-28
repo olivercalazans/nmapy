@@ -1,4 +1,5 @@
 from strategy import *
+from auxiliary import *
 
 class Main:
     STRATEGY_DICTIONARY = {
@@ -24,7 +25,7 @@ class Main:
 
     def _handle_user(self) -> None:
         try:   self._loop()
-        except Exception as error: print(f'ERROR: {error}')
+        except Exception as error: print(f'{Aux._red("ERROR")}: {error}')
 
 
     def _loop(self) -> None:
@@ -48,13 +49,13 @@ class Main:
         elif command == 'exit':
             self._stop
         else:
-            print(f'Unknown command "{command}"')
+            print(f'{Aux._yellow("Unknown command")} "{command}"')
 
 
     def _get_result(self, command:str, arguments:str) -> None:
         strategy = self._get_strategy_dictionary().get(command)
         try:   strategy.execute(arguments)
-        except Exception as error: print(f'Error while trying to call a "execute" method.\nERROR: {error}')
+        except Exception as error: print(f'{Aux._red("Error while trying to call a execute method")}.\nERROR: {error}')
 
 
 
