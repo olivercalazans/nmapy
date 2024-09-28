@@ -3,7 +3,7 @@ import argparse
 from network import *
 
 
-class Strategy(ABC): # =================================================================
+class Strategy(ABC): # ============================================================
 
     @abstractmethod
     def execute(self, arguments=None):
@@ -11,7 +11,7 @@ class Strategy(ABC): # =========================================================
 
 
 
-class Command_List_Strategy(Strategy): # ===============================================
+class Command_List(Strategy): # ==================================================
     def execute(self, arguments:str):
         commands = (
             'pscan...: Portscan',
@@ -21,7 +21,7 @@ class Command_List_Strategy(Strategy): # =======================================
 
 
 
-class IP_Strategy(Strategy): # ========================================================
+class Get_IP(Strategy): # ========================================================
     def execute(self, argument:str):
         try:   Network._ip(self._validate_input(argument))
         except Exception as error: print(f'ERROR: {error}')
@@ -36,7 +36,7 @@ class IP_Strategy(Strategy): # =================================================
     
 
 
-class Portscan_Strategy(Strategy): # ===================================================
+class Portscan(Strategy): # ======================================================
     def execute(self, data:list):
         self._validate_input(data)
     
@@ -59,8 +59,8 @@ class Portscan_Strategy(Strategy): # ===========================================
     def _get_argument_and_flags(self, data:list) -> tuple[str, dict]:
         parser = self._argparser_information()
         try:   arguments = parser.parse_args(data)
-        except argparse.ArgumentError: raise ValueError('Invalid/Missed argument. Please, check --help')
-        except SystemExit: raise ValueError(f'Invalid flag or missed value. Please, check --help')
+        except SystemExit: raise ValueError(f'Invalid argument/flag or missed value. Please, check --help')
+        except Exception:  raise ValueError(f'Unknown error, check --help')
         return (arguments.argument, arguments.port)
     
 
