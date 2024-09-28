@@ -2,9 +2,9 @@ from strategy import *
 
 class Main:
     STRATEGY_DICTIONARY = {
-        "help":  Command_List_Strategy(),
-        "pscan": Portscan_Strategy(),
-        "ip":    IP_Strategy()
+        "help":  Command_List(),
+        "pscan": Portscan(),
+        "ip":    Get_IP()
     }
 
 
