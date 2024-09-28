@@ -48,7 +48,7 @@ class Main:
         elif command == 'exit':
             self._stop
         else:
-            print('Invalid command')
+            print(f'Unknown command "{command}"')
 
 
     def _get_result(self, command:str, arguments:str) -> None:
