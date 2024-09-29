@@ -1,4 +1,4 @@
-import socket
+import socket, platform, subprocess
 from auxiliary import *
 
 class Network:
@@ -36,3 +36,20 @@ class Network:
             message = f' Port {port:>4} : {ports[port]} (STATUS -> {status})'
             print(message)
             portscan_socket.close()
+
+
+    # PING SWEEP ---------------------------------------------------------------------------------------------
+    @staticmethod
+    def _network_scann(network_prefix):
+        for host_bits in range(1, 255):
+            ip = f"{network_prefix}{host_bits}"
+            if Network._ping(ip): print(f"Host ativo: {ip}")
+
+
+    @staticmethod
+    def _ping(ip):
+        flag    = '-n' if platform.system() == 'Windows' else '-c'
+        command = ['ping', flag, '1', ip]
+        result  = subprocess.call(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return result
+        
