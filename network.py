@@ -40,14 +40,14 @@ class Network:
 
     # PING SWEEP ---------------------------------------------------------------------------------------------
     @staticmethod
-    def _network_scann(network_prefix):
+    def _network_scann(network_prefix:str):
         for host_bits in range(1, 255):
             ip = f"{network_prefix}{host_bits}"
             if Network._ping(ip): print(f"Host ativo: {ip}")
 
 
     @staticmethod
-    def _ping(ip):
+    def _ping(ip:str) -> bool:
         flag    = '-n' if platform.system() == 'Windows' else '-c'
         command = ['ping', flag, '1', ip]
         result  = subprocess.call(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
