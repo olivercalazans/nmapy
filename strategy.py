@@ -6,29 +6,30 @@ from auxiliary import *
 
 class Strategy(ABC): # ============================================================
     @abstractmethod
-    def execute(self, arguments=None):
+    def execute(self, arguments=None) -> None:
         pass
 
 
 
 class Command_List(Strategy): # ==================================================
-    def execute(self, arguments:str):
+    def execute(self, arguments:str) -> None:
         commands = (
-            f'{Aux._green("pscan")}...: Portscan',
-            f'{Aux._green("ip")}......: Get IP by name'
+            f'{Aux._green("pscan")}.....: Port scanner',
+            f'{Aux._green("ip")}........: Get IP by name',
+            f'{Aux._green("netscan")}...: Network scanner'
         )
         for i in commands: print(i)
 
 
 
 class Get_IP(Strategy): # ========================================================
-    def execute(self, argument:str):
+    def execute(self, argument:str) -> None:
         try:   Network._ip(self._validate_input(argument))
         except Exception as error: print(f'{Aux._red("ERROR")}: {error}')
 
 
     @staticmethod
-    def _validate_input(argument:list):
+    def _validate_input(argument:list) -> str:
         parser = argparse.ArgumentParser(prog='ip', description='Get the IP of a host')
         parser.add_argument('argument', type=str, help='Hostname')
         hostname = parser.parse_args(argument)
@@ -37,7 +38,7 @@ class Get_IP(Strategy): # ======================================================
 
 
 class Portscan(Strategy): # ======================================================
-    def execute(self, data:list):
+    def execute(self, data:list) -> None:
         self._validate_input(data)
     
 
@@ -49,7 +50,7 @@ class Portscan(Strategy): # ====================================================
 
 
     @staticmethod
-    def _argparser_information():
+    def _argparser_information() -> object:
         parser = argparse.ArgumentParser(prog='pscan', description='Portscan of an IP/Host')
         parser.add_argument('argument', type=str, help='Host name')
         parser.add_argument('-p', '--port', type=int, help='Especify a port to scan')
@@ -91,3 +92,15 @@ class Portscan(Strategy): # ====================================================
     @staticmethod
     def _result(arguments:str, ports:dict) -> None:
         Network._portscan(arguments, ports)
+
+
+
+class Network_Scanner(Strategy):
+    def execute() -> None:
+        ...
+
+    def _get_range():
+        ...
+    
+    def _flags():
+        ...
