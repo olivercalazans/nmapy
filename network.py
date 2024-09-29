@@ -11,7 +11,7 @@ class Network:
 
     # IP BY NAME ---------------------------------------------------------------------------------------------
     @staticmethod
-    def _ip(host_name:str) -> str:
+    def _ip(host_name:str) -> None:
         print(Network._get_ip_by_name(host_name))
 
 
@@ -26,7 +26,7 @@ class Network:
 
     
     @staticmethod
-    def _scan(ip:str, ports:dict) -> list:
+    def _scan(ip:str, ports:dict) -> None:
         for port in ports.keys():
             portscan_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             portscan_socket.settimeout(3)
@@ -40,7 +40,7 @@ class Network:
 
     # PING SWEEP ---------------------------------------------------------------------------------------------
     @staticmethod
-    def _network_scann(network_prefix:str):
+    def _network_scann(network_prefix:str) -> None:
         for host_bits in range(1, 255):
             ip = f"{network_prefix}{host_bits}"
             if Network._ping(ip): print(f"Host ativo: {ip}")
