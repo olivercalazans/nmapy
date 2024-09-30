@@ -1,3 +1,13 @@
+class Command_List:
+    def _execute(self, arguments:str) -> None:
+        commands = (
+            f'{Aux._green("pscan")}.....: Port scanner',
+            f'{Aux._green("ip")}........: Get IP by name',
+            f'{Aux._green("netscan")}...: Network scanner'
+        )
+        for i in commands: print(i)
+
+
 class Aux:
     @staticmethod
     def _red(message):
