@@ -1,21 +1,9 @@
-from strategy import *
 from auxiliary import *
+from network import *
 
 class Main:
-    STRATEGY_DICTIONARY = {
-        "help":  Command_List(),
-        "pscan": Portscan(),
-        "ip":    Get_IP()
-    }
-
-
     def __init__(self) -> None:
         self._stop_flag = False
-    
-
-    @classmethod
-    def _get_strategy_dictionary(cls) -> dict:
-        return cls.STRATEGY_DICTIONARY
 
 
     @property
@@ -54,9 +42,18 @@ class Main:
 
     def _get_result(self, command:str, arguments:str) -> None:
         strategy = self._get_strategy_dictionary().get(command)
-        try:   strategy.execute(arguments)
-        except Exception as error: print(f'{Aux._red("Error while trying to call a execute method")}.\nERROR: {error}')
+        try:   strategy._execute(arguments)
+        except Exception as error: print(f'{Aux._red("Error while trying to execute the command")}.\nERROR: {error}')
 
+
+    @staticmethod
+    def _get_strategy_dictionary() -> dict:
+        STRATEGY_DICTIONARY = {
+            "help":  Command_List(),
+            "pscan": Port_Scanner(),
+            "ip":    Get_IP()
+        }
+        return STRATEGY_DICTIONARY
 
 
 if __name__ == '__main__':
