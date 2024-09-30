@@ -13,7 +13,7 @@ class Main:
 
     def _handle_user(self) -> None:
         try:   self._loop()
-        except Exception as error: print(f'{Aux._red("ERROR")}: {error}')
+        except Exception as error: print(Aux.display_unexpected_error(error))
 
 
     def _loop(self) -> None:
@@ -37,13 +37,13 @@ class Main:
         elif command == 'exit':
             self._stop
         else:
-            print(f'{Aux._yellow("Unknown command")} "{command}"')
+            print(f'{Aux.yellow("Unknown command")} "{command}"')
 
 
     def _get_result(self, command:str, arguments:str) -> None:
         strategy = self._get_strategy_dictionary().get(command)
         try:   strategy._execute(arguments)
-        except Exception as error: print(f'{Aux._red("Error while trying to execute the command")}.\nERROR: {error}')
+        except Exception as error: print(f'{Aux.red("Error while trying to execute the command")}.\nERROR: {error}')
 
 
     @staticmethod
