@@ -10,19 +10,19 @@ class Command_List:
 
 class Aux:
     @staticmethod
-    def red(message) -> str:
+    def red(message:str) -> str:
         return '\033[31m' + message + '\033[0m'
     
     @staticmethod
-    def green(message) -> str:
+    def green(message:str) -> str:
         return '\033[32m' + message + '\033[0m'
     
     @staticmethod
-    def yellow(message) -> str:
+    def yellow(message:str) -> str:
         return '\033[33m' + message + '\033[0m'
     
     @staticmethod
-    def orange(message) -> str:
+    def orange(message:str) -> str:
         return '\033[38;5;214m' + message + '\033[0m'
     
     @staticmethod
