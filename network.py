@@ -1,11 +1,11 @@
-import argparse, socket, platform, subprocess
-from auxiliary import *
+import socket, platform, subprocess, argparse
+from auxiliary import Aux
 
 class Network: # =============================================================================================
     @staticmethod
     def _get_ip_by_name(hostname:str) -> str:
         try:    ip = socket.gethostbyname(hostname)
-        except: ip = f'{Aux._yellow("ERROR")}: Invalid hostname ({hostname})'
+        except: ip = Aux.display_error(f'Invalid hostname ({hostname})')
         return  ip
     
 
@@ -22,10 +22,10 @@ class Network: # ===============================================================
 class Get_IP: # ==============================================================================================
     def _execute(self, data:list):
         try:   argument = self._get_argument(data)
-        except SystemExit: print(f'{Aux._yellow("Invalid/missing argument")}')
-        except Exception as error: print(f'{Aux._red("Unexpect error")}\nERROR: {error}')
+        except SystemExit: print(Aux.display_error("Invalid/missing argument"))
+        except Exception as error: print(Aux.display_unexpected_error(error))
         else:  self._ip(argument)
-    
+
 
     @staticmethod
     def _get_argument(argument:list) -> str:
@@ -45,25 +45,18 @@ class Get_IP: # ================================================================
 class Port_Scanner: # ========================================================================================
     def _execute(self, data:list) -> None:
         try:   argument, flags = self._get_argument_and_flags(data)
-        except ValueError as error: print(error)
-        except Exception as error:  print(f'{Aux._red("Unexpected error")}:\nERROR: {error}')
+        except SystemExit: print(Aux.display_error('Invalid argument/flag or missing value. Please, check --help'))
+        except Exception as error: print(Aux.display_unexpected_error(error))
         else:  self._prepare_ports(argument, flags)
-
-
-    def _get_argument_and_flags(self, data:list) -> tuple[str, dict]:
-        parser = self._argparser_information()
-        try:   arguments = parser.parse_args(data)
-        except SystemExit: raise ValueError(f'{Aux._yellow("Invalid argument/flag or missed value")}. Please, check --help')
-        except Exception:  raise ValueError(f'{Aux._red("Unknown error")}, check --help')
-        return (arguments.argument, arguments.port)
     
 
     @staticmethod
-    def _argparser_information() -> object:
+    def _get_argument_and_flags(data:list) -> tuple[str, dict]:
         parser = argparse.ArgumentParser(prog='pscan', description='Portscan of an IP/Host')
         parser.add_argument('argument', type=str, help='Host name')
         parser.add_argument('-p', '--port', type=int, help='Especify a port to scan')
-        return parser
+        arguments = parser.parse_args(data)
+        return (arguments.argument, arguments.port)
 
 
     def _prepare_ports(self, argument:str, port:int) -> None:
@@ -93,9 +86,9 @@ class Port_Scanner: # ==========================================================
     def _portscan(self, host:str, ports:dict) -> None:
         ip = Network._get_ip_by_name(host)
         try:   self._scan(ip, ports)
-        except socket.gaierror: print(f'{Aux._yellow("ERROR")}: An error occurred in resolving the host')
-        except socket.error:    print(f'{Aux._yellow("ERROR")}: It was not possible to connect to {host}')
-        except Exception as error: print(f'{Aux._red("ERROR")}: {error}') 
+        except socket.gaierror: print(Aux.display_error('An error occurred in resolving the host'))
+        except socket.error:    print(Aux.display_error(f'It was not possible to connect to {host}'))
+        except Exception as error: print(Aux.display_unexpected_error(error))
 
     
     @staticmethod
@@ -104,8 +97,8 @@ class Port_Scanner: # ==========================================================
             portscan_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             portscan_socket.settimeout(3)
             result = portscan_socket.connect_ex((ip, port))
-            status = Aux._red('Closed')
-            if result == 0: status = Aux._green('Opened')
+            status = Aux.red('Closed')
+            if result == 0: status = Aux.green('Opened')
             message = f' Port {port:>4} : {ports[port]} (STATUS -> {status})'
             print(message)
             portscan_socket.close()
