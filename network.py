@@ -69,16 +69,21 @@ class Port_Scanner: # ==========================================================
     @staticmethod
     def _get_ports() -> dict:
         PORTS = { 
-            21  : 'FTP - File Transfer Protocol',  
-            22  : 'SSH - Secure Shell',  
-            23  : 'Telnet',  
-            25  : 'SMTP - Simple Mail Transfer Protocol',   
-            53  : 'DNS - Domain Name System', 
-            80  : 'HTTP - HyperText Transfer Protocol', 
-            110 : 'POP3 - Post Office Protocol version 3', 
-            443 : 'HTTPS - HTTP Protocol over TLS/SSL', 
-            5432: 'PostgreSQL database system', 
-            8080: 'Jakarta Tomcat'
+            21   : 'FTP - File Transfer Protocol',  
+            22   : 'SSH - Secure Shell',  
+            23   : 'Telnet',  
+            25   : 'SMTP - Simple Mail Transfer Protocol',   
+            53   : 'DNS - Domain Name System', 
+            80   : 'HTTP - HyperText Transfer Protocol', 
+            110  : 'POP3 - Post Office Protocol version 3', 
+            443  : 'HTTPS - HTTP Protocol over TLS/SSL',
+            3306 : 'MySQL/MariaDB',
+            3389 : 'RDP - Remote Desktop Protocol',
+            5432 : 'PostgreSQL database system',
+            5900 : 'VNC - Virtual Network Computing',
+            6379 : 'Redis',
+            8080 : 'Jakarta Tomcat',
+            27017: 'MongoDB'
         }
         return PORTS
 
@@ -97,7 +102,7 @@ class Port_Scanner: # ==========================================================
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as portscan_socket:
                 portscan_socket.settimeout(3)
                 status = Aux.green('Opened') if portscan_socket.connect_ex((ip, port)) == 0 else Aux.red('Closed')
-                print(f' Port {port:>4} : {description} (STATUS -> {status})')
+                print(f' Port {port:>5} : {description} (STATUS -> {status})')
 
 
 
