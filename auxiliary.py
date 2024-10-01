@@ -32,3 +32,7 @@ class Aux:
     @staticmethod
     def display_error(message:str) -> str:
         return Aux.yellow('ERROR: ') + message
+    
+    @staticmethod
+    def display_invalid_missing():
+        return Aux.yellow('Invalid or missing argument/flag. Please, check --help')
