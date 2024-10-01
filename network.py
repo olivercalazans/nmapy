@@ -93,22 +93,22 @@ class Port_Scanner: # ==========================================================
     
     @staticmethod
     def _scan(ip:str, ports:dict) -> None:
-        for port in ports.keys():
-            portscan_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            portscan_socket.settimeout(3)
-            result = portscan_socket.connect_ex((ip, port))
-            status = Aux.red('Closed')
-            if result == 0: status = Aux.green('Opened')
-            message = f' Port {port:>4} : {ports[port]} (STATUS -> {status})'
-            print(message)
-            portscan_socket.close()
+        for port, description in ports.items():
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as portscan_socket:
+                portscan_socket.settimeout(3)
+                status = Aux.green('Opened') if portscan_socket.connect_ex((ip, port)) == 0 else Aux.red('Closed')
+                print(f' Port {port:>4} : {description} (STATUS -> {status})')
 
 
 
 
 class Network_Scanner: # =====================================================================================
+    def _execute(self, data:list) -> None:
+        ...
+
+
     @staticmethod
-    def _network_scann(network_prefix:str) -> None:
+    def _network_scanner(network_prefix:str) -> None:
         for host_bits in range(1, 255):
             ip = f"{network_prefix}{host_bits}"
             if Network._ping(ip): print(f"Host ativo: {ip}")
