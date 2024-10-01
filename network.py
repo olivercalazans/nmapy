@@ -1,4 +1,4 @@
-import socket, platform, subprocess, argparse
+import socket, platform, subprocess, argparse, ipaddress
 from auxiliary import Aux
 
 class Network: # =============================================================================================
@@ -44,26 +44,31 @@ class Get_IP: # ================================================================
 
 class Port_Scanner: # ========================================================================================
     def _execute(self, data:list) -> None:
-        try:   argument, flags = self._get_argument_and_flags(data)
-        except SystemExit: print(Aux.display_error('Invalid argument/flag or missing value. Please, check --help'))
+        try:
+            host, port      = self._get_argument_and_flags(data)
+            port_dictionary = self._prepare_ports(port)
+            ip              = Network._get_ip_by_name(host)
+            self._scan(ip, port_dictionary)
+        except SystemExit:         print(Aux.display_invalid_missing())
+        except socket.gaierror:    print(Aux.display_error('An error occurred in resolving the host'))
+        except socket.error:       print(Aux.display_error(f'It was not possible to connect to {host}'))
         except Exception as error: print(Aux.display_unexpected_error(error))
-        else:  self._prepare_ports(argument, flags)
     
 
     @staticmethod
-    def _get_argument_and_flags(data:list) -> tuple[str, dict]:
-        parser = argparse.ArgumentParser(prog='pscan', description='Portscan of an IP/Host')
-        parser.add_argument('argument', type=str, help='Host name')
+    def _get_argument_and_flags(data:list) -> tuple[str, int|None]:
+        parser = argparse.ArgumentParser(prog='pscan', description='Scans ports on a host')
+        parser.add_argument('host', type=str, help='Host name')
         parser.add_argument('-p', '--port', type=int, help='Especify a port to scan')
         arguments = parser.parse_args(data)
-        return (arguments.argument, arguments.port)
+        return (arguments.host, arguments.port)
 
 
-    def _prepare_ports(self, argument:str, port:int) -> None:
+    def _prepare_ports(self, port:int) -> dict:
         port_dictionary = self._get_ports()
         if port in port_dictionary: port_dictionary = {port: port_dictionary[port]}
         elif port is not None:      port_dictionary = {port: 'Generic port'}
-        self._portscan(argument, port_dictionary)
+        return port_dictionary
 
 
     @staticmethod
@@ -87,14 +92,6 @@ class Port_Scanner: # ==========================================================
         }
         return PORTS
 
-
-    def _portscan(self, host:str, ports:dict) -> None:
-        ip = Network._get_ip_by_name(host)
-        try:   self._scan(ip, ports)
-        except socket.gaierror: print(Aux.display_error('An error occurred in resolving the host'))
-        except socket.error:    print(Aux.display_error(f'It was not possible to connect to {host}'))
-        except Exception as error: print(Aux.display_unexpected_error(error))
-
     
     @staticmethod
     def _scan(ip:str, ports:dict) -> None:
@@ -109,16 +106,27 @@ class Port_Scanner: # ==========================================================
 
 class Network_Scanner: # =====================================================================================
     def _execute(self, data:list) -> None:
-        ...
+        try:   
+            ip, display = self._get_argument_and_flag(data)
+            self._validate_ip(ip)
+        except SystemExit: print(Aux.display_invalid_missing())
+        except ValueError: print(Aux.yellow('Invalid IP'))
+        except Exception as error: print(Aux.display_unexpected_error(error))
+        else: ...
 
-    
+
     @staticmethod
-    def _get_argument_and_flag(data:list) -> tuple[str, str]:
+    def _get_argument_and_flag(data:list) -> tuple[str, bool]:
         parser = argparse.ArgumentParser(prog='netscan', description='Scans the network to discover active hosts')
-        parser.add_argument('argument', type=str, help='Network')
-        parser.add_argument('-d', '--display', type=int, help='Displays all messages (closed/opened)')
+        parser.add_argument('ip', type=str, help='IP')
+        parser.add_argument('-d', '--display', action='store_true', help='Displays all messages (closed/opened)')
         arguments = parser.parse_args(data)
-        return (arguments.argument, arguments.display)
+        return (arguments.ip, arguments.display)
+
+
+    @staticmethod
+    def _validate_ip(ip:str) -> str:
+        ipaddress.ip_address(ip)
 
 
     @staticmethod
