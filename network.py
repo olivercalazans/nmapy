@@ -111,6 +111,15 @@ class Network_Scanner: # =======================================================
     def _execute(self, data:list) -> None:
         ...
 
+    
+    @staticmethod
+    def _get_argument_and_flag(data:list) -> tuple[str, str]:
+        parser = argparse.ArgumentParser(prog='netscan', description='Scans the network to discover active hosts')
+        parser.add_argument('argument', type=str, help='Network')
+        parser.add_argument('-d', '--display', type=int, help='Displays all messages (closed/opened)')
+        arguments = parser.parse_args(data)
+        return (arguments.argument, arguments.display)
+
 
     @staticmethod
     def _network_scanner(network_prefix:str) -> None:
