@@ -25,7 +25,7 @@ class Main:
 
 
     @staticmethod
-    def _separates_command_from_arguments(input_data) -> tuple[str, list]:
+    def _separates_command_from_arguments(input_data) -> tuple[str, list|None]:
         command   = input_data[0]
         arguments = input_data[1:] or [None]
         return (command, arguments)
