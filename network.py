@@ -108,9 +108,11 @@ class Port_Scanner: # ==========================================================
         match response:
             case "SA": status = Aux.green('Opened')
             case "RA": status = Aux.red('Closed')
+            case "S":  status = Aux.yellow('Potentially Open')
+            case "F":  status = Aux.red('Connection Closed')
             case None: status = Aux.red('Filtered')
-            case _:    status = Aux.red('Closed')
-        print(f'Status: {status:>17} -> {port:>5} - {description}')
+            case _:    status = Aux.red('Unknown Status')
+        print(f'Status: {status:>26} -> {port:>5} - {description}')
 
 
 
