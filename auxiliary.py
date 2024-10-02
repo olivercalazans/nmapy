@@ -27,7 +27,7 @@ class Aux:
     
     @staticmethod
     def display_unexpected_error(error:str) -> str:
-        return Aux.red('Unexpect error') + f'\nERROR: {error}'
+        return Aux.red('Unexpected error') + f'\nERROR: {error}'
     
     @staticmethod
     def display_error(message:str) -> str:
