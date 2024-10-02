@@ -1,4 +1,5 @@
 import socket, platform, subprocess, argparse, ipaddress
+from scapy.all import IP, TCP, sr1, conf
 from auxiliary import Aux
 
 class Network: # =============================================================================================
@@ -22,7 +23,7 @@ class Network: # ===============================================================
 class Get_IP: # ==============================================================================================
     def _execute(self, data:list):
         try:   argument = self._get_argument(data)
-        except SystemExit: print(Aux.display_error("Invalid/missing argument"))
+        except SystemExit:         print(Aux.display_error("Invalid/missing argument"))
         except Exception as error: print(Aux.display_unexpected_error(error))
         else:  self._ip(argument)
 
@@ -51,7 +52,7 @@ class Port_Scanner: # ==========================================================
             self._scan(ip, port_dictionary)
         except SystemExit:         print(Aux.display_invalid_missing())
         except socket.gaierror:    print(Aux.display_error('An error occurred in resolving the host'))
-        except socket.error:       print(Aux.display_error(f'It was not possible to connect to {host}'))
+        except socket.error:       print(Aux.display_error(f'It was not possible to connect to "{host}"'))
         except Exception as error: print(Aux.display_unexpected_error(error))
     
 
@@ -93,14 +94,23 @@ class Port_Scanner: # ==========================================================
         return PORTS
 
     
-    @staticmethod
-    def _scan(ip:str, ports:dict) -> None:
+    def _scan(self, ip:str, ports:dict) -> None:
+        conf.verb = 0 
         for port, description in ports.items():
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as portscan_socket:
-                portscan_socket.settimeout(3)
-                status = Aux.green('Opened') if portscan_socket.connect_ex((ip, port)) == 0 else Aux.red('Closed')
-                print(f' Port {port:>5} : {description} (STATUS -> {status})')
+            packet   = IP(dst=ip)/TCP(dport=port, flags="S")  
+            response = sr1(packet, timeout=3)
+            response = response[TCP].flags if response else None
+            self._display_result(response, port, description)
 
+
+    @staticmethod
+    def _display_result(response:str|None, port:int, description:str) -> None:
+        match response:
+            case "SA": status = Aux.green('Opened')
+            case "RA": status = Aux.red('Closed')
+            case None: status = Aux.red('Filtered')
+            case _:    status = Aux.red('Closed')
+        print(f'Status: {status:>17} -> {port:>5} - {description}')
 
 
 
@@ -108,9 +118,10 @@ class Network_Scanner: # =======================================================
     def _execute(self, data:list) -> None:
         try:   
             ip, display = self._get_argument_and_flag(data)
-            self._validate_ip(ip)
-        except SystemExit: print(Aux.display_invalid_missing())
-        except ValueError: print(Aux.yellow('Invalid IP'))
+            network     = self._get_network(ip)
+            self._network_scanner(network)
+        except SystemExit:         print(Aux.display_invalid_missing())
+        except ValueError:         print(Aux.yellow('Invalid IP'))
         except Exception as error: print(Aux.display_unexpected_error(error))
         else: ...
 
@@ -125,13 +136,14 @@ class Network_Scanner: # =======================================================
 
 
     @staticmethod
-    def _validate_ip(ip:str) -> str:
+    def _get_network(ip:str) -> ipaddress.IPv4Address:
         ipaddress.ip_address(ip)
+        network = ipaddress.ip_network(ip)
+        return network
 
 
     @staticmethod
-    def _network_scanner(network_prefix:str) -> None:
-        for host_bits in range(1, 255):
-            ip = f"{network_prefix}{host_bits}"
+    def _network_scanner(network:list) -> None:
+        for ip in network.hosts():
             if Network._ping(ip): print(f"Host ativo: {ip}")
         
