@@ -50,7 +50,7 @@ class Port_Scanner: # ==========================================================
             port_dictionary = self._prepare_ports(port)
             ip              = Network._get_ip_by_name(host)
             packages        = self._create_packages(ip, port_dictionary)
-            responses, unanswered = self._send_packages(packages)
+            responses, _    = self._send_packages(packages)
             self._process_responses(responses, port_dictionary)
         except SystemExit:         print(Aux.display_invalid_missing())
         except socket.gaierror:    print(Aux.display_error('An error occurred in resolving the host'))
@@ -95,20 +95,21 @@ class Port_Scanner: # ==========================================================
 
     @staticmethod
     def _create_packages(ip:str, ports:dict) -> list:
+        conf.verb = 0
         return [IP(dst=ip)/TCP(dport=port, flags="S") for port in ports.keys()]
     
     
     @staticmethod
     def _send_packages(packages:list) -> tuple[list, list]:
-        responses, unanswered = sr(packages, timeout=3, inter=0.1)
+        responses, unanswered = sr(packages, timeout=3, inter=0.2)
         return (responses, unanswered)
 
 
-    def _process_responses(self, responses, ports:dict):
+    def _process_responses(self, responses:list, ports:dict) -> None:
         for sent, received in responses:
-            port = sent[TCP].dport
+            port           = sent[TCP].dport
             response_flags = received[TCP].flags if received else None
-            description = ports[port]
+            description    = ports[port]
             self._display_result(response_flags, port, description)
 
 
@@ -119,9 +120,10 @@ class Port_Scanner: # ==========================================================
             case "RA": status = Aux.red('Closed')
             case "S":  status = Aux.yellow('Potentially Open')
             case "F":  status = Aux.red('Connection Closed')
+            case "R":  status = Aux.red('Reset')
             case None: status = Aux.red('Filtered')
             case _:    status = Aux.red('Unknown Status')
-        print(f'Status: {status:>26} -> {port:>5} - {description}')
+        print(f'Status: {status:>17} -> {port:>5} - {description}')
 
 
 
