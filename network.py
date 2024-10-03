@@ -1,6 +1,9 @@
-import socket, platform, subprocess, argparse, ipaddress
-from scapy.all import IP, TCP, sr, conf
-from auxiliary import Aux
+import socket, argparse, ipaddress
+from scapy.all import IP, TCP, ARP, Ether
+from scapy.all import sr, srp
+from scapy.all import conf
+from auxiliary import Aux 
+
 
 class Network: # =============================================================================================
     @staticmethod
@@ -9,14 +12,6 @@ class Network: # ===============================================================
         except: ip = Aux.display_error(f'Invalid hostname ({hostname})')
         return  ip
     
-
-    @staticmethod
-    def _ping(ip:str) -> bool:
-        flag    = '-n' if platform.system() == 'Windows' else '-c'
-        command = ['ping', flag, '1', ip]
-        result  = subprocess.call(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        return result
-
 
 
 
@@ -128,16 +123,19 @@ class Port_Scanner: # ==========================================================
 
 
 
+
 class Network_Scanner: # =====================================================================================
     def _execute(self, data:list) -> None:
         try:   
             ip, display = self._get_argument_and_flag(data)
             network     = self._get_network(ip)
-            self._network_scanner(network)
-        except SystemExit:         print(Aux.display_invalid_missing())
-        except ValueError:         print(Aux.yellow('Invalid IP'))
+            package     = self._create_package(network)
+            answered    = self._arp_sweep(package)
+            self._display_result(answered)
+        except SystemExit: print(Aux.yellow("Invalid command"))
+        except ValueError: print(Aux.yellow("Invalid IP"))
+        except KeyboardInterrupt:  print(Aux.orange("Process stopped"))
         except Exception as error: print(Aux.display_unexpected_error(error))
-        else: ...
 
 
     @staticmethod
@@ -150,14 +148,24 @@ class Network_Scanner: # =======================================================
 
 
     @staticmethod
-    def _get_network(ip:str) -> ipaddress.IPv4Address:
-        ipaddress.ip_address(ip)
-        network = ipaddress.ip_network(ip)
-        return network
+    def _get_network(ip:str) -> ipaddress.IPv4Network:
+        return ipaddress.ip_network(f'{ip}/24', strict=False)
 
 
     @staticmethod
-    def _network_scanner(network:list) -> None:
-        for ip in network.hosts():
-            if Network._ping(ip): print(f"Host ativo: {ip}")
-        
+    def _create_package(network:ipaddress.IPv4Network) -> Ether:
+        arp_request   = ARP(pdst=str(network))
+        broadcast     = Ether(dst="ff:ff:ff:ff:ff:ff")
+        return broadcast / arp_request
+
+
+    @staticmethod
+    def _arp_sweep(package:Ether) -> list:
+        answered, _ = srp(package, timeout=2, verbose=False)
+        return answered
+
+
+    @staticmethod
+    def _display_result(answered:list[tuple]) -> None:
+        for _, received in answered:
+            print(f'Active host: IP {received.psrc:<15}, MAC {received.hwsrc}')
