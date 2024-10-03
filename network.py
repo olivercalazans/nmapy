@@ -46,11 +46,11 @@ class Get_IP: # ================================================================
 class Port_Scanner: # ========================================================================================
     def _execute(self, data:list) -> None:
         try:
-            host, port      = self._get_argument_and_flags(data)
-            port_dictionary = self._prepare_ports(port)
-            ip              = Network._get_ip_by_name(host)
-            packages        = self._create_packages(ip, port_dictionary)
-            responses, _    = self._send_packages(packages)
+            host, port, verb = self._get_argument_and_flags(data)
+            port_dictionary  = self._prepare_ports(port)
+            target_ip        = Network._get_ip_by_name(host)
+            packages         = self._create_packages(target_ip, port_dictionary, verb)
+            responses, _     = self._send_packages(packages)
             self._process_responses(responses, port_dictionary)
         except SystemExit:         print(Aux.display_invalid_missing())
         except socket.gaierror:    print(Aux.display_error('An error occurred in resolving the host'))
@@ -63,8 +63,9 @@ class Port_Scanner: # ==========================================================
         parser = argparse.ArgumentParser(prog='pscan', description='Scans ports on a host')
         parser.add_argument('host', type=str, help='Host name')
         parser.add_argument('-p', '--port', type=int, help='Especify a port to scan')
+        parser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose output')
         arguments = parser.parse_args(data)
-        return (arguments.host, arguments.port)
+        return (arguments.host, arguments.port, arguments.verbose)
 
 
     def _prepare_ports(self, port:int) -> dict:
@@ -94,14 +95,14 @@ class Port_Scanner: # ==========================================================
 
 
     @staticmethod
-    def _create_packages(ip:str, ports:dict) -> list:
-        conf.verb = 0
+    def _create_packages(ip:str, ports:dict, verbose:bool) -> list:
+        conf.verb = 0 if not verbose else 1
         return [IP(dst=ip)/TCP(dport=port, flags="S") for port in ports.keys()]
     
     
     @staticmethod
     def _send_packages(packages:list) -> tuple[list, list]:
-        responses, unanswered = sr(packages, timeout=3, inter=0.2)
+        responses, unanswered = sr(packages, timeout=5, inter=0.1)
         return (responses, unanswered)
 
 
@@ -117,8 +118,8 @@ class Port_Scanner: # ==========================================================
     def _display_result(response:str|None, port:int, description:str) -> None:
         match response:
             case "SA": status = Aux.green('Opened')
-            case "RA": status = Aux.red('Closed')
             case "S":  status = Aux.yellow('Potentially Open')
+            case "RA": status = Aux.red('Closed')
             case "F":  status = Aux.red('Connection Closed')
             case "R":  status = Aux.red('Reset')
             case None: status = Aux.red('Filtered')
