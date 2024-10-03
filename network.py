@@ -1,5 +1,5 @@
 import socket, platform, subprocess, argparse, ipaddress
-from scapy.all import IP, TCP, sr1, conf
+from scapy.all import IP, TCP, sr, conf
 from auxiliary import Aux
 
 class Network: # =============================================================================================
@@ -49,7 +49,9 @@ class Port_Scanner: # ==========================================================
             host, port      = self._get_argument_and_flags(data)
             port_dictionary = self._prepare_ports(port)
             ip              = Network._get_ip_by_name(host)
-            self._scan(ip, port_dictionary)
+            packages        = self._create_packages(ip, port_dictionary)
+            responses, unanswered = self._send_packages(packages)
+            self._process_responses(responses, port_dictionary)
         except SystemExit:         print(Aux.display_invalid_missing())
         except socket.gaierror:    print(Aux.display_error('An error occurred in resolving the host'))
         except socket.error:       print(Aux.display_error(f'It was not possible to connect to "{host}"'))
@@ -66,10 +68,7 @@ class Port_Scanner: # ==========================================================
 
 
     def _prepare_ports(self, port:int) -> dict:
-        port_dictionary = self._get_ports()
-        if port in port_dictionary: port_dictionary = {port: port_dictionary[port]}
-        elif port is not None:      port_dictionary = {port: 'Generic port'}
-        return port_dictionary
+        return self._get_ports() if port == None else {port: None}
 
 
     @staticmethod
@@ -93,14 +92,24 @@ class Port_Scanner: # ==========================================================
         }
         return PORTS
 
+
+    @staticmethod
+    def _create_packages(ip:str, ports:dict) -> list:
+        return [IP(dst=ip)/TCP(dport=port, flags="S") for port in ports.keys()]
     
-    def _scan(self, ip:str, ports:dict) -> None:
-        conf.verb = 0 
-        for port, description in ports.items():
-            packet   = IP(dst=ip)/TCP(dport=port, flags="S")  
-            response = sr1(packet, timeout=3)
-            response = response[TCP].flags if response else None
-            self._display_result(response, port, description)
+    
+    @staticmethod
+    def _send_packages(packages:list) -> tuple[list, list]:
+        responses, unanswered = sr(packages, timeout=3, inter=0.1)
+        return (responses, unanswered)
+
+
+    def _process_responses(self, responses, ports:dict):
+        for sent, received in responses:
+            port = sent[TCP].dport
+            response_flags = received[TCP].flags if received else None
+            description = ports[port]
+            self._display_result(response_flags, port, description)
 
 
     @staticmethod
