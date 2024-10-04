@@ -1,4 +1,5 @@
-import socket, argparse, ipaddress
+import socket, argparse, ipaddress, subprocess, platform
+from concurrent.futures import ThreadPoolExecutor
 from scapy.all import IP, TCP, ARP, Ether
 from scapy.all import sr, srp
 from scapy.all import conf
@@ -127,11 +128,9 @@ class Port_Scanner: # ==========================================================
 class Network_Scanner: # =====================================================================================
     def _execute(self, data:list) -> None:
         try:   
-            ip, display = self._get_argument_and_flag(data)
+            ip, ping    = self._get_argument_and_flag(data)
             network     = self._get_network(ip)
-            package     = self._create_package(network)
-            answered    = self._arp_sweep(package)
-            self._display_result(answered)
+            self._run_arp_methods(network) if not ping else self._run_ping_methods(network)
         except SystemExit: print(Aux.yellow("Invalid command"))
         except ValueError: print(Aux.yellow("Invalid IP"))
         except KeyboardInterrupt:  print(Aux.orange("Process stopped"))
@@ -142,9 +141,9 @@ class Network_Scanner: # =======================================================
     def _get_argument_and_flag(data:list) -> tuple[str, bool]:
         parser = argparse.ArgumentParser(prog='netscan', description='Scans the network to discover active hosts')
         parser.add_argument('ip', type=str, help='IP')
-        parser.add_argument('-d', '--display', action='store_true', help='Displays all messages (closed/opened)')
+        parser.add_argument('-p', '--ping', action='store_true', help='Use ping instead of an ARP package')
         arguments = parser.parse_args(data)
-        return (arguments.ip, arguments.display)
+        return (arguments.ip, arguments.ping)
 
 
     @staticmethod
@@ -152,20 +151,69 @@ class Network_Scanner: # =======================================================
         return ipaddress.ip_network(f'{ip}/24', strict=False)
 
 
+    # NET SCANNER USING ARP ----------------------------------------
+    def _run_arp_methods(self, network:ipaddress.IPv4Network) -> None:
+        package  = self._create_arp_package(network)
+        answered = self._perform_arp_sweep(package)
+        self._display_arp_result(answered)
+
+
     @staticmethod
-    def _create_package(network:ipaddress.IPv4Network) -> Ether:
-        arp_request   = ARP(pdst=str(network))
-        broadcast     = Ether(dst="ff:ff:ff:ff:ff:ff")
+    def _create_arp_package(network:ipaddress.IPv4Network) -> Ether:
+        arp_request = ARP(pdst=str(network))
+        broadcast   = Ether(dst="ff:ff:ff:ff:ff:ff")
         return broadcast / arp_request
 
 
     @staticmethod
-    def _arp_sweep(package:Ether) -> list:
+    def _perform_arp_sweep(package:Ether) -> list:
         answered, _ = srp(package, timeout=2, verbose=False)
         return answered
 
 
     @staticmethod
-    def _display_result(answered:list[tuple]) -> None:
+    def _display_arp_result(answered:list[tuple]) -> None:
         for _, received in answered:
-            print(f'Active host: IP {received.psrc:<15}, MAC {received.hwsrc}')
+            print(f'{Aux.green("Active host")}: IP {received.psrc:<15}, MAC {received.hwsrc}')
+
+
+    # NET SCANNER USING PING -----------------------------------------
+    def _run_ping_methods(self, network:ipaddress.IPv4Network) ->None:
+        futures      = self._ping_sweep(network)
+        active_hosts = self._process_result(futures)
+        self._display_ping_result(active_hosts)
+        
+
+    def _ping_sweep(self, network:ipaddress.IPv4Network) -> dict:
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            return {executor.submit(self._send_ping, str(ip)): ip for ip in network.hosts()}
+            
+
+    def _send_ping(self, ip:str) -> bool:
+        command = self._prepare_ping_command(ip)
+        return subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
+    
+
+    @staticmethod
+    def _prepare_ping_command(ip:str) -> list:
+        flag = '-n' if platform.system() == 'Windows' else '-c'        
+        return ['ping', flag, '1', str(ip)]
+
+
+    @staticmethod
+    def _process_result(future_to_ip:dict) -> list:
+        active_hosts = []
+        for future in future_to_ip:
+            ip = future_to_ip[future]
+            try:
+                if future.result():
+                    active_hosts.append(str(ip))
+            except Exception as e:
+                print(f"{Aux.orange('Error pinging')} {ip}: {e}")
+        return active_hosts
+
+
+    @staticmethod
+    def _display_ping_result(active_hosts:list) -> None:
+        for ip in active_hosts:
+            print(f'{Aux.green("Active host")}: {ip}')
