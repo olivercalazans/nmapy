@@ -1,5 +1,5 @@
 from auxiliary import *
-from network import *
+from tools import *
 
 class Main:
     def __init__(self) -> None:
@@ -33,14 +33,14 @@ class Main:
 
     def _check_if_the_method_exists(self, command:str, arguments:tuple) -> None:
         if command in self._get_strategy_dictionary():
-            self._get_result(command, arguments)
+            self._run_command(command, arguments)
         elif command == 'exit':
             self._stop
         else:
             print(f'{Aux.yellow("Unknown command")} "{command}"')
 
 
-    def _get_result(self, command:str, arguments:str) -> None:
+    def _run_command(self, command:str, arguments:str) -> None:
         strategy = self._get_strategy_dictionary().get(command)
         try:   strategy._execute(arguments)
         except Exception as error: print(f'{Aux.red("Error while trying to execute the command")}.\nERROR: {error}')
@@ -48,12 +48,13 @@ class Main:
 
     @staticmethod
     def _get_strategy_dictionary() -> dict:
-        STRATEGY_DICTIONARY = {
-            "help":  Command_List(),
-            "pscan": Port_Scanner(),
-            "ip":    Get_IP()
+        return {
+            "help":    Command_List(),
+            "ip":      Get_IP(),
+            "geoip":   IP_geolocation(),
+            "pscan":   Port_Scanner(),
+            "netscan": Network_Scanner()
         }
-        return STRATEGY_DICTIONARY
 
 
 if __name__ == '__main__':
