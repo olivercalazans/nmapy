@@ -1,9 +1,11 @@
-import socket, argparse, ipaddress, subprocess, platform, json, urllib.request
+import socket, argparse, ipaddress, subprocess, platform, json, urllib.request, http.client
 from concurrent.futures import ThreadPoolExecutor
 from scapy.all import IP, TCP, ARP, Ether
 from scapy.all import sr, srp
 from scapy.all import conf
 from auxiliary import Aux 
+
+
 
 
 class Network: # =============================================================================================
@@ -150,7 +152,7 @@ class Network_Scanner: # =======================================================
         return ipaddress.ip_network(f'{ip}/24', strict=False)
 
 
-    # NET SCANNER USING ARP ----------------------------------------
+    # NET SCANNER USING ARP ------------------------------------------
     def _run_arp_methods(self, network:ipaddress.IPv4Network) -> None:
         package  = self._create_arp_package(network)
         answered = self._perform_arp_sweep(package)
@@ -233,7 +235,7 @@ class IP_geolocation: # ========================================================
 
     
     @staticmethod
-    def _get_argument_and_flag(data:list) -> tuple[str, bool]:
+    def _get_argument_and_flag(data:list) -> str:
         parser = argparse.ArgumentParser(prog='geoip', description='It gives the geolacation of an IP')
         parser.add_argument('ip', type=str, help='IP or hostname')
         arguments = parser.parse_args(data)
@@ -241,7 +243,7 @@ class IP_geolocation: # ========================================================
     
     
     @staticmethod
-    def _get_geolocation(ip:ipaddress.IPv4Address):
+    def _get_geolocation(ip:ipaddress.IPv4Address) -> dict:
         with urllib.request.urlopen(f"https://ipinfo.io/{ip}/json") as response:
             return json.load(response)
         
@@ -264,3 +266,46 @@ class IP_geolocation: # ========================================================
         for key, value in result.items():
             separator = (8 - len(key)) * '.'
             print(f'{key}{separator}: {value}')
+
+
+
+
+class MAC_To_Device: # =======================================================================================
+    def _execute(self, argument:list) -> None:
+        try: 
+            mac      = self._get_argument_and_flag(argument)
+            response = self._lookup_mac(mac)
+            result   = self._process_result(response)
+            self._display_result(mac, result)
+        except SystemExit: print(Aux.display_invalid_missing())
+        except http.client.HTTPException as error: print(f"{Aux.yellow('HTTP error occurred')}: {error}")
+        except Exception as error: print(Aux.display_unexpected_error(error))
+
+
+    @staticmethod
+    def _get_argument_and_flag(data:list) -> str:
+        parser = argparse.ArgumentParser(prog='macdev', description='Returns the kind of the device')
+        parser.add_argument('mac', type=str, help='MAC to be looked up')
+        arguments = parser.parse_args(data)
+        return (arguments.mac)
+
+
+    @staticmethod
+    def _lookup_mac(mac:str) -> http.client.HTTPResponse:
+        conn = http.client.HTTPSConnection("api.macvendors.com")
+        try:
+            conn.request("GET", f"/{mac}")
+            return conn.getresponse()
+        finally: conn.close() 
+
+    
+    @staticmethod
+    def _process_result(response:http.client.HTTPResponse) -> str:
+        if response.status == 200:
+            return response.read().decode('utf-8')
+        else:
+            return "Manufacturer not found"
+        
+    @staticmethod
+    def _display_result(mac:str, result:str) -> None:
+        print(f'MAC: {mac} - Manufacturer: {result}')
