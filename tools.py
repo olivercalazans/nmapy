@@ -1,4 +1,4 @@
-import socket, argparse, ipaddress, subprocess, platform
+import socket, argparse, ipaddress, subprocess, platform, json, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from scapy.all import IP, TCP, ARP, Ether
 from scapy.all import sr, srp
@@ -17,7 +17,7 @@ class Network: # ===============================================================
 
 
 class Get_IP: # ==============================================================================================
-    def _execute(self, data:list):
+    def _execute(self, data:list) -> None:
         try:   argument = self._get_argument(data)
         except SystemExit:         print(Aux.display_error("Invalid/missing argument"))
         except Exception as error: print(Aux.display_unexpected_error(error))
@@ -70,7 +70,7 @@ class Port_Scanner: # ==========================================================
 
     @staticmethod
     def _get_ports() -> dict:
-        PORTS = { 
+        return { 
             21   : 'FTP - File Transfer Protocol',  
             22   : 'SSH - Secure Shell',  
             23   : 'Telnet',  
@@ -87,7 +87,6 @@ class Port_Scanner: # ==========================================================
             8080 : 'Jakarta Tomcat',
             27017: 'MongoDB'
         }
-        return PORTS
 
 
     @staticmethod
@@ -131,7 +130,7 @@ class Network_Scanner: # =======================================================
             ip, ping    = self._get_argument_and_flag(data)
             network     = self._get_network(ip)
             self._run_arp_methods(network) if not ping else self._run_ping_methods(network)
-        except SystemExit: print(Aux.yellow("Invalid command"))
+        except SystemExit: print(Aux.display_invalid_missing())
         except ValueError: print(Aux.yellow("Invalid IP"))
         except KeyboardInterrupt:  print(Aux.orange("Process stopped"))
         except Exception as error: print(Aux.display_unexpected_error(error))
@@ -208,8 +207,8 @@ class Network_Scanner: # =======================================================
             try:
                 if future.result():
                     active_hosts.append(str(ip))
-            except Exception as e:
-                print(f"{Aux.orange('Error pinging')} {ip}: {e}")
+            except Exception as error:
+                print(f"{Aux.orange('Error pinging')} {ip}: {error}")
         return active_hosts
 
 
@@ -217,3 +216,51 @@ class Network_Scanner: # =======================================================
     def _display_ping_result(active_hosts:list) -> None:
         for ip in active_hosts:
             print(f'{Aux.green("Active host")}: {ip}')
+
+
+
+
+class IP_geolocation: # ======================================================================================
+    def _execute(self, argument) -> None:
+        try:
+            host   = self._get_argument_and_flag(argument)
+            ip     = Network._get_ip_by_name(host)
+            data   = self._get_geolocation(ip)
+            result = self._process_data(data)
+            self._display_result(result)
+        except SystemExit: print(Aux.display_invalid_missing())
+        except Exception as error: print(Aux.display_unexpected_error(error))
+
+    
+    @staticmethod
+    def _get_argument_and_flag(data:list) -> tuple[str, bool]:
+        parser = argparse.ArgumentParser(prog='geoip', description='It gives the geolacation of an IP')
+        parser.add_argument('ip', type=str, help='IP or hostname')
+        arguments = parser.parse_args(data)
+        return (arguments.ip)
+    
+    
+    @staticmethod
+    def _get_geolocation(ip:ipaddress.IPv4Address):
+        with urllib.request.urlopen(f"https://ipinfo.io/{ip}/json") as response:
+            return json.load(response)
+        
+    
+    @staticmethod
+    def _process_data(data:object) -> dict:
+        return {
+                "IP":       data.get("ip"),
+                "City":     data.get("city"),
+                "Region":   data.get("region"),
+                "Country":  data.get("country"),
+                "Location": data.get("loc"),
+                "Postal":   data.get("postal"),
+                "Timezone": data.get("timezone")
+            }
+    
+
+    @staticmethod
+    def _display_result(result:dict) -> None:
+        for key, value in result.items():
+            separator = (8 - len(key)) * '.'
+            print(f'{key}{separator}: {value}')
