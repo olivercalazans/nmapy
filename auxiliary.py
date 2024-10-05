@@ -5,6 +5,7 @@ class Command_List:
             f'{Aux.green("geoip")}.....: Get geolocation of an IP',
             f'{Aux.green("pscan")}.....: Port scanner',
             f'{Aux.green("netscan")}...: Network scanner'
+            f'{Aux.green("macdev")}....: Looks up a MAC'
         )
         for i in commands: print(i)
 
