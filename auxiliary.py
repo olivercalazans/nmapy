@@ -1,8 +1,9 @@
 class Command_List:
     def _execute(self, arguments:str) -> None:
         commands = (
-            f'{Aux.green("pscan")}.....: Port scanner',
             f'{Aux.green("ip")}........: Get IP by name',
+            f'{Aux.green("geoip")}.....: Get geolocation of an IP',
+            f'{Aux.green("pscan")}.....: Port scanner',
             f'{Aux.green("netscan")}...: Network scanner'
         )
         for i in commands: print(i)
