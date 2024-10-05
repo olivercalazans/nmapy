@@ -53,7 +53,8 @@ class Main:
             "ip":      Get_IP(),
             "geoip":   IP_geolocation(),
             "pscan":   Port_Scanner(),
-            "netscan": Network_Scanner()
+            "netscan": Network_Scanner(),
+            "macdev":  MAC_To_Device(),
         }
 
 
