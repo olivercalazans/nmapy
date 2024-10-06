@@ -73,7 +73,7 @@ class Port_Scanner: # ==========================================================
     def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> tuple:
         data.insert(0, "PortScanner")
         arguments = parser_manager._parse(data)
-        return (arguments.host, arguments.p, arguments.v)
+        return (arguments.host, arguments.port, arguments.verbose)
 
 
     def _prepare_ports(self, port:int) -> dict:
@@ -152,7 +152,7 @@ class Network_Scanner: # =======================================================
     def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> tuple[str, bool]:
         data.insert(0, "Netscanner")
         arguments = parser_manager._parse(data)
-        return (arguments.ip, arguments.p)
+        return (arguments.ip, arguments.ping)
 
 
     @staticmethod
