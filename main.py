@@ -1,9 +1,10 @@
-from auxiliary import *
+from auxiliary import Aux, Argument_Parser_Manager
 from commands import *
 
 class Main:
     def __init__(self) -> None:
-        self._stop_flag = False
+        self._stop_flag      = False
+        self._parser_manager = Argument_Parser_Manager()
 
 
     @property
@@ -42,7 +43,7 @@ class Main:
 
     def _run_command(self, command:str, arguments:str) -> None:
         strategy = self._get_strategy_dictionary().get(command)
-        try:   strategy._execute(arguments)
+        try:   strategy._execute(self._parser_manager, arguments)
         except Exception as error: print(f'{Aux.red("Error while trying to execute the command")}.\nERROR: {error}')
 
 
