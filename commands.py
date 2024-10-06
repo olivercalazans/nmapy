@@ -3,13 +3,13 @@ from concurrent.futures import ThreadPoolExecutor
 from scapy.all import IP, TCP, ARP, Ether
 from scapy.all import sr, srp
 from scapy.all import conf
-from auxiliary import *
+from auxiliary import Aux, Argument_Parser_Manager
 
 
 
 
 class Command_List: # ========================================================================================
-    def _execute(self, _) -> None:
+    def _execute(self, __, _) -> None:
         COMMANDS = (
             f'{Aux.green("ip")}........: Get IP by name',
             f'{Aux.green("geoip")}.....: Get geolocation of an IP',
@@ -33,16 +33,15 @@ class Network: # ===============================================================
 
 
 class Get_IP: # ==============================================================================================
-    def _execute(self, data:list) -> None:
-        try:   argument = self._get_argument(data)
+    def _execute(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
+        try:   argument = self._get_argument(parser_manager, data)
         except SystemExit:         print(Aux.display_error("Invalid/missing argument"))
         except Exception as error: print(Aux.display_unexpected_error(error))
         else:  self._ip(argument)
 
 
     @staticmethod
-    def _get_argument(argument:list) -> str:
-        parser_manager = Argument_Parser_Manager()
+    def _get_argument(parser_manager:Argument_Parser_Manager, argument:list) -> str:
         argument.insert(0, "Get_Ip")
         arguments = parser_manager._parse(argument)
         return (arguments.host)
@@ -56,9 +55,9 @@ class Get_IP: # ================================================================
 
 
 class Port_Scanner: # ========================================================================================
-    def _execute(self, data:list) -> None:
+    def _execute(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
         try:
-            host, port, verb = self._get_argument_and_flags(data)
+            host, port, verb = self._get_argument_and_flags(parser_manager, data)
             port_dictionary  = self._prepare_ports(port)
             target_ip        = Network._get_ip_by_name(host)
             packages         = self._create_packages(target_ip, port_dictionary, verb)
@@ -71,8 +70,7 @@ class Port_Scanner: # ==========================================================
     
 
     @staticmethod
-    def _get_argument_and_flags(data: list) -> tuple:
-        parser_manager = Argument_Parser_Manager()
+    def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> tuple:
         data.insert(0, "PortScanner")
         arguments = parser_manager._parse(data)
         return (arguments.host, arguments.p, arguments.v)
@@ -139,9 +137,9 @@ class Port_Scanner: # ==========================================================
 
 
 class Network_Scanner: # =====================================================================================
-    def _execute(self, data:list) -> None:
+    def _execute(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
         try:   
-            ip, ping    = self._get_argument_and_flags(data)
+            ip, ping    = self._get_argument_and_flags(parser_manager, data)
             network     = self._get_network(ip)
             self._run_arp_methods(network) if not ping else self._run_ping_methods(network)
         except SystemExit: print(Aux.display_invalid_missing())
@@ -151,8 +149,7 @@ class Network_Scanner: # =======================================================
 
 
     @staticmethod
-    def _get_argument_and_flags(data:list) -> tuple[str, bool]:
-        parser_manager = Argument_Parser_Manager()
+    def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> tuple[str, bool]:
         data.insert(0, "Netscanner")
         arguments = parser_manager._parse(data)
         return (arguments.ip, arguments.p)
@@ -234,9 +231,9 @@ class Network_Scanner: # =======================================================
 
 
 class IP_geolocation: # ======================================================================================
-    def _execute(self, argument) -> None:
+    def _execute(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
         try:
-            host   = self._get_argument_and_flags(argument)
+            host   = self._get_argument_and_flags(parser_manager, data)
             ip     = Network._get_ip_by_name(host)
             data   = self._get_geolocation(ip)
             result = self._process_data(data)
@@ -246,8 +243,7 @@ class IP_geolocation: # ========================================================
 
 
     @staticmethod
-    def _get_argument_and_flags(data:list) -> str:
-        parser_manager = Argument_Parser_Manager()
+    def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> str:
         data.insert(0, "GeoIP")
         arguments = parser_manager._parse(data)
         return (arguments.ip)
@@ -282,9 +278,9 @@ class IP_geolocation: # ========================================================
 
 
 class MAC_To_Device: # =======================================================================================
-    def _execute(self, argument:list) -> None:
+    def _execute(self, parser_manager:Argument_Parser_Manager, argument:list) -> None:
         try: 
-            mac      = self._get_argument_and_flags(argument)
+            mac      = self._get_argument_and_flags(parser_manager, argument)
             response = self._lookup_mac(mac)
             result   = self._process_result(response)
             self._display_result(mac, result)
@@ -294,8 +290,7 @@ class MAC_To_Device: # =========================================================
 
 
     @staticmethod
-    def _get_argument_and_flags(data:list) -> str:
-        parser_manager = Argument_Parser_Manager()
+    def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> str:
         data.insert(0, "MacToDev")
         arguments = parser_manager._parse(data)
         return (arguments.mac)
