@@ -44,12 +44,12 @@ class Argument_Parser_Manager: # ===============================================
     def _add_arguments(self, class_name:str, argument_list:list[dict]) -> None:
         class_parser = self._subparser.add_parser(class_name)
         for arg in argument_list:
-            if arg['arg_type'] == 'bool':
-                class_parser.add_argument(arg["name"], action="store_true", help=arg["help"])
-            elif arg['arg_type'] == 'value':
-                class_parser.add_argument(arg["name"], type=arg['type'], help=arg["help"])
+            if arg[0] == 'bool':
+                class_parser.add_argument(arg[1], arg[2], action="store_true", help=arg[3])
+            elif arg[0] == 'value':
+                class_parser.add_argument(arg[1], arg[2], type=arg[3], help=arg[4])
             else:
-                class_parser.add_argument(arg["name"], type=str, help=arg["help"])
+                class_parser.add_argument(arg[1], type=str, help=arg[2])
 
 
     def _add_all_commands(self) -> None:
@@ -70,36 +70,37 @@ class Argument_Definitions: # ==================================================
     @staticmethod
     def _get_ip_arguments():
         return "Get_Ip", [
-            {"arg_type": "arg", "name": 'host', "help": "Host name"}
+            ("arg", 'host', "Host name")
         ]
 
 
     @staticmethod
     def _portscanner_arguments():
         return "PortScanner", [
-            {"arg_type": "arg",   "name": 'host',              "help": "Host name"},
-            {"arg_type": "value", "name": "-p",   "type": int, "help": "Specify a port to scan"},
-            {"arg_type": "bool",  "name": "-v",                "help": "Enable verbose output"}
+            ("arg", "host", "Host name"),
+            ("value", "-p", "--port", int, "Specify a port to scan"),
+            ("bool",  "-v", "--verbose", "Enable verbose output")
         ]
     
 
     @staticmethod
     def _netscanner_arguments():
         return "Netscanner", [
-            {"arg_type": "arg",  "name": 'ip', "help": "IP"},
-            {"arg_type": "bool", "name": "-p", "help": "Use ping instead of an ARP package"}
+            ("arg", "ip", "IP"),
+            ("bool", "-p", "--ping", "Use ping instead of an ARP package")
         ]
     
 
     @staticmethod
     def _ip_geolocation_arguments():
         return "GeoIP", [
-            {"arg_type": "arg", "name": 'ip', "help": "IP or Hostname"}
+            ("arg", "ip", "IP or Hostname")
         ]
     
 
     @staticmethod
     def _mac_to_device_arguments():
         return "MacToDev", [
-            {"arg_type": "arg", "name": 'mac', "help": "MAC to be looked up"}
+            ("arg", "mac", "MAC to be looked up")
         ]
+    
