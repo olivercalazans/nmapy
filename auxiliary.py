@@ -60,7 +60,8 @@ class Argument_Parser_Manager: # ===============================================
                 self._add_arguments(arguments[0], arguments[1])
 
 
-    def _parse(self, data: list) -> argparse.Namespace:
+    def _parse(self, subparser_id:str, data:list) -> argparse.Namespace:
+        data.insert(0, subparser_id)
         return self._parser.parse_args(data)
     
 
