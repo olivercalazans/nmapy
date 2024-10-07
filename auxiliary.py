@@ -125,7 +125,7 @@ class DataBases: # =============================================================
 
     def _get_mac_list(self) -> list[dict]:
         mac_dictionary = {}
-        with open(self._get_path('oui.txt'), 'r') as file:
+        with open(self._get_path('mac_list.txt'), 'r') as file:
             for line in file:
                 line = line.strip()
                 info = line.split('\t')
