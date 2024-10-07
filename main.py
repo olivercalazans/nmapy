@@ -1,3 +1,8 @@
+# MIT License
+# Copyright (c) 2024 Oliver Ribeiro Calazans Jeronimo
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
+
+
 from auxiliary import Aux, Argument_Parser_Manager, DataBases
 from commands import *
 
