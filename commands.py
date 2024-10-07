@@ -28,7 +28,7 @@ class Network: # ===============================================================
         try:    ip = socket.gethostbyname(hostname)
         except: ip = Aux.display_error(f'Invalid hostname ({hostname})')
         return  ip
-    
+
 
 
 
@@ -42,8 +42,7 @@ class Get_IP: # ================================================================
 
     @staticmethod
     def _get_argument(parser_manager:Argument_Parser_Manager, argument:list) -> str:
-        argument.insert(0, "Get_Ip")
-        arguments = parser_manager._parse(argument)
+        arguments = parser_manager._parse("Get_Ip", argument)
         return (arguments.host)
 
 
@@ -67,12 +66,11 @@ class Port_Scanner: # ==========================================================
         except socket.gaierror:     print(Aux.display_error('An error occurred in resolving the host'))
         except socket.error:        print(Aux.display_error(f'It was not possible to connect to "{host}"'))
         except Exception as error:  print(Aux.display_unexpected_error(error))
-    
+
 
     @staticmethod
     def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> tuple:
-        data.insert(0, "PortScanner")
-        arguments = parser_manager._parse(data)
+        arguments = parser_manager._parse("PortScanner", data)
         return (arguments.host, arguments.port, arguments.verbose)
 
 
@@ -105,8 +103,8 @@ class Port_Scanner: # ==========================================================
     def _create_packages(ip:str, ports:dict, verbose:bool) -> list:
         conf.verb = 0 if not verbose else 1
         return [IP(dst=ip)/TCP(dport=port, flags="S") for port in ports.keys()]
-    
-    
+
+
     @staticmethod
     def _send_packages(packages:list) -> tuple[list, list]:
         responses, unanswered = sr(packages, timeout=5, inter=0.1)
@@ -117,7 +115,7 @@ class Port_Scanner: # ==========================================================
         for sent, received in responses:
             port           = sent[TCP].dport
             response_flags = received[TCP].flags if received else None
-            description    = ports[port]
+            description    = ports[port] if port in self._get_ports() else 'Generic Port'
             self._display_result(response_flags, port, description)
 
 
@@ -150,8 +148,7 @@ class Network_Scanner: # =======================================================
 
     @staticmethod
     def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> tuple[str, bool]:
-        data.insert(0, "Netscanner")
-        arguments = parser_manager._parse(data)
+        arguments = parser_manager._parse("Netscanner", data)
         return (arguments.ip, arguments.ping)
 
 
@@ -191,17 +188,17 @@ class Network_Scanner: # =======================================================
         futures      = self._ping_sweep(network)
         active_hosts = self._process_result(futures)
         self._display_ping_result(active_hosts)
-        
+
 
     def _ping_sweep(self, network:ipaddress.IPv4Network) -> dict:
         with ThreadPoolExecutor(max_workers=100) as executor:
             return {executor.submit(self._send_ping, str(ip)): ip for ip in network.hosts()}
-            
+
 
     def _send_ping(self, ip:str) -> bool:
         command = self._prepare_ping_command(ip)
         return subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
-    
+
 
     @staticmethod
     def _prepare_ping_command(ip:str) -> list:
@@ -244,8 +241,7 @@ class IP_geolocation: # ========================================================
 
     @staticmethod
     def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> str:
-        data.insert(0, "GeoIP")
-        arguments = parser_manager._parse(data)
+        arguments = parser_manager._parse("GeoIP", data)
         return (arguments.ip)
     
     
@@ -253,7 +249,7 @@ class IP_geolocation: # ========================================================
     def _get_geolocation(ip:ipaddress.IPv4Address) -> dict:
         with urllib.request.urlopen(f"https://ipinfo.io/{ip}/json") as response:
             return json.load(response)
-        
+
     
     @staticmethod
     def _process_data(data:object) -> dict:
@@ -266,7 +262,7 @@ class IP_geolocation: # ========================================================
                 "Postal":   data.get("postal"),
                 "Timezone": data.get("timezone")
             }
-    
+
 
     @staticmethod
     def _display_result(result:dict) -> None:
@@ -291,8 +287,7 @@ class MAC_To_Device: # =========================================================
 
     @staticmethod
     def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> str:
-        data.insert(0, "MacToDev")
-        arguments = parser_manager._parse(data)
+        arguments = parser_manager._parse("MacToDev", data)
         return (arguments.mac)
 
 
@@ -304,15 +299,15 @@ class MAC_To_Device: # =========================================================
             return conn.getresponse()
         finally: conn.close() 
 
-    
+
     @staticmethod
     def _process_result(response:http.client.HTTPResponse) -> str:
         if response.status == 200:
             return response.read().decode('utf-8')
         else:
             return "Manufacturer not found"
-        
-        
+
+
     @staticmethod
     def _display_result(mac:str, result:str) -> None:
         print(f'MAC: {mac} - Manufacturer: {result}')
