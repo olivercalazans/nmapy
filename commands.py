@@ -236,7 +236,7 @@ class Network_Scanner: # =======================================================
 
 
 
-class IP_geolocation: # ======================================================================================
+class IP_Geolocation: # ======================================================================================
     def _execute(self, auxiliary_data, data:list) -> None:
         try:
             host   = self._get_argument_and_flags(auxiliary_data.parser_manager, data)
