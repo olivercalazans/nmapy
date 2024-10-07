@@ -1,4 +1,4 @@
-import socket, ipaddress, subprocess, platform, json, urllib.request, http.client
+import socket, ipaddress, subprocess, platform, json, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from scapy.all import IP, TCP, ARP, Ether
 from scapy.all import sr, srp
@@ -285,7 +285,6 @@ class MAC_To_Device: # =========================================================
             result = self._lookup_mac(auxiliary_data.mac_dictionary, mac)
             self._display_result(mac, result)
         except SystemExit: print(Aux.display_invalid_missing())
-        except http.client.HTTPException as error: print(f"{Aux.yellow('HTTP error occurred')}: {error}")
         except Exception as error: print(Aux.display_unexpected_error(error))
 
 
