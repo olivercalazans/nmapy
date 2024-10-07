@@ -21,6 +21,7 @@ class Command_List: # ==========================================================
 
 
 
+
 class Network: # =============================================================================================
     @staticmethod
     def _get_ip_by_name(hostname:str) -> str:
@@ -31,9 +32,10 @@ class Network: # ===============================================================
 
 
 
+
 class Get_IP: # ==============================================================================================
-    def _execute(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
-        try:   argument = self._get_argument(parser_manager, data)
+    def _execute(self, auxiliary_data, data:list) -> None:
+        try:   argument = self._get_argument(auxiliary_data.parser_manager, data)
         except SystemExit:         print(Aux.display_error("Invalid/missing argument"))
         except Exception as error: print(Aux.display_unexpected_error(error))
         else:  self._ip(argument)
@@ -52,10 +54,11 @@ class Get_IP: # ================================================================
 
 
 
+
 class Port_Scanner: # ========================================================================================
-    def _execute(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
+    def _execute(self, auxiliary_data, data:list) -> None:
         try:
-            host, port, verb = self._get_argument_and_flags(parser_manager, data)
+            host, port, verb = self._get_argument_and_flags(auxiliary_data.parser_manager, data)
             port_dictionary  = self._prepare_ports(port)
             target_ip        = Network._get_ip_by_name(host)
             packages         = self._create_packages(target_ip, port_dictionary, verb)
@@ -133,10 +136,11 @@ class Port_Scanner: # ==========================================================
 
 
 
+
 class Network_Scanner: # =====================================================================================
-    def _execute(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
+    def _execute(self, auxiliary_data, data:list) -> None:
         try:   
-            ip, ping    = self._get_argument_and_flags(parser_manager, data)
+            ip, ping    = self._get_argument_and_flags(auxiliary_data.parser_manager, data)
             network     = self._get_network(ip)
             self._run_arp_methods(network) if not ping else self._run_ping_methods(network)
         except SystemExit: print(Aux.display_invalid_missing())
@@ -226,10 +230,11 @@ class Network_Scanner: # =======================================================
 
 
 
+
 class IP_geolocation: # ======================================================================================
-    def _execute(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
+    def _execute(self, auxiliary_data, data:list) -> None:
         try:
-            host   = self._get_argument_and_flags(parser_manager, data)
+            host   = self._get_argument_and_flags(auxiliary_data.parser_manager, data)
             ip     = Network._get_ip_by_name(host)
             data   = self._get_geolocation(ip)
             result = self._process_data(data)
@@ -272,12 +277,12 @@ class IP_geolocation: # ========================================================
 
 
 
+
 class MAC_To_Device: # =======================================================================================
-    def _execute(self, parser_manager:Argument_Parser_Manager, argument:list) -> None:
+    def _execute(self, auxiliary_data, argument:list) -> None:
         try: 
-            mac      = self._get_argument_and_flags(parser_manager, argument)
-            response = self._lookup_mac(mac)
-            result   = self._process_result(response)
+            mac    = self._get_argument_and_flags(auxiliary_data.parser_manager, argument)
+            result = self._lookup_mac(auxiliary_data.mac_dictionary, mac)
             self._display_result(mac, result)
         except SystemExit: print(Aux.display_invalid_missing())
         except http.client.HTTPException as error: print(f"{Aux.yellow('HTTP error occurred')}: {error}")
@@ -291,21 +296,9 @@ class MAC_To_Device: # =========================================================
 
 
     @staticmethod
-    def _lookup_mac(mac:str) -> http.client.HTTPResponse:
-        conn = http.client.HTTPSConnection("api.macvendors.com")
-        try:
-            conn.request("GET", f"/{mac}")
-            return conn.getresponse()
-        finally: conn.close() 
-
-
-    @staticmethod
-    def _process_result(response:http.client.HTTPResponse) -> str:
-        if response.status == 200:
-            return response.read().decode('utf-8')
-        else:
-            return "Manufacturer not found"
-
+    def _lookup_mac(mac_dictionary:list[dict], mac:str) -> None:
+        return mac_dictionary.get(mac, 'Not found')
+        
 
     @staticmethod
     def _display_result(mac:str, result:str) -> None:
