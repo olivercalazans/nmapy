@@ -10,14 +10,13 @@ from auxiliary import Aux, Argument_Parser_Manager
 
 class Command_List: # ========================================================================================
     def _execute(self, __, _) -> None:
-        COMMANDS = (
+        for i in (
             f'{Aux.green("ip")}........: Get IP by name',
             f'{Aux.green("geoip")}.....: Get geolocation of an IP',
             f'{Aux.green("pscan")}.....: Port scanner',
             f'{Aux.green("netscan")}...: Network scanner',
             f'{Aux.green("macdev")}....: Looks up a MAC'
-        )
-        for i in COMMANDS: print(i)
+        ): print(i)
 
 
 
