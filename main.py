@@ -58,7 +58,7 @@ class Main: # ==================================================================
         return {
             "help":    Command_List(),
             "ip":      Get_IP(),
-            "geoip":   IP_geolocation(),
+            "geoip":   IP_Geolocation(),
             "pscan":   Port_Scanner(),
             "netscan": Network_Scanner(),
             "macdev":  MAC_To_Device(),
