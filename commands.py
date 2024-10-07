@@ -1,3 +1,8 @@
+# MIT License
+# Copyright (c) 2024 Oliver Ribeiro Calazans Jeronimo
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
+
+
 import socket, ipaddress, subprocess, platform, json, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from scapy.all import IP, TCP, ARP, Ether
