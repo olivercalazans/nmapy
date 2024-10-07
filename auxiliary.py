@@ -1,4 +1,4 @@
-import argparse
+import argparse, os
 
 
 class Aux: # =================================================================================================
@@ -29,6 +29,7 @@ class Aux: # ===================================================================
     @staticmethod
     def display_invalid_missing() -> str:
         return Aux.yellow(f'Invalid or missing argument/flag. Please, check --help')
+
 
 
 
@@ -64,6 +65,7 @@ class Argument_Parser_Manager: # ===============================================
         data.insert(0, subparser_id)
         return self._parser.parse_args(data)
     
+
 
 
 
@@ -105,3 +107,22 @@ class Argument_Definitions: # ==================================================
             ("arg", "mac", "MAC to be looked up")
         ]
     
+
+
+
+
+class DataBases: # ===========================================================================================
+    @staticmethod
+    def _get_path(file_name:str) -> str:
+        DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(DIRECTORY, 'databases', file_name)
+    
+
+    def _get_mac_list(self) -> list[dict]:
+        mac_dictionary = {}
+        with open(self._get_path('oui.txt'), 'r') as file:
+            for line in file:
+                line = line.strip()
+                info = line.split('\t')
+                mac_dictionary[info[0].strip()]= info[1]
+        return mac_dictionary
