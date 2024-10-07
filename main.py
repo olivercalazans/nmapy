@@ -1,10 +1,11 @@
-from auxiliary import Aux, Argument_Parser_Manager
+from auxiliary import Aux, Argument_Parser_Manager, DataBases
 from commands import *
 
-class Main:
+
+class Main: # ================================================================================================
     def __init__(self) -> None:
         self._stop_flag      = False
-        self._parser_manager = Argument_Parser_Manager()
+        self._auxiliary_data = Auxiliary_Data()
 
 
     @property
@@ -43,7 +44,7 @@ class Main:
 
     def _run_command(self, command:str, arguments:str) -> None:
         strategy = self._get_strategy_dictionary().get(command)
-        try:   strategy._execute(self._parser_manager, arguments)
+        try:   strategy._execute(self._auxiliary_data, arguments)
         except Exception as error: print(f'{Aux.red("Error while trying to execute the command")}.\nERROR: {error}')
 
 
@@ -57,6 +58,27 @@ class Main:
             "netscan": Network_Scanner(),
             "macdev":  MAC_To_Device(),
         }
+
+
+
+
+
+class Auxiliary_Data: # ======================================================================================
+    def __init__(self) -> None:
+        self._parser_manager = Argument_Parser_Manager()
+        self._databases      = DataBases()
+        self._mac_dictionary = self._databases._get_mac_list()
+
+
+    @property
+    def parser_manager(self) -> Argument_Parser_Manager:
+        return self._parser_manager
+
+
+    @property
+    def mac_dictionary(self) -> list[dict]:
+        return self._mac_dictionary
+
 
 
 if __name__ == '__main__':
