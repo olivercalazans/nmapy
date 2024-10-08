@@ -46,7 +46,7 @@ This code behaves like the command-line from Linux or Windows. To run a command,
 ### Data Sources
 This project uses the OUI data provided by the IEEE Standards Association. The data was retrieved from the official IEEE website:
 - IEEE OUI Data: [https://standards-oui.ieee.org/](https://standards-oui.ieee.org/)
-  - Note that the original data has been modified for the purposes of this project.
+> Note that the original data has been modified for the purposes of this project.
 
 
 
