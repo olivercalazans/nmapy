@@ -6,7 +6,7 @@ DataSeeker is a command-line tool that gathers information about devices and net
 
 
 ### How to install:
-- It does not need to be installed. To use it, just run the code. The code has the following dependency:
+- It does not need to be installed. To use it, just run the code. However, there are two dependencies that need to be installed:
   - **Python Installation**: Ensure that you have Python 3.11 or higher installed on your machine. You can download it from [python.org](https://www.python.org/downloads/).
   - **Scapy Installation**: The only external dependency is the Scapy library, which can be installed via pip:
     ```bash
@@ -41,7 +41,16 @@ This code behaves like the command-line from Linux or Windows. To run a command,
     netscan <network_address> <flags>
     ```
 
+
+
+### Data Sources
+This project uses the OUI data provided by the IEEE Standards Association. The data was retrieved from the official IEEE website:
+- IEEE OUI Data: [https://standards-oui.ieee.org/](https://standards-oui.ieee.org/)
+  - Note that the original data has been modified for the purposes of this project.
+
+
+
 ### License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details. 
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 
