@@ -3,7 +3,7 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import socket, ipaddress, subprocess, platform, json, urllib.request
+import socket, ipaddress, subprocess, platform, json, urllib.request, re
 from concurrent.futures import ThreadPoolExecutor
 from scapy.all import IP, TCP, ARP, Ether
 from scapy.all import sr, srp
@@ -287,9 +287,11 @@ class MAC_To_Device: # =========================================================
     def _execute(self, auxiliary_data, argument:list) -> None:
         try: 
             mac    = self._get_argument_and_flags(auxiliary_data.parser_manager, argument)
+            mac    = self._normalize_mac(mac)
             result = self._lookup_mac(auxiliary_data.mac_dictionary, mac)
             self._display_result(mac, result)
         except SystemExit: print(Aux.display_invalid_missing())
+        except ValueError as error: print(Aux.display_error(error))
         except Exception as error: print(Aux.display_unexpected_error(error))
 
 
@@ -297,6 +299,14 @@ class MAC_To_Device: # =========================================================
     def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> str:
         arguments = parser_manager._parse("MacToDev", data)
         return (arguments.mac)
+    
+
+    @staticmethod
+    def _normalize_mac(mac):
+        cleaned_mac = re.sub(r'[^a-fA-F0-9]', '', mac)
+        if len(cleaned_mac) < 6: raise ValueError("Invalid MAC address")
+        normalized_mac = '-'.join([cleaned_mac[i:i+2] for i in range(0, 6, 2)])
+        return normalized_mac.upper()
 
 
     @staticmethod
