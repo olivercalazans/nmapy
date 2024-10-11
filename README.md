@@ -4,7 +4,7 @@ DataSeeker is a command-line tool that gathers information about devices and net
 <br>
 
 ## How to install: 
-It does not need to be installed. To use it, just run the code. However, there are two dependencies that need to be installed:
+It does not need to be installed. To use it, just run the code. **However**, there are two dependencies that need to be installed:
   - **Python Installation**: Ensure that you have Python 3.11 or higher installed on your machine. You can download it from [python.org](https://www.python.org/downloads/).
   - **Scapy Installation**: The only external dependency is the Scapy library, which can be installed via pip:
     ```bash
