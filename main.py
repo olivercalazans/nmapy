@@ -10,7 +10,8 @@ It handles input processing and command execution.
 
 
 from auxiliary import Aux, Argument_Parser_Manager, DataBases
-from commands import *
+from simple_commands import *
+from extended_commands import *
 
 
 class Main: # ================================================================================================
