@@ -5,6 +5,11 @@
 
 """
 THIS FILE CONTAINS THE CLASSES THAT EXECUTE SIMPLE COMMANDS.
+    -> Command list class;
+    -> Network class;
+    -> Get IP class;
+    -> IP geolocation class;
+    -> MAC to device class.
 """
 
 
