@@ -3,10 +3,18 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
+"""
+This file contains classes that are used by many other classes and
+data that are essential for all. They are included to avoid code 
+repetition and to streamline processes.
+"""
+
+
 import argparse, os
 
 
 class Aux: # =================================================================================================
+    """This class provides utility methods to format messages for better visibility."""
     @staticmethod
     def red(message:str) -> str:
         return '\033[31m' + message + '\033[0m'
@@ -40,7 +48,14 @@ class Aux: # ===================================================================
 
 
 class Argument_Parser_Manager: # =============================================================================
+    """This class builds the argument parser for all command classes."""
+
     def __init__(self) -> None:
+        """
+        Initializes the Argument Parser Manager.
+        This constructor sets up the main argument parser and initializes 
+        the subparsers for handling different command classes.
+        """
         self._parser = argparse.ArgumentParser(description="Argument Manager")
         self._subparser = self._parser.add_subparsers(dest="class")
         self._argument_class = Argument_Definitions()
@@ -48,6 +63,7 @@ class Argument_Parser_Manager: # ===============================================
 
 
     def _add_arguments(self, class_name:str, argument_list:list[dict]) -> None:
+        """Adds arguments and flags for a specific command class to the parser."""
         class_parser = self._subparser.add_parser(class_name)
         for arg in argument_list:
             if arg[0] == 'bool':
@@ -59,6 +75,7 @@ class Argument_Parser_Manager: # ===============================================
 
 
     def _add_all_commands(self) -> None:
+        """Reads all argument definitions from the Argument_Definitions class and adds them to the parser."""
         for method_name in dir(self._argument_class):
             method = getattr(self._argument_class, method_name)
             if callable(method) and method_name.endswith('_arguments'):
@@ -67,6 +84,7 @@ class Argument_Parser_Manager: # ===============================================
 
 
     def _parse(self, subparser_id:str, data:list) -> argparse.Namespace:
+        """Parses the given data using the specified subparser ID."""
         data.insert(0, subparser_id)
         return self._parser.parse_args(data)
     
@@ -75,6 +93,8 @@ class Argument_Parser_Manager: # ===============================================
 
 
 class Argument_Definitions: # ================================================================================
+    """This class contains the definitions for all argument parsers used in the application."""
+
     @staticmethod
     def _get_ip_arguments():
         return "Get_Ip", [
@@ -117,15 +137,19 @@ class Argument_Definitions: # ==================================================
 
 
 class DataBases: # ===========================================================================================
+    """This class reads files to store necessary data, avoiding repetitive data loading."""
+
     @staticmethod
     def _get_path(file_name:str) -> str:
+        """Returns the full path to the specified file in the databases directory."""
         DIRECTORY = os.path.dirname(os.path.abspath(__file__))
         return os.path.join(DIRECTORY, 'databases', file_name)
     
 
     def _get_mac_list(self) -> list[dict]:
+        """Reads the MAC address list file and returns a dictionary mapping MAC addresses to their manufacturers."""
         mac_dictionary = {}
-        with open(self._get_path('mac_list.txt'), 'r') as file:
+        with open(self._get_path('mac_list.txt'), 'r', encoding='utf-8') as file:
             for line in file:
                 line = line.strip()
                 info = line.split('\t')
