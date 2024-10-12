@@ -5,6 +5,8 @@
 
 """
 THIS FILE CONTAINS THE CLASSES THAT EXECUTE EXTENDED AND COMPLEX COMMANDS.
+    -> Port scanner class;
+    -> Network scanner class.
 """
 
 
