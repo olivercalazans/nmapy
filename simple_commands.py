@@ -14,6 +14,7 @@ THIS FILE CONTAINS THE CLASSES THAT EXECUTE SIMPLE COMMANDS.
 
 
 import socket, ipaddress, json, urllib.request, re
+from scapy.all import get_if_list, get_if_addr
 from auxiliary import Aux, Argument_Parser_Manager
 
 
@@ -42,6 +43,21 @@ class Network: # ===============================================================
         try:    ip = socket.gethostbyname(hostname)
         except: ip = Aux.display_error(f'Invalid hostname ({hostname})')
         return  ip
+    
+
+    @staticmethod
+    def _get_network_interfaces() -> list:
+        return get_if_list()
+    
+
+    def _get_ip_addresses(self):
+        ip_addresses = list()
+        try:
+            for iface in self._get_network_interfaces():
+                ip = get_if_addr(iface)
+                if ip: ip_addresses.append(ip)
+        except Exception: pass
+        return ip_addresses
 
 
 
