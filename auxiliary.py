@@ -107,7 +107,8 @@ class Argument_Definitions: # ==================================================
         return "PortScanner", [
             ("arg", "host", "Host name"),
             ("value", "-p", "--port", int, "Specify a port to scan"),
-            ("bool",  "-v", "--verbose", "Enable verbose output")
+            ("value", "-D", "--decoy", int, "Uses decoy method"),
+            ("bool", "-v", "--verbose", "Enable verbose output")
         ]
     
 
