@@ -10,7 +10,7 @@ THIS FILE CONTAINS THE CLASSES THAT EXECUTE EXTENDED AND COMPLEX COMMANDS.
 """
 
 
-import socket, subprocess, platform, ipaddress
+import socket, subprocess, platform, ipaddress, random, time
 from concurrent.futures import ThreadPoolExecutor
 from scapy.all import IP, TCP, ARP, Ether
 from scapy.all import sr, srp
@@ -25,7 +25,7 @@ class Port_Scanner: # ==========================================================
     def _execute(self, auxiliary_data, data:list) -> None:
         """ Executes the port scanning process with error handling."""
         try:
-            host, port, verb = self._get_argument_and_flags(auxiliary_data.parser_manager, data)
+            host, port, verb, decoy = self._get_argument_and_flags(auxiliary_data.parser_manager, data)
             port_dictionary  = self._prepare_ports(port)
             target_ip        = Network._get_ip_by_name(host)
             packages         = self._create_packages(target_ip, port_dictionary, verb)
@@ -41,7 +41,7 @@ class Port_Scanner: # ==========================================================
     def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> tuple:
         """Parses and retrieves the hostname, port, and verbosity flag from the arguments."""
         arguments = parser_manager._parse("PortScanner", data)
-        return (arguments.host, arguments.port, arguments.verbose)
+        return (arguments.host, arguments.port, arguments.verbose, arguments.decoy)
 
 
     def _prepare_ports(self, port:int) -> dict:
