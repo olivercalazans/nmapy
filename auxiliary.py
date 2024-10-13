@@ -10,38 +10,47 @@ repetition and to streamline processes.
 """
 
 
-import argparse, os
+import argparse, os, socket, fcntl, struct
+from scapy.all import get_if_list, get_if_addr
 
 
-class Aux: # =================================================================================================
-    """This class provides utility methods to format messages for better visibility."""
+
+class Network: # =============================================================================================
+    """Contains common network-related methods used by multiple classes."""
+
     @staticmethod
-    def red(message:str) -> str:
-        return '\033[31m' + message + '\033[0m'
+    def _get_ip_by_name(hostname:str) -> str:
+        """Get the IP address of a given hostname."""
+        try:    ip = socket.gethostbyname(hostname)
+        except: ip = Aux.display_error(f'Invalid hostname ({hostname})')
+        return  ip
     
+
     @staticmethod
-    def green(message:str) -> str:
-        return '\033[32m' + message + '\033[0m'
+    def _get_network_interfaces() -> list[str]:
+        """Get the device's network interfaces"""
+        return get_if_list()
     
+
     @staticmethod
-    def yellow(message:str) -> str:
-        return '\033[33m' + message + '\033[0m'
+    def _get_ip_address(interface:str) -> str:
+        """Get the IP address of the specified network interface."""
+        try:   return get_if_addr(interface)
+        except Exception: return 'Unknown/error'
     
+
     @staticmethod
-    def orange(message:str) -> str:
-        return '\033[38;5;214m' + message + '\033[0m'
-    
-    @staticmethod
-    def display_unexpected_error(error:str) -> str:
-        return Aux.red('Unexpected error') + f'\nERROR: {error}'
-    
-    @staticmethod
-    def display_error(message:str) -> str:
-        return Aux.yellow('ERROR: ') + message
-    
-    @staticmethod
-    def display_invalid_missing() -> str:
-        return Aux.yellow(f'Invalid or missing argument/flag. Please, check --help')
+    def get_subnet_mask(interface:str) -> str|None:
+        """Get the subnet mask of the specified network interface."""
+        temporary_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            return socket.inet_ntoa(fcntl.ioctl(
+                temporary_socket.fileno(),
+                0x891b,  # SIOCGIFNETMASK
+                struct.pack('256s', interface[:15].encode('utf-8'))
+            )[20:24])
+        except Exception:
+            return None
 
 
 
@@ -156,3 +165,38 @@ class DataBases: # =============================================================
                 info = line.split('\t')
                 mac_dictionary[info[0].strip()]= info[1]
         return mac_dictionary
+    
+
+
+
+
+class Aux: # =================================================================================================
+    """This class provides utility methods to format messages for better visibility."""
+
+    @staticmethod
+    def red(message:str) -> str:
+        return '\033[31m' + message + '\033[0m'
+    
+    @staticmethod
+    def green(message:str) -> str:
+        return '\033[32m' + message + '\033[0m'
+    
+    @staticmethod
+    def yellow(message:str) -> str:
+        return '\033[33m' + message + '\033[0m'
+    
+    @staticmethod
+    def orange(message:str) -> str:
+        return '\033[38;5;214m' + message + '\033[0m'
+    
+    @staticmethod
+    def display_unexpected_error(error:str) -> str:
+        return Aux.red('Unexpected error') + f'\nERROR: {error}'
+    
+    @staticmethod
+    def display_error(message:str) -> str:
+        return Aux.yellow('ERROR: ') + message
+    
+    @staticmethod
+    def display_invalid_missing() -> str:
+        return Aux.yellow(f'Invalid or missing argument/flag. Please, check --help')
