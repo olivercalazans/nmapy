@@ -6,16 +6,15 @@
 """
 THIS FILE CONTAINS THE CLASSES THAT EXECUTE SIMPLE COMMANDS.
     -> Command list class;
-    -> Network class;
     -> Get IP class;
     -> IP geolocation class;
     -> MAC to device class.
 """
 
 
-import socket, ipaddress, json, urllib.request, re
-from scapy.all import get_if_list, get_if_addr
-from auxiliary import Aux, Argument_Parser_Manager
+import ipaddress, json, urllib.request, re
+from auxiliary import Aux, Argument_Parser_Manager, Network
+
 
 
 class Command_List: # ========================================================================================
@@ -29,35 +28,6 @@ class Command_List: # ==========================================================
             f'{Aux.green("netscan")}...: Network scanner',
             f'{Aux.green("macdev")}....: Looks up a MAC'
         ): print(i)
-
-
-
-
-
-class Network: # =============================================================================================
-    """Contains common network-related methods used by multiple classes."""
-
-    @staticmethod
-    def _get_ip_by_name(hostname:str) -> str:
-        """Get the IP address of a given hostname."""
-        try:    ip = socket.gethostbyname(hostname)
-        except: ip = Aux.display_error(f'Invalid hostname ({hostname})')
-        return  ip
-    
-
-    @staticmethod
-    def _get_network_interfaces() -> list:
-        return get_if_list()
-    
-
-    def _get_ip_addresses(self):
-        ip_addresses = list()
-        try:
-            for iface in self._get_network_interfaces():
-                ip = get_if_addr(iface)
-                if ip: ip_addresses.append(ip)
-        except Exception: pass
-        return ip_addresses
 
 
 
