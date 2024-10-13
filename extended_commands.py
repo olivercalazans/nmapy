@@ -15,8 +15,8 @@ from concurrent.futures import ThreadPoolExecutor
 from scapy.all import IP, TCP, ARP, Ether
 from scapy.all import sr, srp
 from scapy.all import conf
-from simple_commands import Network
-from auxiliary import Aux, Argument_Parser_Manager
+from auxiliary import Aux, Argument_Parser_Manager, Network
+
 
 
 class Port_Scanner: # ========================================================================================
