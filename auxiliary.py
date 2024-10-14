@@ -40,15 +40,15 @@ class Network: # ===============================================================
     
 
     @staticmethod
-    def get_subnet_mask(interface:str) -> str|None:
+    def _get_subnet_mask(interface:str) -> str|None:
         """Get the subnet mask of the specified network interface."""
-        temporary_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            return socket.inet_ntoa(fcntl.ioctl(
-                temporary_socket.fileno(),
-                0x891b,  # SIOCGIFNETMASK
-                struct.pack('256s', interface[:15].encode('utf-8'))
-            )[20:24])
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as temporary_socket:
+                return socket.inet_ntoa(fcntl.ioctl(
+                    temporary_socket.fileno(),
+                    0x891b,  # SIOCGIFNETMASK
+                    struct.pack('256s', interface[:15].encode('utf-8'))
+                )[20:24])
         except Exception:
             return None
 
