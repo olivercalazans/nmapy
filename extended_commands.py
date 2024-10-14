@@ -108,6 +108,17 @@ class Port_Scanner: # ==========================================================
         print(f'Status: {status:>17} -> {port:>5} - {description}')
 
 
+    @staticmethod
+    def _generate_random_ip_in_subnet(network_ip:str, subnet_mask:str) -> list:
+        """Takes a network IP and subnet mask, returning a random IP within the valid range."""
+        network_ip_int  = int.from_bytes(map(int, network_ip.split('.')), byteorder='big')
+        subnet_mask_int = int.from_bytes(map(int, subnet_mask.split('.')), byteorder='big')
+        host_bits       = 32 - bin(subnet_mask_int).count('1')
+        network_range   = (network_ip_int & subnet_mask_int, (network_ip_int & subnet_mask_int) | ((1 << host_bits) - 1))
+        random_ip_int   = random.randint(network_range[0], network_range[1])
+        return '.'.join(map(str, random_ip_int.to_bytes(4, byteorder='big')))
+
+
 
 
 
