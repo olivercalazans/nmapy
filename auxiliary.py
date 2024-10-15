@@ -130,7 +130,7 @@ class Argument_Definitions: # ==================================================
     def _netscanner_arguments():
         return "Netscanner", [
             ("arg", "ip", "IP"),
-            ("bool", "-p", "--ping", "Use ping instead of an ARP package")
+            ("bool", "-p", "--ping", "Use ping instead of an ARP packet")
         ]
     
 
