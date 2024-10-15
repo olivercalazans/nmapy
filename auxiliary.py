@@ -10,13 +10,18 @@ repetition and to streamline processes.
 """
 
 
-import argparse, os, socket, fcntl, struct
+import argparse, os, socket, struct, platform
 from scapy.all import get_if_list, get_if_addr
-
+if os.name == 'posix': import fcntl
 
 
 class Network: # =============================================================================================
     """Contains common network-related methods used by multiple classes."""
+
+    @staticmethod
+    def _get_operating_system_name() -> str:
+        return platform.system()
+
 
     @staticmethod
     def _get_ip_by_name(hostname:str) -> str:
@@ -146,7 +151,7 @@ class Argument_Definitions: # ==================================================
 
 
 
-class DataBases: # ===========================================================================================
+class Files: # ===========================================================================================
     """This class reads files to store necessary data, avoiding repetitive data loading."""
 
     @staticmethod
@@ -156,10 +161,11 @@ class DataBases: # =============================================================
         return os.path.join(DIRECTORY, 'databases', file_name)
     
 
-    def _get_mac_list(self) -> list[dict]:
+    @staticmethod
+    def _get_mac_list() -> list[dict]:
         """Reads the MAC address list file and returns a dictionary mapping MAC addresses to their manufacturers."""
         mac_dictionary = {}
-        with open(self._get_path('mac_list.txt'), 'r', encoding='utf-8') as file:
+        with open(Files._get_path('mac_list.txt'), 'r', encoding='utf-8') as file:
             for line in file:
                 line = line.strip()
                 info = line.split('\t')
