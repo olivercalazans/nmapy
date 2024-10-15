@@ -20,7 +20,8 @@ from auxiliary import Aux, Argument_Parser_Manager, Network
 class Command_List: # ========================================================================================
     """Displays a list of all available commands."""
 
-    def _execute(self, __, _) -> None:
+    @staticmethod
+    def _execute(__, _) -> None:
         for i in (
             f'{Aux.green("ip")}........: Get IP by name',
             f'{Aux.green("geoip")}.....: Get geolocation of an IP',
@@ -36,12 +37,13 @@ class Command_List: # ==========================================================
 class Get_IP: # ==============================================================================================
     """Performs a lookup and displays the IP address of a hostname."""
 
-    def _execute(self, auxiliary_data, data:list) -> None:
+    @staticmethod
+    def _execute(database, data:list) -> None:
         """Executes the process to retrieve the IP address based on the provided hostname."""
-        try:   argument = self._get_argument(auxiliary_data.parser_manager, data)
+        try:   argument = Get_IP._get_argument(database.parser_manager, data)
         except SystemExit:         print(Aux.display_error("Invalid/missing argument"))
         except Exception as error: print(Aux.display_unexpected_error(error))
-        else:  self._ip(argument)
+        else:  Get_IP._ip(argument)
 
 
     @staticmethod
@@ -63,14 +65,15 @@ class Get_IP: # ================================================================
 class IP_Geolocation: # ======================================================================================
     """This class performs the geolocation of an IP address."""
 
-    def _execute(self, auxiliary_data, data:list) -> None:
+    @staticmethod
+    def _execute(database, data:list) -> None:
         """Executes the geolocation process and handles errors."""
         try:
-            host   = self._get_argument_and_flags(auxiliary_data.parser_manager, data)
+            host   = IP_Geolocation._get_argument_and_flags(database.parser_manager, data)
             ip     = Network._get_ip_by_name(host)
-            data   = self._get_geolocation(ip)
-            result = self._process_data(data)
-            self._display_result(result)
+            data   = IP_Geolocation._get_geolocation(ip)
+            result = IP_Geolocation._process_data(data)
+            IP_Geolocation._display_result(result)
         except SystemExit: print(Aux.display_invalid_missing())
         except Exception as error: print(Aux.display_unexpected_error(error))
 
@@ -117,13 +120,14 @@ class IP_Geolocation: # ========================================================
 class MAC_To_Device: # =======================================================================================
     """This class displays the manufacturer of devices based on their MAC address."""
 
-    def _execute(self, auxiliary_data, argument:list) -> None:
+    @staticmethod
+    def _execute(database, argument:list) -> None:
         """Executes the manufacturer lookup process and handles errors."""
         try: 
-            mac    = self._get_argument_and_flags(auxiliary_data.parser_manager, argument)
-            mac    = self._normalize_mac(mac)
-            result = self._lookup_mac(auxiliary_data.mac_dictionary, mac)
-            self._display_result(mac, result)
+            mac    = MAC_To_Device._get_argument_and_flags(database.parser_manager, argument)
+            mac    = MAC_To_Device._normalize_mac(mac)
+            result = MAC_To_Device._lookup_mac(database.mac_dictionary, mac)
+            MAC_To_Device._display_result(mac, result)
         except SystemExit: print(Aux.display_invalid_missing())
         except ValueError as error: print(Aux.display_error(error))
         except Exception as error: print(Aux.display_unexpected_error(error))
