@@ -9,9 +9,10 @@ It handles input processing and command execution.
 """
 
 
-from auxiliary import Aux, Argument_Parser_Manager, DataBases
+from auxiliary import Aux, Argument_Parser_Manager, Files
 from simple_commands import *
 from extended_commands import *
+
 
 
 class Main: # ================================================================================================
@@ -29,8 +30,8 @@ class Main: # ==================================================================
 
     def __init__(self) -> None:
         """Initializes the Main class, setting up the stop flag and auxiliary data."""
-        self._stop_flag      = False
-        self._auxiliary_data = Auxiliary_Data()
+        self._stop_flag = False
+        self._database  = DataBase()
 
 
     @property
@@ -75,7 +76,7 @@ class Main: # ==================================================================
     def _run_command(self, command:str, arguments:str) -> None:
         """Executes the command by calling the corresponding class method."""
         strategy = self._get_strategy_dictionary().get(command)
-        try:   strategy._execute(self._auxiliary_data, arguments)
+        try:   strategy._execute(self._database, arguments)
         except Exception as error: print(f'{Aux.red("Error while trying to execute the command")}.\nERROR: {error}')
 
 
@@ -95,15 +96,15 @@ class Main: # ==================================================================
 
 
 
-class Auxiliary_Data: # ======================================================================================
+class DataBase: # ======================================================================================
     """
     Stores auxiliary data and instances needed for other classes.
     This includes managing argument parsers and storing databases like the MAC dictionary.
     
     Attributes:
         _parser_manager (Argument_Parser_Manager): Manages the argument parsers.
-        _databases (DataBases)...................: Holds data needed for the commands.
         _mac_dictionary (list)...................: Stores the MAC address database.
+        _operating_system (str)..................: Stores the operating system name.
     
     Methods:
         parser_manager: Returns the argument parser manager.
@@ -111,9 +112,9 @@ class Auxiliary_Data: # ========================================================
     """
 
     def __init__(self) -> None:
-        self._parser_manager = Argument_Parser_Manager()
-        self._databases      = DataBases()
-        self._mac_dictionary = self._databases._get_mac_list()
+        self._parser_manager   = Argument_Parser_Manager()
+        self._mac_dictionary   = Files()._get_mac_list()
+        self._operating_system = Network._get_operating_system_name()
 
 
     @property
@@ -126,6 +127,12 @@ class Auxiliary_Data: # ========================================================
     def mac_dictionary(self) -> list[dict]:
         """Returns the MAC address dictionary used to find the device manufacturer."""
         return self._mac_dictionary
+    
+
+    @property
+    def os(self) -> str:
+        """Returns the Operating System name."""
+        return self._operating_system
 
 
 
