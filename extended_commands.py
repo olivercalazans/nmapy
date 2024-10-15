@@ -10,7 +10,7 @@ THIS FILE CONTAINS THE CLASSES THAT EXECUTE EXTENDED AND COMPLEX COMMANDS.
 """
 
 
-import socket, subprocess, platform, ipaddress, random, time
+import socket, subprocess, ipaddress, random, time
 from concurrent.futures import ThreadPoolExecutor
 from scapy.all import IP, TCP, ARP, Ether
 from scapy.all import sr, srp
@@ -22,15 +22,16 @@ from auxiliary import Aux, Argument_Parser_Manager, Network
 class Port_Scanner: # ========================================================================================
     """Performs a port scan on a specified host."""
 
-    def _execute(self, auxiliary_data, data:list) -> None:
+    @staticmethod
+    def _execute(database, data:list) -> None:
         """ Executes the port scanning process with error handling."""
         try:
-            host, port, verb, decoy = self._get_argument_and_flags(auxiliary_data.parser_manager, data)
-            port_dictionary  = self._prepare_ports(port)
+            host, port, verb, decoy = Port_Scanner._get_argument_and_flags(database.parser_manager, data)
+            port_dictionary  = Port_Scanner._prepare_ports(port)
             target_ip        = Network._get_ip_by_name(host)
-            packages         = self._create_packages(target_ip, port_dictionary, verb)
-            responses, _     = self._send_packages(packages)
-            self._process_responses(responses, port_dictionary)
+            packages         = Port_Scanner._create_packages(target_ip, port_dictionary, verb)
+            responses, _     = Port_Scanner._send_packages(packages)
+            Port_Scanner._process_responses(responses, port_dictionary)
         except SystemExit:          print(Aux.display_invalid_missing())
         except socket.gaierror:     print(Aux.display_error('An error occurred in resolving the host'))
         except socket.error:        print(Aux.display_error(f'It was not possible to connect to "{host}"'))
@@ -44,9 +45,10 @@ class Port_Scanner: # ==========================================================
         return (arguments.host, arguments.port, arguments.verbose, arguments.decoy)
 
 
-    def _prepare_ports(self, port:int) -> dict:
+    @staticmethod
+    def _prepare_ports(port:int) -> dict:
         """Prepares the port or ports to be scanned."""
-        return self._get_ports() if port == None else {port: None}
+        return Port_Scanner._get_ports() if port == None else {port: None}
 
 
     @staticmethod
@@ -85,13 +87,14 @@ class Port_Scanner: # ==========================================================
         return (responses, unanswered)
 
 
-    def _process_responses(self, responses:list, ports:dict) -> None:
+    @staticmethod
+    def _process_responses(responses:list, ports:dict) -> None:
         """Processes the scan responses and displays the results."""
         for sent, received in responses:
             port           = sent[TCP].dport
             response_flags = received[TCP].flags if received else None
-            description    = ports[port] if port in self._get_ports() else 'Generic Port'
-            self._display_result(response_flags, port, description)
+            description    = ports[port] if port in Port_Scanner._get_ports() else 'Generic Port'
+            Port_Scanner._display_result(response_flags, port, description)
 
 
     @staticmethod
@@ -128,16 +131,25 @@ class Network_Scanner: # =======================================================
     It has two scanning methods: one for ARP scanning and one for ping scanning.
     """
 
-    def _execute(self, auxiliary_data, data:list) -> None:
+    OPERATING_SYSTEM = None
+
+    @staticmethod
+    def _execute(database, data:list) -> None:
         """Executes the network scan and handles possible errors."""
-        try:   
-            ip, ping    = self._get_argument_and_flags(auxiliary_data.parser_manager, data)
-            network     = self._get_network(ip)
-            self._run_arp_methods(network) if not ping else self._run_ping_methods(network)
+        try:
+            Network_Scanner._set_operating_system(database.os)
+            ip, ping = Network_Scanner._get_argument_and_flags(database.parser_manager, data)
+            network  = Network_Scanner._get_network(ip)
+            Network_Scanner._run_arp_methods(network) if not ping else Network_Scanner._run_ping_methods(network)
         except SystemExit: print(Aux.display_invalid_missing())
         except ValueError: print(Aux.yellow("Invalid IP"))
         except KeyboardInterrupt:  print(Aux.orange("Process stopped"))
         except Exception as error: print(Aux.display_unexpected_error(error))
+
+    
+    @classmethod
+    def _set_operating_system(cls, operating_system:str) -> None:
+        cls.OPERATING_SYSTEM = operating_system
 
 
     @staticmethod
@@ -154,11 +166,12 @@ class Network_Scanner: # =======================================================
 
 
     # ARP NETWORK SCANNER METHODS ------------------------------------
-    def _run_arp_methods(self, network:ipaddress.IPv4Network) -> None:
+    @staticmethod
+    def _run_arp_methods(network:ipaddress.IPv4Network) -> None:
         """Performs network scanning using ARP requests."""
-        package  = self._create_arp_package(network)
-        answered = self._perform_arp_sweep(package)
-        self._display_arp_result(answered)
+        package  = Network_Scanner._create_arp_package(network)
+        answered = Network_Scanner._perform_arp_sweep(package)
+        Network_Scanner._display_arp_result(answered)
 
 
     @staticmethod
@@ -184,29 +197,32 @@ class Network_Scanner: # =======================================================
 
 
     # PING NETWORK SCANNER METHODS -----------------------------------
-    def _run_ping_methods(self, network:ipaddress.IPv4Network) ->None:
+    @staticmethod
+    def _run_ping_methods(network:ipaddress.IPv4Network) ->None:
         """Performs network scanning using ICMP ping requests."""
-        futures      = self._ping_sweep(network)
-        active_hosts = self._process_result(futures)
-        self._display_ping_result(active_hosts)
+        futures      = Network_Scanner._ping_sweep(network)
+        active_hosts = Network_Scanner._process_result(futures)
+        Network_Scanner._display_ping_result(active_hosts)
 
 
-    def _ping_sweep(self, network:ipaddress.IPv4Network) -> dict:
+    @staticmethod
+    def _ping_sweep(network:ipaddress.IPv4Network) -> dict:
         """Performs a ping sweep over the network by sending ICMP requests."""
         with ThreadPoolExecutor(max_workers=100) as executor:
-            return {executor.submit(self._send_ping, str(ip)): ip for ip in network.hosts()}
+            return {executor.submit(Network_Scanner._send_ping, str(ip)): ip for ip in network.hosts()}
 
 
-    def _send_ping(self, ip:str) -> bool:
+    @staticmethod
+    def _send_ping(ip:str) -> bool:
         """Sends an ICMP ping to the specified IP address."""
-        command = self._prepare_ping_command(ip)
+        command = Network_Scanner._prepare_ping_command(ip)
         return subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
 
 
     @staticmethod
     def _prepare_ping_command(ip:str) -> list:
         """Prepares the ping command based on the operating system."""
-        flag = '-n' if platform.system() == 'Windows' else '-c'        
+        flag = '-n' if Network_Scanner.OPERATING_SYSTEM == 'Windows' else '-c'        
         return ['ping', flag, '1', str(ip)]
 
 
