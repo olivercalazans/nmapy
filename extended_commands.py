@@ -13,8 +13,8 @@ THIS FILE CONTAINS THE CLASSES THAT EXECUTE EXTENDED AND COMPLEX COMMANDS.
 import socket, subprocess, ipaddress, random, time
 from concurrent.futures import ThreadPoolExecutor
 from scapy.all import IP, TCP, ARP, Ether
-from scapy.all import sr, srp
-from scapy.all import conf
+from scapy.all import sr, srp, send
+from scapy.all import conf, sniff
 from auxiliary import Aux, Argument_Parser_Manager, Network
 
 
@@ -29,8 +29,8 @@ class Port_Scanner: # ==========================================================
             host, port, verb, decoy = Port_Scanner._get_argument_and_flags(database.parser_manager, data)
             port_dictionary  = Port_Scanner._prepare_ports(port)
             target_ip        = Network._get_ip_by_name(host)
-            packages         = Port_Scanner._create_packages(target_ip, port_dictionary, verb)
-            responses, _     = Port_Scanner._send_packages(packages)
+            packets          = Port_Scanner._create_packets(target_ip, port_dictionary, verb)
+            responses, _     = Port_Scanner._send_packets(packets)
             Port_Scanner._process_responses(responses, port_dictionary)
         except SystemExit:          print(Aux.display_invalid_missing())
         except socket.gaierror:     print(Aux.display_error('An error occurred in resolving the host'))
@@ -74,16 +74,16 @@ class Port_Scanner: # ==========================================================
 
 
     @staticmethod
-    def _create_packages(ip:str, ports:dict, verbose:bool) -> list:
+    def _create_packets(ip:str, ports:dict, verbose:bool) -> list:
         """Creates the TCP SYN packets to be sent for scanning the specified ports."""
         conf.verb = 0 if not verbose else 1
         return [IP(dst=ip)/TCP(dport=port, flags="S") for port in ports.keys()]
 
 
     @staticmethod
-    def _send_packages(packages:list) -> tuple[list, list]:
+    def _send_packets(packets:list) -> tuple[list, list]:
         """Sends the SYN packets and receives the responses."""
-        responses, unanswered = sr(packages, timeout=5, inter=0.1)
+        responses, unanswered = sr(packets, timeout=5, inter=0.1)
         return (responses, unanswered)
 
 
@@ -120,6 +120,20 @@ class Port_Scanner: # ==========================================================
         network_range   = (network_ip_int & subnet_mask_int, (network_ip_int & subnet_mask_int) | ((1 << host_bits) - 1))
         random_ip_int   = random.randint(network_range[0], network_range[1])
         return '.'.join(map(str, random_ip_int.to_bytes(4, byteorder='big')))
+
+
+    @staticmethod
+    def _capture_real_response(my_ip, port, timeout=5):
+        def packet_filter(packet):
+            return (packet.haslayer(IP) and 
+                    packet.haslayer(TCP) and 
+                    packet[IP].dst == my_ip and 
+                    packet[TCP].dport == port)
+        response = sniff(filter=f"tcp and dst host {my_ip} and tcp port {port}",
+                         prn=lambda x: x.summary(), 
+                         lfilter=packet_filter, timeout=timeout, count=1)
+        return response if response else None
+
 
 
 
@@ -169,23 +183,23 @@ class Network_Scanner: # =======================================================
     @staticmethod
     def _run_arp_methods(network:ipaddress.IPv4Network) -> None:
         """Performs network scanning using ARP requests."""
-        package  = Network_Scanner._create_arp_package(network)
-        answered = Network_Scanner._perform_arp_sweep(package)
+        packet   = Network_Scanner._create_arp_packet(network)
+        answered = Network_Scanner._perform_arp_sweep(packet)
         Network_Scanner._display_arp_result(answered)
 
 
     @staticmethod
-    def _create_arp_package(network:ipaddress.IPv4Network) -> Ether:
-        """Creates an ARP request package to be sent over the network."""
+    def _create_arp_packet(network:ipaddress.IPv4Network) -> Ether:
+        """Creates an ARP request packet to be sent over the network."""
         arp_request = ARP(pdst=str(network))
         broadcast   = Ether(dst="ff:ff:ff:ff:ff:ff")
         return broadcast / arp_request
 
 
     @staticmethod
-    def _perform_arp_sweep(package:Ether) -> list:
-        """Sends the ARP package and returns a list of answered responses."""
-        answered, _ = srp(package, timeout=2, verbose=False)
+    def _perform_arp_sweep(packet:Ether) -> list:
+        """Sends the ARP packet and returns a list of answered responses."""
+        answered, _ = srp(packet, timeout=2, verbose=False)
         return answered
 
 
@@ -233,8 +247,7 @@ class Network_Scanner: # =======================================================
         for future in future_to_ip:
             ip = future_to_ip[future]
             try:
-                if future.result():
-                    active_hosts.append(str(ip))
+                if future.result(): active_hosts.append(str(ip))
             except Exception as error:
                 print(f"{Aux.orange('Error pinging')} {ip}: {error}")
         return active_hosts
