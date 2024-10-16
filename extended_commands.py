@@ -111,19 +111,18 @@ class Port_Scanner: # ==========================================================
         print(f'Status: {status:>17} -> {port:>5} - {description}')
 
 
+    # DECOY METHODS ---------------------------------------------------------------------------
     @staticmethod
-    def _generate_random_ip_in_subnet(network_ip:str, subnet_mask:str) -> list:
+    def _generate_random_ip_in_subnet(network_ip:str, subnet_mask:str, count = 5) -> list:
         """Takes a network IP and subnet mask, returning a random IP within the valid range."""
-        network_ip_int  = int.from_bytes(map(int, network_ip.split('.')), byteorder='big')
-        subnet_mask_int = int.from_bytes(map(int, subnet_mask.split('.')), byteorder='big')
-        host_bits       = 32 - bin(subnet_mask_int).count('1')
-        network_range   = (network_ip_int & subnet_mask_int, (network_ip_int & subnet_mask_int) | ((1 << host_bits) - 1))
-        random_ip_int   = random.randint(network_range[0], network_range[1])
-        return '.'.join(map(str, random_ip_int.to_bytes(4, byteorder='big')))
+        network    = ipaddress.IPv4Network(f"{network_ip}/{subnet_mask}", strict=False)
+        hosts      = list(network.hosts())
+        random_ips = random.sample(hosts, count)
+        return [str(ip) for ip in random_ips]
 
 
     @staticmethod
-    def _capture_real_response(my_ip, port, timeout=5):
+    def _capture_real_response(my_ip:str, port:int, timeout=5):
         def packet_filter(packet):
             return (packet.haslayer(IP) and 
                     packet.haslayer(TCP) and 
@@ -145,13 +144,10 @@ class Network_Scanner: # =======================================================
     It has two scanning methods: one for ARP scanning and one for ping scanning.
     """
 
-    OPERATING_SYSTEM = None
-
     @staticmethod
     def _execute(database, data:list) -> None:
         """Executes the network scan and handles possible errors."""
         try:
-            Network_Scanner._set_operating_system(database.os)
             ip, ping = Network_Scanner._get_argument_and_flags(database.parser_manager, data)
             network  = Network_Scanner._get_network(ip)
             Network_Scanner._run_arp_methods(network) if not ping else Network_Scanner._run_ping_methods(network)
@@ -159,11 +155,6 @@ class Network_Scanner: # =======================================================
         except ValueError: print(Aux.yellow("Invalid IP"))
         except KeyboardInterrupt:  print(Aux.orange("Process stopped"))
         except Exception as error: print(Aux.display_unexpected_error(error))
-
-    
-    @classmethod
-    def _set_operating_system(cls, operating_system:str) -> None:
-        cls.OPERATING_SYSTEM = operating_system
 
 
     @staticmethod
@@ -229,15 +220,8 @@ class Network_Scanner: # =======================================================
     @staticmethod
     def _send_ping(ip:str) -> bool:
         """Sends an ICMP ping to the specified IP address."""
-        command = Network_Scanner._prepare_ping_command(ip)
+        command = ['ping', '-n', '1', str(ip)]
         return subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
-
-
-    @staticmethod
-    def _prepare_ping_command(ip:str) -> list:
-        """Prepares the ping command based on the operating system."""
-        flag = '-n' if Network_Scanner.OPERATING_SYSTEM == 'Windows' else '-c'        
-        return ['ping', flag, '1', str(ip)]
 
 
     @staticmethod
