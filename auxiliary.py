@@ -51,7 +51,7 @@ class Network: # ===============================================================
 
     
     @staticmethod
-    def _convert_mask_to_cidr(subnet_mask:str):
+    def _convert_mask_to_cidr(subnet_mask:str) -> int:
         return ipaddress.IPv4Network(f'0.0.0.0/{subnet_mask}').prefixlen
 
     
