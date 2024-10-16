@@ -10,26 +10,13 @@ repetition and to streamline processes.
 """
 
 
-import argparse, os, socket, struct, platform
+import argparse, os, socket, struct, fcntl, ipaddress
 from scapy.all import get_if_list, get_if_addr
-if os.name == 'posix': import fcntl
+
 
 
 class Network: # =============================================================================================
     """Contains common network-related methods used by multiple classes."""
-
-    @staticmethod
-    def _get_operating_system_name() -> str:
-        return platform.system()
-
-
-    @staticmethod
-    def _get_ip_by_name(hostname:str) -> str:
-        """Get the IP address of a given hostname."""
-        try:    ip = socket.gethostbyname(hostname)
-        except: ip = Aux.display_error(f'Invalid hostname ({hostname})')
-        return  ip
-    
 
     @staticmethod
     def _get_network_interfaces() -> list[str]:
@@ -56,6 +43,24 @@ class Network: # ===============================================================
                 )[20:24])
         except Exception:
             return None
+        
+
+    @staticmethod
+    def _get_network_information(ip:str, subnet_mask:str) -> ipaddress.IPv4Address:
+        return ipaddress.IPv4Network(f"{ip}/{subnet_mask}", strict=False)
+
+    
+    @staticmethod
+    def _convert_mask_to_cidr(subnet_mask:str):
+        return ipaddress.IPv4Network(f'0.0.0.0/{subnet_mask}').prefixlen
+
+    
+    @staticmethod
+    def _get_ip_by_name(hostname:str) -> str:
+        """Get the IP address of a given hostname."""
+        try:    ip = socket.gethostbyname(hostname)
+        except: ip = Aux.display_error(f'Invalid hostname ({hostname})')
+        return  ip
 
 
 
