@@ -23,13 +23,34 @@ class Command_List: # ==========================================================
     @staticmethod
     def _execute(__, _) -> None:
         for i in (
+            f'{Aux.green("iface")}.....: Display interface information',
             f'{Aux.green("ip")}........: Get IP by name',
             f'{Aux.green("geoip")}.....: Get geolocation of an IP',
-            f'{Aux.green("pscan")}.....: Port scanner',
+            f'{Aux.green("macdev")}....: Looks up a MAC',
             f'{Aux.green("netscan")}...: Network scanner',
-            f'{Aux.green("macdev")}....: Looks up a MAC'
+            f'{Aux.green("pscan")}.....: Port scanner',
         ): print(i)
 
+
+
+
+
+class Interfaces: # ==========================================================================================
+    """Displays network interfaces information."""
+
+    @staticmethod
+    def _execute(__, _):
+        interfaces  = Network._get_network_interfaces()
+        for iface in interfaces:
+            ip_address = Network._get_ip_address(iface)
+            subnet_mask = Network._get_subnet_mask(iface)
+            network_information = Network._get_network_information(ip_address, subnet_mask)
+            print(f'# Interface: {iface}')
+            print(f'    - Address.....: {ip_address}/{Network._convert_mask_to_cidr(subnet_mask)}')
+            print(f'    - Network addr: {network_information.network_address}')
+            print(f'    - Netmask.....: {subnet_mask}')
+            print(f'    - Broadcast...: {network_information.broadcast_address}')
+            print(f'    - Valid hosts.: {network_information.num_addresses - 2}\n')
 
 
 
