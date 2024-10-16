@@ -85,11 +85,12 @@ class Main: # ==================================================================
         """Returns the class dictionary."""
         return {
             "help":    Command_List(),
+            "iface":   Interfaces(),
             "ip":      Get_IP(),
             "geoip":   IP_Geolocation(),
-            "pscan":   Port_Scanner(),
-            "netscan": Network_Scanner(),
             "macdev":  MAC_To_Device(),
+            "netscan": Network_Scanner(),
+            "pscan":   Port_Scanner(),
         }
 
 
@@ -104,7 +105,6 @@ class DataBase: # ==============================================================
     Attributes:
         _parser_manager (Argument_Parser_Manager): Manages the argument parsers.
         _mac_dictionary (list)...................: Stores the MAC address database.
-        _operating_system (str)..................: Stores the operating system name.
     
     Methods:
         parser_manager: Returns the argument parser manager.
@@ -114,7 +114,6 @@ class DataBase: # ==============================================================
     def __init__(self) -> None:
         self._parser_manager   = Argument_Parser_Manager()
         self._mac_dictionary   = Files()._get_mac_list()
-        self._operating_system = Network._get_operating_system_name()
 
 
     @property
@@ -127,12 +126,7 @@ class DataBase: # ==============================================================
     def mac_dictionary(self) -> list[dict]:
         """Returns the MAC address dictionary used to find the device manufacturer."""
         return self._mac_dictionary
-    
 
-    @property
-    def os(self) -> str:
-        """Returns the Operating System name."""
-        return self._operating_system
 
 
 
