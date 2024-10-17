@@ -1,19 +1,21 @@
 # DataSeeker
-DataSeeker is a command-line tool that gathers information about devices and networks. Completely made in Python with only one library dependency, it provides an easy-to-use interface for network exploration.
+DataSeeker is a command-line tool that gathers information about devices and networks. Completely made in Python with only one library dependency, it provides an easy-to-use interface for network exploration. This code is designed to run on Linux systems. However, it can also be used on Windows through WSL (I've done some basic testing, but not a full evaluation).
 
 <br>
 
 ## How to install: 
 It does not need to be installed. To use it, just run the code. **However**, there are two dependencies that need to be installed:
-  - **Python Installation**: Ensure that you have Python 3.11 or higher installed on your machine. You can download it from [python.org](https://www.python.org/downloads/).
-  - **Scapy Installation**: The only external dependency is the Scapy library, which can be installed via pip:
-    ```bash
-    pip install scapy
-    ```
   - **Download files**: You can download the files directly from this repository or use git clone:
     ```bash
     git clone https://github.com/olivercalazans/DataSeeker.git
     ```
+  - **1st - Python Installation**: Ensure that you have Python 3.11 or higher installed on your machine. You can download it from [python.org](https://www.python.org/downloads/).
+    
+  - **2nd - Scapy Installation**: The only external dependency is the Scapy library, which can be installed via pip:
+    ```bash
+    pip install scapy
+    ```
+  
 <br>
 
 ## Functionalities:
