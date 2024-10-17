@@ -11,7 +11,8 @@ It handles input processing and command execution.
 
 from auxiliary import Aux, Argument_Parser_Manager, Files
 from simple_commands import *
-from extended_commands import *
+from network_scanner import *
+from port_scanner import *
 
 
 
