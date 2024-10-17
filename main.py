@@ -44,6 +44,7 @@ class Main: # ==================================================================
     def _handle_user(self) -> None:
         """This method is used to do error handling of the loop"""
         try:   self._loop()
+        except KeyboardInterrupt:  print(Aux.orange('Key board interruption'))
         except Exception as error: print(Aux.display_unexpected_error(error))
 
 
