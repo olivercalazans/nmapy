@@ -3,11 +3,12 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import subprocess, ipaddress
+import ipaddress, logging
 from concurrent.futures import ThreadPoolExecutor
-from scapy.all import ARP, Ether
-from scapy.all import srp
-from auxiliary import Aux, Argument_Parser_Manager
+from scapy.all import  Ether, ARP, ICMP, IP
+from scapy.all import srp, sr1
+from scapy.all import conf
+from auxiliary import Aux, Argument_Parser_Manager, Network
 
 
 
@@ -18,11 +19,13 @@ class Network_Scanner:
     """
 
     @staticmethod
-    def _execute(database, data:list) -> None:
+    def _execute(database, arguments:list) -> None:
         """Executes the network scan and handles possible errors."""
         try:
-            ip, ping = Network_Scanner._get_argument_and_flags(database.parser_manager, data)
-            network  = Network_Scanner._get_network(ip)
+            ping       = None if not arguments else Network_Scanner._get_argument_and_flags(database.parser_manager, arguments)
+            interface  = Network._select_interface()
+            conf.iface = interface
+            network    = Network._get_network_information(Network._get_ip_address(interface), Network._get_subnet_mask(interface))
             Network_Scanner._run_arp_methods(network) if not ping else Network_Scanner._run_ping_methods(network)
         except SystemExit: print(Aux.display_invalid_missing())
         except ValueError: print(Aux.yellow("Invalid IP"))
@@ -31,16 +34,10 @@ class Network_Scanner:
 
 
     @staticmethod
-    def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> tuple[str, bool]:
+    def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, arguments:list) -> tuple[str, bool]:
         """Parses arguments and flags from the command line."""
-        arguments = parser_manager._parse("Netscanner", data)
-        return (arguments.ip, arguments.ping)
-
-
-    @staticmethod
-    def _get_network(ip:str) -> ipaddress.IPv4Network:
-        """Returns the network to be scanned, based on the provided IP address."""
-        return ipaddress.ip_network(f'{ip}/24', strict=False)
+        arguments = parser_manager._parse("Netscanner", arguments)
+        return arguments.ping
 
 
     # ARP NETWORK SCANNER METHODS ------------------------------------
@@ -86,17 +83,21 @@ class Network_Scanner:
     @staticmethod
     def _ping_sweep(network:ipaddress.IPv4Network) -> dict:
         """Performs a ping sweep over the network by sending ICMP requests."""
+        logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+        conf.verb = 0
         with ThreadPoolExecutor(max_workers=100) as executor:
             return {executor.submit(Network_Scanner._send_ping, str(ip)): ip for ip in network.hosts()}
 
 
     @staticmethod
-    def _send_ping(ip:str) -> bool:
-        """Sends an ICMP ping to the specified IP address."""
-        command = ['ping', '-n', '1', str(ip)]
-        return subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
+    def _send_ping(ip: str) -> bool:
+        """Sends an ICMP ping to the specified IP address using Scapy."""
+        packet = IP(dst=ip)/ICMP()
+        reply  = sr1(packet, timeout=2, verbose=0)
+        return reply is not None
 
 
+    # PROCESS RESULT -----------------------------------------------------------------------------------------
     @staticmethod
     def _process_result(future_to_ip:dict) -> list:
         """Processes the ping responses, collecting active hosts."""
