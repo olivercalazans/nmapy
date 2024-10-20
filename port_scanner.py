@@ -3,10 +3,10 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import socket, ipaddress, random, time
+import socket, ipaddress, random, time, threading
 from scapy.all import IP, TCP
-from scapy.all import sr, send
-from scapy.all import conf, sniff, packet
+from scapy.all import sr, sr1, send
+from scapy.all import conf, packet
 from auxiliary import Aux, Argument_Parser_Manager, Network
 
 
@@ -69,9 +69,11 @@ class Port_Scanner:
 
 
     @staticmethod
-    def _get_the_result_according_to_the_transmission_method(decoy:int, interface:str, target_ip:str, ports:dict) -> list:
-        if decoy: response = Port_Scanner._perform_decoy_method(decoy, interface, target_ip)
-        else:     response = Port_Scanner._perform_normal_scan(target_ip, ports)
+    def _get_the_result_according_to_the_transmission_method(decoy:int, target_ip:str, ports:dict, interface:str) -> list:
+        if isinstance(decoy, int):
+            response = Port_Scanner._perform_decoy_method(decoy, interface, target_ip)
+        else:
+            response = Port_Scanner._perform_normal_scan(target_ip, ports)
         return response
     
 
@@ -97,16 +99,16 @@ class Port_Scanner:
 
 
     # DECOY METHODS ------------------------------------------------------------------------------------------
+    received_packet = None
+    
     @staticmethod
     def _perform_decoy_method(port:int, interface:str, target_ip:str) -> list:
         my_ip    = Network._get_ip_address(interface)
         netmask  = Network._get_subnet_mask(interface)
-        packets  = Port_Scanner._prepare_decoy_and_real_ips(my_ip, netmask)
-        response = Port_Scanner._capture_real_response(my_ip, port, target_ip)
-        print('ok')
-        Port_Scanner._send_decoy_and_real_packets(packets, target_ip, port)
-        return response
-
+        ips      = Port_Scanner._prepare_decoy_and_real_ips(my_ip, netmask)
+        Port_Scanner._send_decoy_and_real_packets(ips, my_ip, target_ip, port)
+        return Port_Scanner.received_packet
+        
     
     @staticmethod
     def _prepare_decoy_and_real_ips(my_ip:str, subnet_mask:str) -> None:
@@ -124,34 +126,42 @@ class Port_Scanner:
     
 
     @staticmethod
-    def _add_real_packet(decoy_packets:list, my_ip:str) -> list:
-        packet_number = len(decoy_packets)
+    def _add_real_packet(decoy_ips:list, my_ip:str) -> list:
+        packet_number = len(decoy_ips)
         index         = random.randint(packet_number // 2, packet_number - 1)
-        return decoy_packets.append(index, my_ip)
-
-
-    @staticmethod
-    def _capture_real_response(my_ip:str, port:int, target_ip:str, timeout=5) -> list[packet.Packet]|None:
-        def packet_filter(packet):
-            return (packet.haslayer(IP) and 
-                    packet.haslayer(TCP) and 
-                    packet[IP].dst == my_ip and 
-                    packet[IP].src == target_ip and
-                    packet[TCP].dport == port)
-        response = sniff(filter=f"tcp and dst host {my_ip} and tcp port {port}",
-                         prn=lambda x: x.summary(), 
-                         lfilter=packet_filter, timeout=timeout, count=1)
-        return response if response else None
-    
+        decoy_ips.insert(index, my_ip)
+        return decoy_ips
+        
 
     @staticmethod
-    def _send_decoy_and_real_packets(ip_list:list, target_ip:str, port:int) -> None:
+    def _send_decoy_and_real_packets(ip_list:list, my_ip:str ,target_ip:str, port:int) -> None:
         for ip in ip_list:
-            packet = IP(src=ip, dst=target_ip) / TCP(dport=port, flags="S")
-            send(packet, verbose=0)
+            if ip == my_ip:
+                thread = threading.Thread(target=Port_Scanner._send_real_packet, args=(my_ip, target_ip, port))
+                thread.start()
+            else:
+                Port_Scanner._send_decoy_packet(ip, target_ip, port)
             delay = random.uniform(1, 3)
-            print(f'{ip}: delay {delay}')
+            print(f'{Aux.green("Packet sent")}: {ip}, Delay: {delay}')
             time.sleep(delay)
+
+
+    @staticmethod
+    def _create_packet(source_ip:str, target_ip:str, port:int) -> packet:
+        return IP(src=source_ip, dst=target_ip) / TCP(dport=port, flags="S")
+
+
+    @staticmethod
+    def _send_real_packet(my_ip:str, target_ip:str, port:int) -> None:
+        real_packet = Port_Scanner._create_packet(my_ip, target_ip, port)
+        response    = sr1(real_packet, verbose=0)
+        Port_Scanner.received_packet = [(real_packet, response)]
+
+
+    @staticmethod
+    def _send_decoy_packet(decoy_ip:str, target_ip:str, port:int) -> None:
+        decoy_packet = Port_Scanner._create_packet(decoy_ip, target_ip, port)
+        send(decoy_packet, verbose=0)
 
 
     # PROCESS DATA -------------------------------------------------------------------------------------------
