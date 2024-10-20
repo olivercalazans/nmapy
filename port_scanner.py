@@ -70,6 +70,7 @@ class Port_Scanner:
 
     @staticmethod
     def _get_the_result_according_to_the_transmission_method(decoy:int, target_ip:str, ports:dict, interface:str) -> list:
+        """Retrieves the scan results based on the specified transmission method."""
         if isinstance(decoy, int):
             response = Port_Scanner._perform_decoy_method(decoy, interface, target_ip)
         else:
@@ -80,6 +81,7 @@ class Port_Scanner:
     # NORMAL SCAN --------------------------------------------------------------------------------------------
     @staticmethod
     def _perform_normal_scan(target_ip:str, port_dictionary:dict) -> list:
+        """Performs a normal scan on the specified target IP address."""
         packets      = Port_Scanner._create_packets(target_ip, port_dictionary)
         responses, _ = Port_Scanner._send_packets(packets)
         return responses
@@ -103,6 +105,7 @@ class Port_Scanner:
     
     @staticmethod
     def _perform_decoy_method(port:int, interface:str, target_ip:str) -> list:
+        """Performs a decoy scan method using the specified port and network interface."""
         my_ip    = Network._get_ip_address(interface)
         netmask  = Network._get_subnet_mask(interface)
         ips      = Port_Scanner._prepare_decoy_and_real_ips(my_ip, netmask)
@@ -112,6 +115,7 @@ class Port_Scanner:
     
     @staticmethod
     def _prepare_decoy_and_real_ips(my_ip:str, subnet_mask:str) -> None:
+        """ Prepares a list of decoy IPs and adds the real IP to the list."""
         decoy_packets = Port_Scanner._generate_random_ip_in_subnet(my_ip, subnet_mask)
         return Port_Scanner._add_real_packet(decoy_packets, my_ip)
 
@@ -127,6 +131,7 @@ class Port_Scanner:
 
     @staticmethod
     def _add_real_packet(decoy_ips:list, my_ip:str) -> list:
+        """Inserts the real IP address into a list of decoy IPs at a random position."""
         packet_number = len(decoy_ips)
         index         = random.randint(packet_number // 2, packet_number - 1)
         decoy_ips.insert(index, my_ip)
@@ -135,6 +140,7 @@ class Port_Scanner:
 
     @staticmethod
     def _send_decoy_and_real_packets(ip_list:list, my_ip:str ,target_ip:str, port:int) -> None:
+        """Sends both decoy and real packets to the specified target IP address."""
         for ip in ip_list:
             if ip == my_ip:
                 thread = threading.Thread(target=Port_Scanner._send_real_packet, args=(my_ip, target_ip, port))
@@ -148,11 +154,13 @@ class Port_Scanner:
 
     @staticmethod
     def _create_packet(source_ip:str, target_ip:str, port:int) -> packet:
+        """Creates a TCP SYN packet for a specified source and target IP address."""
         return IP(src=source_ip, dst=target_ip) / TCP(dport=port, flags="S")
 
 
     @staticmethod
     def _send_real_packet(my_ip:str, target_ip:str, port:int) -> None:
+        """Sends a real TCP SYN packet to the specified target IP address."""
         real_packet = Port_Scanner._create_packet(my_ip, target_ip, port)
         response    = sr1(real_packet, verbose=0)
         Port_Scanner.received_packet = [(real_packet, response)]
@@ -160,6 +168,7 @@ class Port_Scanner:
 
     @staticmethod
     def _send_decoy_packet(decoy_ip:str, target_ip:str, port:int) -> None:
+        """Sends a decoy TCP SYN packet to the specified target IP address."""
         decoy_packet = Port_Scanner._create_packet(decoy_ip, target_ip, port)
         send(decoy_packet, verbose=0)
 
