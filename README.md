@@ -20,6 +20,11 @@ It does not need to be installed. To use it, just run the code. **However**, the
 
 ## Functionalities:
 This code behaves like the command-line from Linux or Windows. To run a command, use the command name, an argument, and the flags (optional). Run the "help" command to see all the commands available.
+
+- **Interfaces**: Returns all available network interfaces along with their information, such as IP address, subnet mask, etc;
+    ```bash
+    iface
+    ```
 - **IP**: Return an IP of a Hostname;
     ```bash
     ip <ip_address>
@@ -32,14 +37,15 @@ This code behaves like the command-line from Linux or Windows. To run a command,
     ```bash
     macdev <mac_address>
     ```
+- **Network Scanner**: Maps the network to discover connected devices and information about them;
+    ```bash
+    netscan <flags>
+    ```
 - **Port Scanner**: Scans a device to discover which ports it has and their status;
     ```bash
     pscan <ip_address> <flags>
     ```
-- **Network Scanner**: Maps the network to discover connected devices and information about them;
-    ```bash
-    netscan <network_address> <flags>
-    ```
+    
 <br>
 
 ## Data Sources
