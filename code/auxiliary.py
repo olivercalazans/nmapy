@@ -28,20 +28,8 @@ class Network: # ===============================================================
     def _select_interface() -> str:
         interfaces = Network._get_network_interfaces()
         Network._display_interfaces(interfaces)
-        index = Network._validate_input(interfaces)
-        return interfaces[index]
-
-    
-    @staticmethod
-    def _validate_input(interfaces:list) -> int:
-        while True:
-            try: 
-                iface_number = int(input('Choose an interface: '))
-                if iface_number >= 0 and iface_number < len(interfaces):
-                    return iface_number
-                else:
-                    print(Aux.yellow(f'Choose a number between 0 and {len(interfaces) - 1}'))
-            except: print(Aux.yellow('Choose a number'))
+        interface  = Network._validate_input(interfaces)
+        return interface
     
 
     @staticmethod
@@ -57,7 +45,7 @@ class Network: # ===============================================================
         """Get the IP address of the specified network interface."""
         try:   return get_if_addr(interface)
         except Exception: return 'Unknown/error'
-    
+
 
     @staticmethod
     def _get_subnet_mask(interface:str) -> str|None:
@@ -71,7 +59,7 @@ class Network: # ===============================================================
                 )[20:24])
         except Exception:
             return None
-        
+
 
     @staticmethod
     def _get_network_information(ip:str, subnet_mask:str) -> ipaddress.IPv4Address:
@@ -84,13 +72,42 @@ class Network: # ===============================================================
 
     
     @staticmethod
-    def _get_ip_by_name(hostname:str) -> str:
+    def _get_ip_by_name(hostname:str, select:bool) -> str:
         """Get the IP address of a given hostname."""
-        try:    ip = socket.gethostbyname(hostname)
+        try:    
+            result = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
+            ip     = [ip[-1][0] for ip in result]
+            if len(ip) == 1:
+                ip = ip[0]
+            elif select:
+                ip = Network._select_an_ip(ip)
         except: ip = Aux.display_error(f'Invalid hostname ({hostname})')
         return  ip
+    
+
+    @staticmethod
+    def _select_an_ip(ip_list:str) -> str:
+        Network._display_ips(ip_list)
+        ip_list = Network._validate_input(ip_list)
+        return ip_list
 
 
+    @staticmethod
+    def _display_ips(ip_list:list[str]) -> None:
+        for index, ip in enumerate(ip_list):
+            print(f'{index} - {ip}')
+    
+
+    @staticmethod
+    def _validate_input(options:list[str]) -> str:
+        while True:
+            try: 
+                number = int(input('Choose one: '))
+                if number >= 0 and number < len(options):
+                    return options[number]
+                else:
+                    print(Aux.yellow(f'Choose a number between 0 and {len(options) - 1}'))
+            except: print(Aux.yellow('Choose a number'))
 
 
 
