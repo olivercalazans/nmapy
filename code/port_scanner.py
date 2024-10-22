@@ -20,7 +20,7 @@ class Port_Scanner:
         try:
             host, port, verb, decoy = Port_Scanner._get_argument_and_flags(database.parser_manager, data)
             ports      = Port_Scanner._prepare_ports(port)
-            target_ip  = Network._get_ip_by_name(host)
+            target_ip  = Network._get_ip_by_name(host, True)
             interface  = Network._select_interface()
             conf.iface = interface
             conf.verb  = 0 if not verb else 1
@@ -196,4 +196,3 @@ class Port_Scanner:
             case None: status = Aux.red('Filtered')
             case _:    status = Aux.red('Unknown Status')
         print(f'Status: {status:>17} -> {port:>5} - {description}')
-
