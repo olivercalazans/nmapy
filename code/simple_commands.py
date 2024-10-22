@@ -78,7 +78,8 @@ class Get_IP: # ================================================================
     @staticmethod
     def _ip(host_name:str) -> None:
         """Displays the IP address of the provided hostname."""
-        print(Network._get_ip_by_name(host_name))
+        ips = Network._get_ip_by_name(host_name, False)
+        Network._display_ips(ips)
 
 
 
@@ -92,7 +93,7 @@ class IP_Geolocation: # ========================================================
         """Executes the geolocation process and handles errors."""
         try:
             host   = IP_Geolocation._get_argument_and_flags(database.parser_manager, data)
-            ip     = Network._get_ip_by_name(host)
+            ip     = Network._get_ip_by_name(host, True)
             data   = IP_Geolocation._get_geolocation(ip)
             result = IP_Geolocation._process_data(data)
             IP_Geolocation._display_result(result)
