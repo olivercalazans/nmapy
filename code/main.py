@@ -115,6 +115,7 @@ class DataBase: # ==============================================================
     """
 
     def __init__(self) -> None:
+        """Initializes the DataBase class by setting up the argument parser manager and loading necessary data."""
         self._parser_manager   = Argument_Parser_Manager()
         self._mac_dictionary   = Files()._get_mac_list()
 
