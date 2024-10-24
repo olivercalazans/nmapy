@@ -53,16 +53,16 @@ class Main: # ==================================================================
         """Loop that receives input data from user."""
         while not self._stop_flag:
             print('\nWrite "help" to see the commands ' + '=' * 40)
-            input_data         = input('>> ').split(' ')
+            input_data         = input('>> ').split()
             command, arguments = self._separates_command_from_arguments(input_data)
             self._check_if_the_method_exists(command, arguments)
 
 
     @staticmethod
-    def _separates_command_from_arguments(input_data) -> tuple[str, list|None]:
+    def _separates_command_from_arguments(input_data:list) -> tuple[str, list|None]:
         """Separates the input data into command and arguments."""
-        command   = input_data[0]
-        arguments = input_data[1:] or None
+        command    = input_data[0]
+        arguments  = input_data[1:] or None
         return (command, arguments)
 
 
@@ -104,11 +104,11 @@ class DataBase: # ==============================================================
     """
     Stores auxiliary data and instances needed for other classes.
     This includes managing argument parsers and storing databases like the MAC dictionary.
-    
+
     Attributes:
         _parser_manager (Argument_Parser_Manager): Manages the argument parsers.
         _mac_dictionary (list)...................: Stores the MAC address database.
-    
+
     Methods:
         parser_manager: Returns the argument parser manager.
         mac_dictionary: Returns the MAC address database.
