@@ -39,7 +39,7 @@ class Network: # ===============================================================
         for index, iface in enumerate(interfaces):
             ip_addr = Network._get_ip_address(iface)
             netmask = Network._get_subnet_mask(iface)
-            print(f'{index} - {ip_addr}/{Network._convert_mask_to_cidr(netmask)}')
+            print(f'{index} - {iface} => {ip_addr}/{Network._convert_mask_to_cidr(netmask)}')
 
 
     @staticmethod
@@ -189,10 +189,11 @@ class Argument_Definitions: # ==================================================
     @staticmethod
     def _portscanner_arguments():
         return "PortScanner", [
-            ("arg", "host", "Host name"),
+            ("arg",   "host", "Host name"),
+            ("bool",  "-v", "--verbose", "Enable verbose output"),
+            ("bool",  "-r", "--random-ports", "Use the ports in random order"),
             ("value", "-p", "--port", int, "Specify a port to scan"),
-            ("value", "-D", "--decoy", int, "Uses decoy method"),
-            ("bool", "-v", "--verbose", "Enable verbose output")
+            ("value", "-D", "--decoy", int, "Uses decoy method")
         ]
 
 
