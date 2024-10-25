@@ -14,17 +14,19 @@ from auxiliary import Aux, Argument_Parser_Manager, Network
 class Port_Scanner:
     """Performs a port scan on a specified host."""
 
+    FLAGS = None
+
     @staticmethod
     def _execute(database, data:list) -> None:
         """ Executes the port scanning process with error handling."""
         try:
-            host, port, verb, decoy = Port_Scanner._get_argument_and_flags(database.parser_manager, data)
-            ports      = Port_Scanner._prepare_ports(port)
+            host       = Port_Scanner._get_argument_and_flags(database.parser_manager, data)
+            ports      = Port_Scanner._prepare_ports(Port_Scanner.FLAGS['port'])
             target_ip  = Network._get_ip_by_name(host, True)
             interface  = Network._select_interface()
             conf.iface = interface
-            conf.verb  = 0 if not verb else 1
-            responses  = Port_Scanner._get_the_result_according_to_the_transmission_method(decoy, target_ip, ports, interface)
+            conf.verb  = 0 if not Port_Scanner.FLAGS['verbose'] else 1
+            responses  = Port_Scanner._get_result_by_transmission_method(target_ip, ports, interface)
             Port_Scanner._process_responses(responses, ports)
         except SystemExit:         print(Aux.display_invalid_missing())
         except KeyboardInterrupt:  print(Aux.orange("Process stopped"))
@@ -34,16 +36,27 @@ class Port_Scanner:
 
 
     @staticmethod
-    def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> tuple:
+    def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, data:list) -> str:
         """Parses and retrieves the hostname, port, and verbosity flag from the arguments."""
         arguments = parser_manager._parse("PortScanner", data)
-        return (arguments.host, arguments.port, arguments.verbose, arguments.decoy)
+        Port_Scanner.FLAGS = {
+            'port':    arguments.port,
+            'verbose': arguments.verbose,
+            'random':  arguments.random_ports,
+            'decoy':   arguments.decoy
+        }
+        return (arguments.host)
 
 
     @staticmethod
-    def _prepare_ports(port:int) -> dict:
+    def _prepare_ports(port: int) -> dict:
         """Prepares the port or ports to be scanned."""
-        return Port_Scanner._get_ports() if port == None else {port: None}
+        ports = Port_Scanner._get_ports()
+        if port:
+            return {port: None}
+        elif Port_Scanner.FLAGS.get('random'):
+            return dict(random.sample(list(ports.items()), len(ports)))
+        return ports
 
 
     @staticmethod
@@ -69,8 +82,9 @@ class Port_Scanner:
 
 
     @staticmethod
-    def _get_the_result_according_to_the_transmission_method(decoy:int, target_ip:str, ports:dict, interface:str) -> list:
+    def _get_result_by_transmission_method(target_ip:str, ports:dict, interface:str) -> list:
         """Retrieves the scan results based on the specified transmission method."""
+        decoy = Port_Scanner.FLAGS['decoy']
         if isinstance(decoy, int):
             response = Port_Scanner._perform_decoy_method(decoy, interface, target_ip)
         else:
