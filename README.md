@@ -18,36 +18,6 @@ It does not need to be installed. To use it, just run the code. **However**, the
   
 <br>
 
-## Functionalities:
-This code behaves like the command-line from Linux or Windows. To run a command, use the command name, an argument, and the flags (optional). Run the "help" command to see all the commands available.
-
-- **Interfaces**: Returns all available network interfaces along with their information, such as IP address, subnet mask, etc;
-    ```bash
-    iface
-    ```
-- **IP**: Return an IP of a Hostname;
-    ```bash
-    ip <ip_address>
-    ```
-- **IP Geolocation**: Return the geolocation information of an IP;
-    ```bash
-    geoip <ip_address> <flags>
-    ```
-- **MAC to Device**: Return the manufacturer of a device by its MAC address;
-    ```bash
-    macdev <mac_address>
-    ```
-- **Network Scanner**: Maps the network to discover connected devices and information about them;
-    ```bash
-    netscan <flags>
-    ```
-- **Port Scanner**: Scans a device to discover which ports it has and their status;
-    ```bash
-    pscan <ip_address> <flags>
-    ```
-    
-<br>
-
 ## Data Sources
 This project uses the OUI data provided by the IEEE Standards Association. The data was retrieved from the official IEEE website:
 - IEEE OUI Data: [https://standards-oui.ieee.org/](https://standards-oui.ieee.org/)
