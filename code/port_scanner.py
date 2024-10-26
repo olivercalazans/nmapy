@@ -3,7 +3,7 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import socket, ipaddress, random, time, threading
+import socket, ipaddress, random, time, threading, sys
 from scapy.all import IP, TCP
 from scapy.all import sr, sr1, send
 from scapy.all import conf, packet
@@ -121,12 +121,14 @@ class Port_Scanner:
     
 
     @staticmethod
-    def _async_sending(packets, delay):
+    def _async_sending(packets:list, delay:bool|str) -> list:
         threads = []
-        for packet in packets:
+        for i ,packet in enumerate(packets):
             thread = threading.Thread(target=Port_Scanner._async_send_packet, args=(packet,))
             threads.append(thread)
             thread.start()
+            sys.stdout.write(f'\rPacket sent: {i}/{len(packets)}')
+            sys.stdout.flush()
             time.sleep(delay)
         for thread in threads:
             thread.join()
@@ -229,6 +231,7 @@ class Port_Scanner:
     @staticmethod
     def _process_responses(responses:list, ports:dict) -> None:
         """Processes the scan responses and displays the results."""
+        print('\n')
         all_ports = Port_Scanner._get_ports()
         for sent, received in responses:
             port           = sent[TCP].dport
