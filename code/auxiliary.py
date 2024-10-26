@@ -137,12 +137,11 @@ class Argument_Parser_Manager: # ===============================================
         """Adds arguments and flags for a specific command class to the parser."""
         class_parser = self._subparser.add_parser(class_name)
         for arg in argument_list:
-            if arg[0] == 'bool':
-                class_parser.add_argument(arg[1], arg[2], action="store_true", help=arg[3])
-            elif arg[0] == 'value':
-                class_parser.add_argument(arg[1], arg[2], type=arg[3], help=arg[4])
-            else:
-                class_parser.add_argument(arg[1], type=str, help=arg[2])
+            match arg[0]:
+                case 'bool':  class_parser.add_argument(arg[1], arg[2], action="store_true", help=arg[3])
+                case 'value': class_parser.add_argument(arg[1], arg[2], type=arg[3], help=arg[4])
+                case 'opt':   class_parser.add_argument(arg[1], arg[2], nargs='?', const=True, default=False, help=arg[3])
+                case _:       class_parser.add_argument(arg[1], type=str, help=arg[2])
 
 
     def _add_all_commands(self) -> None:
@@ -191,9 +190,10 @@ class Argument_Definitions: # ==================================================
         return "PortScanner", [
             ("arg",   "host", "Host name"),
             ("bool",  "-v", "--verbose", "Enable verbose output"),
-            ("bool",  "-r", "--random-ports", "Use the ports in random order"),
+            ("bool",  "-r", "--random-order", "Use the ports in random order"),
             ("value", "-p", "--port", str, "Specify a port to scan"),
-            ("value", "-D", "--decoy", int, "Uses decoy method")
+            ("value", "-D", "--decoy", int, "Uses decoy method"),
+            ("opt",  "-R", "--random-delay", "Add a delay between packet transmissions."),
         ]
 
 
