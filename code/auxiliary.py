@@ -192,7 +192,7 @@ class Argument_Definitions: # ==================================================
             ("arg",   "host", "Host name"),
             ("bool",  "-v", "--verbose", "Enable verbose output"),
             ("bool",  "-r", "--random-ports", "Use the ports in random order"),
-            ("value", "-p", "--port", int, "Specify a port to scan"),
+            ("value", "-p", "--port", str, "Specify a port to scan"),
             ("value", "-D", "--decoy", int, "Uses decoy method")
         ]
 
