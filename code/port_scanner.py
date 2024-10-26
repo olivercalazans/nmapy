@@ -151,7 +151,7 @@ class Port_Scanner:
     def _async_send_packet(packet:packet) -> list:
         response = sr1(packet, timeout=5, verbose=False)
         with Port_Scanner.LOCK:
-            Port_Scanner.ASYNC_RESPONSES.append(response)
+            Port_Scanner.ASYNC_RESPONSES.append((packet, response))
 
 
     # DECOY METHODS ------------------------------------------------------------------------------------------    
@@ -163,8 +163,8 @@ class Port_Scanner:
         ips      = Port_Scanner._prepare_decoy_and_real_ips(my_ip, netmask)
         Port_Scanner._send_decoy_and_real_packets(ips, my_ip, target_ip, port)
         return Port_Scanner.REAL_PACKET_RESPONSE
-        
-    
+
+
     @staticmethod
     def _prepare_decoy_and_real_ips(my_ip:str, subnet_mask:str) -> None:
         """ Prepares a list of decoy IPs and adds the real IP to the list."""
