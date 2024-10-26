@@ -21,7 +21,7 @@ class Port_Scanner:
         """ Executes the port scanning process with error handling."""
         try:
             host       = Port_Scanner._get_argument_and_flags(database.parser_manager, data)
-            ports      = Port_Scanner._prepare_ports(Port_Scanner.FLAGS['port'])
+            ports      = Port_Scanner._prepare_ports(Port_Scanner.FLAGS['ports'])
             target_ip  = Network._get_ip_by_name(host, True)
             interface  = Network._select_interface()
             conf.iface = interface
@@ -40,7 +40,7 @@ class Port_Scanner:
         """Parses and retrieves the hostname, port, and verbosity flag from the arguments."""
         arguments = parser_manager._parse("PortScanner", data)
         Port_Scanner.FLAGS = {
-            'port':    arguments.port,
+            'ports':   arguments.port,
             'verbose': arguments.verbose,
             'random':  arguments.random_ports,
             'decoy':   arguments.decoy
@@ -49,11 +49,11 @@ class Port_Scanner:
 
 
     @staticmethod
-    def _prepare_ports(port: int) -> dict:
+    def _prepare_ports(input_ports:str) -> dict:
         """Prepares the port or ports to be scanned."""
         ports = Port_Scanner._get_ports()
-        if port:
-            return {port: None}
+        if input_ports:
+            return {int(valor): None for valor in input_ports.split(",")}
         elif Port_Scanner.FLAGS.get('random'):
             return dict(random.sample(list(ports.items()), len(ports)))
         return ports
@@ -191,10 +191,11 @@ class Port_Scanner:
     @staticmethod
     def _process_responses(responses:list, ports:dict) -> None:
         """Processes the scan responses and displays the results."""
+        all_ports = Port_Scanner._get_ports()
         for sent, received in responses:
             port           = sent[TCP].dport
             response_flags = received[TCP].flags if received else None
-            description    = ports[port] if port in Port_Scanner._get_ports() else 'Generic Port'
+            description    = all_ports[port] if port in all_ports else 'Generic Port'
             Port_Scanner._display_result(response_flags, port, description)
 
 
