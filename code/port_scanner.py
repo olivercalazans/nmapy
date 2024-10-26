@@ -14,7 +14,10 @@ from auxiliary import Aux, Argument_Parser_Manager, Network
 class Port_Scanner:
     """Performs a port scan on a specified host."""
 
-    FLAGS = None
+    FLAGS                = None
+    ASYNC_RESPONSES      = list()
+    LOCK                 = threading.Lock()
+    REAL_PACKET_RESPONSE = None
 
     @staticmethod
     def _execute(database, data:list) -> None:
@@ -42,8 +45,9 @@ class Port_Scanner:
         Port_Scanner.FLAGS = {
             'ports':   arguments.port,
             'verbose': arguments.verbose,
-            'random':  arguments.random_ports,
-            'decoy':   arguments.decoy
+            'random':  arguments.random_order,
+            'delay':   arguments.random_delay,
+            'decoy':   arguments.decoy,
         }
         return (arguments.host)
 
@@ -96,15 +100,17 @@ class Port_Scanner:
     @staticmethod
     def _perform_normal_scan(target_ip:str, port_dictionary:dict) -> list:
         """Performs a normal scan on the specified target IP address."""
-        packets      = Port_Scanner._create_packets(target_ip, port_dictionary)
-        responses, _ = Port_Scanner._send_packets(packets)
+        delay   = Port_Scanner.FLAGS['delay']
+        packets = Port_Scanner._create_packets(target_ip, port_dictionary)
+        if delay: responses    = Port_Scanner._async_sending(packets, delay)
+        else:     responses, _ = Port_Scanner._send_packets(packets)
         return responses
 
 
     @staticmethod
-    def _create_packets(ip:str, ports:dict) -> list:
+    def _create_packets(target_ip:str, ports:dict) -> list:
         """Creates the TCP SYN packets to be sent for scanning the specified ports."""
-        return [IP(dst=ip)/TCP(dport=port, flags="S") for port in ports.keys()]
+        return [IP(dst=target_ip)/TCP(dport=port, flags="S") for port in ports.keys()]
 
 
     @staticmethod
@@ -112,11 +118,43 @@ class Port_Scanner:
         """Sends the SYN packets and receives the responses."""
         responses, unanswered = sr(packets, timeout=5, inter=0.1)
         return (responses, unanswered)
-
-
-    # DECOY METHODS ------------------------------------------------------------------------------------------
-    received_packet = None
     
+
+    @staticmethod
+    def _async_sending(packets, delay):
+        threads = []
+        for packet in packets:
+            thread = threading.Thread(target=Port_Scanner._async_send_packet, args=(packet,))
+            threads.append(thread)
+            thread.start()
+            time.sleep(delay)
+        for thread in threads:
+            thread.join()
+        return Port_Scanner.ASYNC_RESPONSES
+
+
+    @staticmethod
+    def _get_delay_time_list(delay:bool|str, packet_number:int) -> list:
+        match delay:
+            case True: return [random.uniform(1, 3) for _ in range(packet_number)]
+            case _:    return Port_Scanner._create_delay_time_list(delay, packet_number)
+
+
+    @staticmethod
+    def _create_delay_time_list(delay:str, packet_number:int) -> list:
+        values = [int(value) for value in delay.split('-')]
+        if len(values) > 1: return [random.uniform(values[0], values[1]) for _ in range(packet_number)]
+        return [values[0] for _ in range(packet_number)]
+
+
+    @staticmethod
+    def _async_send_packet(packet:packet) -> list:
+        response = sr1(packet, timeout=5, verbose=False)
+        with Port_Scanner.LOCK:
+            Port_Scanner.ASYNC_RESPONSES.append(response)
+
+
+    # DECOY METHODS ------------------------------------------------------------------------------------------    
     @staticmethod
     def _perform_decoy_method(port:int, interface:str, target_ip:str) -> list:
         """Performs a decoy scan method using the specified port and network interface."""
@@ -124,7 +162,7 @@ class Port_Scanner:
         netmask  = Network._get_subnet_mask(interface)
         ips      = Port_Scanner._prepare_decoy_and_real_ips(my_ip, netmask)
         Port_Scanner._send_decoy_and_real_packets(ips, my_ip, target_ip, port)
-        return Port_Scanner.received_packet
+        return Port_Scanner.REAL_PACKET_RESPONSE
         
     
     @staticmethod
@@ -177,7 +215,7 @@ class Port_Scanner:
         """Sends a real TCP SYN packet to the specified target IP address."""
         real_packet = Port_Scanner._create_packet(my_ip, target_ip, port)
         response    = sr1(real_packet, verbose=0)
-        Port_Scanner.received_packet = [(real_packet, response)]
+        Port_Scanner.REAL_PACKET_RESPONSE = [(real_packet, response)]
 
 
     @staticmethod
