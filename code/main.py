@@ -53,7 +53,7 @@ class Main: # ==================================================================
         """Loop that receives input data from user."""
         while not self._stop_flag:
             print('\nWrite "help" to see the commands ' + '=' * 40)
-            input_data         = input('>> ').split()
+            input_data         = input(f'[{Aux.orange("DataSeeker")}]# ').split()
             command, arguments = self._separates_command_from_arguments(input_data)
             self._check_if_the_method_exists(command, arguments)
 
