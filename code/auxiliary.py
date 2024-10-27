@@ -192,7 +192,7 @@ class Argument_Definitions: # ==================================================
             ("bool",  "-v", "--verbose", "Enable verbose output"),
             ("bool",  "-r", "--random-order", "Use the ports in random order"),
             ("value", "-p", "--port", str, "Specify a port to scan"),
-            ("value", "-D", "--decoy", int, "Uses decoy method"),
+            ("value", "-D", "--decoy", str, "Uses decoy method"),
             ("opt",  "-R", "--random-delay", "Add a delay between packet transmissions."),
         ]
 
