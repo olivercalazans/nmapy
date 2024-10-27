@@ -18,6 +18,7 @@ class Port_Scanner:
     ASYNC_RESPONSES      = list()
     LOCK                 = threading.Lock()
     REAL_PACKET_RESPONSE = None
+    MY_IP_ADDRESS        = None
 
     @staticmethod
     def _execute(database, data:list) -> None:
@@ -30,7 +31,7 @@ class Port_Scanner:
             conf.iface = interface
             conf.verb  = 0 if not Port_Scanner.FLAGS['verbose'] else 1
             responses  = Port_Scanner._get_result_by_transmission_method(target_ip, ports, interface)
-            Port_Scanner._process_responses(responses, ports)
+            Port_Scanner._process_responses(responses)
         except SystemExit:         print(Aux.display_invalid_missing())
         except KeyboardInterrupt:  print(Aux.orange("Process stopped"))
         except socket.gaierror:    print(Aux.display_error('An error occurred in resolving the host'))
@@ -89,12 +90,12 @@ class Port_Scanner:
     def _get_result_by_transmission_method(target_ip:str, ports:dict, interface:str) -> list:
         """Retrieves the scan results based on the specified transmission method."""
         decoy = Port_Scanner.FLAGS['decoy']
-        if isinstance(decoy, int):
+        if isinstance(decoy, str):
             response = Port_Scanner._perform_decoy_method(decoy, interface, target_ip)
         else:
             response = Port_Scanner._perform_normal_scan(target_ip, ports)
         return response
-    
+
 
     # NORMAL SCAN --------------------------------------------------------------------------------------------
     @staticmethod
@@ -108,9 +109,9 @@ class Port_Scanner:
 
 
     @staticmethod
-    def _create_packets(target_ip:str, ports:dict) -> list:
+    def _create_packets(target_ip:str, ports:dict, source_ip=None) -> list:
         """Creates the TCP SYN packets to be sent for scanning the specified ports."""
-        return [IP(dst=target_ip)/TCP(dport=port, flags="S") for port in ports.keys()]
+        return [IP(src=source_ip, dst=target_ip) / TCP(dport=port, flags="S") for port in ports.keys()]
 
 
     @staticmethod
@@ -118,7 +119,7 @@ class Port_Scanner:
         """Sends the SYN packets and receives the responses."""
         responses, unanswered = sr(packets, timeout=5, inter=0.1)
         return (responses, unanswered)
-    
+
 
     @staticmethod
     def _async_sending(packets:list, delay:bool|str) -> list:
@@ -166,10 +167,11 @@ class Port_Scanner:
     @staticmethod
     def _perform_decoy_method(port:int, interface:str, target_ip:str) -> list:
         """Performs a decoy scan method using the specified port and network interface."""
-        my_ip    = Network._get_ip_address(interface)
-        netmask  = Network._get_subnet_mask(interface)
-        ips      = Port_Scanner._prepare_decoy_and_real_ips(my_ip, netmask)
-        Port_Scanner._send_decoy_and_real_packets(ips, my_ip, target_ip, port)
+        ports   = Port_Scanner._prepare_ports(port)
+        my_ip   = Network._get_ip_address(interface)
+        netmask = Network._get_subnet_mask(interface)
+        ips     = Port_Scanner._prepare_decoy_and_real_ips(my_ip, netmask)
+        Port_Scanner._send_decoy_and_real_packets(ips, my_ip, target_ip, ports)
         return Port_Scanner.REAL_PACKET_RESPONSE
 
 
@@ -187,7 +189,7 @@ class Port_Scanner:
         hosts      = list(network.hosts())
         random_ips = random.sample(hosts, count)
         return [str(ip) for ip in random_ips]
-    
+
 
     @staticmethod
     def _add_real_packet(decoy_ips:list, my_ip:str) -> list:
@@ -196,32 +198,26 @@ class Port_Scanner:
         index         = random.randint(packet_number // 2, packet_number - 1)
         decoy_ips.insert(index, my_ip)
         return decoy_ips
-        
+
 
     @staticmethod
-    def _send_decoy_and_real_packets(ip_list:list, my_ip:str ,target_ip:str, port:int) -> None:
+    def _send_decoy_and_real_packets(ip_list:list, my_ip:str ,target_ip:str, ports:int) -> None:
         """Sends both decoy and real packets to the specified target IP address."""
         for ip in ip_list:
             if ip == my_ip:
-                thread = threading.Thread(target=Port_Scanner._send_real_packet, args=(my_ip, target_ip, port))
+                thread = threading.Thread(target=Port_Scanner._send_real_packet, args=(my_ip, target_ip, ports))
                 thread.start()
             else:
-                Port_Scanner._send_decoy_packet(ip, target_ip, port)
+                Port_Scanner._send_decoy_packet(ip, target_ip, ports)
             delay = random.uniform(1, 3)
             print(f'{Aux.green("Packet sent")}: {ip}, Delay: {delay}')
             time.sleep(delay)
 
 
     @staticmethod
-    def _create_packet(source_ip:str, target_ip:str, port:int) -> packet:
-        """Creates a TCP SYN packet for a specified source and target IP address."""
-        return IP(src=source_ip, dst=target_ip) / TCP(dport=port, flags="S")
-
-
-    @staticmethod
     def _send_real_packet(my_ip:str, target_ip:str, port:int) -> None:
         """Sends a real TCP SYN packet to the specified target IP address."""
-        real_packet = Port_Scanner._create_packet(my_ip, target_ip, port)
+        real_packet = Port_Scanner._create_packets(target_ip, port, my_ip)[0]
         response    = sr1(real_packet, verbose=0)
         Port_Scanner.REAL_PACKET_RESPONSE = [(real_packet, response)]
 
@@ -229,13 +225,13 @@ class Port_Scanner:
     @staticmethod
     def _send_decoy_packet(decoy_ip:str, target_ip:str, port:int) -> None:
         """Sends a decoy TCP SYN packet to the specified target IP address."""
-        decoy_packet = Port_Scanner._create_packet(decoy_ip, target_ip, port)
+        decoy_packet = Port_Scanner._create_packets(target_ip, port, decoy_ip)[0]
         send(decoy_packet, verbose=0)
 
 
     # PROCESS DATA -------------------------------------------------------------------------------------------
     @staticmethod
-    def _process_responses(responses:list, ports:dict) -> None:
+    def _process_responses(responses:list) -> None:
         """Processes the scan responses and displays the results."""
         all_ports = Port_Scanner._get_ports()
         for sent, received in responses:
