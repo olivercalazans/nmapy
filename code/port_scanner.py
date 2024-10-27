@@ -122,6 +122,7 @@ class Port_Scanner:
 
     @staticmethod
     def _async_sending(packets:list, delay:bool|str) -> list:
+        """Sends TCP packets in concurrent threads with an optional delay between each send."""
         threads = []
         for i ,packet in enumerate(packets):
             thread = threading.Thread(target=Port_Scanner._async_send_packet, args=(packet,))
@@ -137,6 +138,7 @@ class Port_Scanner:
 
     @staticmethod
     def _get_delay_time_list(delay:bool|str, packet_number:int) -> list:
+        """Generates a list of delay times for sending packets."""
         match delay:
             case True: return [random.uniform(1, 3) for _ in range(packet_number)]
             case _:    return Port_Scanner._create_delay_time_list(delay, packet_number)
@@ -144,6 +146,7 @@ class Port_Scanner:
 
     @staticmethod
     def _create_delay_time_list(delay:str, packet_number:int) -> list:
+        """Creates a list of delay times based on a specified range or fixed value"""
         values = [int(value) for value in delay.split('-')]
         if len(values) > 1: return [random.uniform(values[0], values[1]) for _ in range(packet_number)]
         return [values[0] for _ in range(packet_number)]
@@ -151,6 +154,7 @@ class Port_Scanner:
 
     @staticmethod
     def _async_send_packet(packet:packet) -> list:
+        """Sends a single TCP SYN packet asynchronously and stores the response."""
         response = sr1(packet, timeout=5, verbose=False)
         with Port_Scanner.LOCK:
             Port_Scanner.ASYNC_RESPONSES.append((packet, response))
