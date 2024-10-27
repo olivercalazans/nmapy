@@ -123,16 +123,18 @@ class Port_Scanner:
     @staticmethod
     def _async_sending(packets:list, delay:bool|str) -> list:
         """Sends TCP packets in concurrent threads with an optional delay between each send."""
+        delay   = Port_Scanner._get_delay_time_list(delay, len(packets))
         threads = []
-        for i ,packet in enumerate(packets):
+        for index ,packet in enumerate(packets):
             thread = threading.Thread(target=Port_Scanner._async_send_packet, args=(packet,))
             threads.append(thread)
             thread.start()
-            sys.stdout.write(f'\rPacket sent: {i}/{len(packets)}')
+            sys.stdout.write(f'\rPacket sent: {index}/{len(packets)} - {delay[index]:.2}s')
             sys.stdout.flush()
-            time.sleep(delay)
+            time.sleep(delay[index])
         for thread in threads:
             thread.join()
+        print('\n')
         return Port_Scanner.ASYNC_RESPONSES
 
 
@@ -147,13 +149,13 @@ class Port_Scanner:
     @staticmethod
     def _create_delay_time_list(delay:str, packet_number:int) -> list:
         """Creates a list of delay times based on a specified range or fixed value"""
-        values = [int(value) for value in delay.split('-')]
+        values = [float(value) for value in delay.split('-')]
         if len(values) > 1: return [random.uniform(values[0], values[1]) for _ in range(packet_number)]
         return [values[0] for _ in range(packet_number)]
 
 
     @staticmethod
-    def _async_send_packet(packet:packet) -> list:
+    def _async_send_packet(packet:packet) -> None:
         """Sends a single TCP SYN packet asynchronously and stores the response."""
         response = sr1(packet, timeout=5, verbose=False)
         with Port_Scanner.LOCK:
@@ -235,7 +237,6 @@ class Port_Scanner:
     @staticmethod
     def _process_responses(responses:list, ports:dict) -> None:
         """Processes the scan responses and displays the results."""
-        print('\n')
         all_ports = Port_Scanner._get_ports()
         for sent, received in responses:
             port           = sent[TCP].dport
