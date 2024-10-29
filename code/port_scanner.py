@@ -210,7 +210,7 @@ class Port_Scanner:
             else:
                 Port_Scanner._send_decoy_packet(ip, target_ip, ports)
             delay = random.uniform(1, 3)
-            print(f'{Aux.green("Packet sent")}: {ip}, Delay: {delay}')
+            print(f'{Aux.green("Packet sent")}: {ip}, Delay: {delay:.2}')
             time.sleep(delay)
 
 
