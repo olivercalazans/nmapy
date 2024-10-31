@@ -13,7 +13,7 @@ from auxiliary import Aux, Argument_Parser_Manager
 
 
 
-class Network_Scanner:
+class Network_Mapper:
     """
     This class performs a network scan using ARP or ICMP (ping).
     It has two scanning methods: one for ARP scanning and one for ping scanning.
@@ -23,11 +23,11 @@ class Network_Scanner:
     def _execute(database, arguments:list) -> None:
         """Executes the network scan and handles possible errors."""
         try:
-            ping       = None if not arguments else Network_Scanner._get_argument_and_flags(database.parser_manager, arguments)
+            ping       = None if not arguments else Network_Mapper._get_argument_and_flags(database.parser_manager, arguments)
             interface  = Network._select_interface()
             conf.iface = interface
             network    = Network._get_network_information(Network._get_ip_address(interface), Network._get_subnet_mask(interface))
-            Network_Scanner._run_arp_methods(network) if not ping else Network_Scanner._run_ping_methods(network)
+            Network_Mapper._run_arp_methods(network) if not ping else Network_Mapper._run_ping_methods(network)
         except SystemExit: print(Aux.display_invalid_missing())
         except ValueError: print(Aux.yellow("Invalid IP"))
         except KeyboardInterrupt:  print(Aux.orange("Process stopped"))
@@ -45,9 +45,9 @@ class Network_Scanner:
     @staticmethod
     def _run_arp_methods(network:ipaddress.IPv4Network) -> None:
         """Performs network scanning using ARP requests."""
-        packet   = Network_Scanner._create_arp_packet(network)
-        answered = Network_Scanner._perform_arp_sweep(packet)
-        Network_Scanner._display_arp_result(answered)
+        packet   = Network_Mapper._create_arp_packet(network)
+        answered = Network_Mapper._perform_arp_sweep(packet)
+        Network_Mapper._display_arp_result(answered)
 
 
     @staticmethod
@@ -76,9 +76,9 @@ class Network_Scanner:
     @staticmethod
     def _run_ping_methods(network:ipaddress.IPv4Network) ->None:
         """Performs network scanning using ICMP ping requests."""
-        futures      = Network_Scanner._ping_sweep(network)
-        active_hosts = Network_Scanner._process_result(futures)
-        Network_Scanner._display_ping_result(active_hosts)
+        futures      = Network_Mapper._ping_sweep(network)
+        active_hosts = Network_Mapper._process_result(futures)
+        Network_Mapper._display_ping_result(active_hosts)
 
 
     @staticmethod
@@ -87,7 +87,7 @@ class Network_Scanner:
         logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
         conf.verb = 0
         with ThreadPoolExecutor(max_workers=100) as executor:
-            return {executor.submit(Network_Scanner._send_ping, str(ip)): ip for ip in network.hosts()}
+            return {executor.submit(Network_Mapper._send_ping, str(ip)): ip for ip in network.hosts()}
 
 
     @staticmethod
