@@ -8,7 +8,8 @@ from concurrent.futures import ThreadPoolExecutor
 from scapy.all import  Ether, ARP, ICMP, IP
 from scapy.all import srp, sr1
 from scapy.all import conf
-from auxiliary import Aux, Argument_Parser_Manager, Network
+from network import *
+from auxiliary import Aux, Argument_Parser_Manager
 
 
 
