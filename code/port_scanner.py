@@ -7,8 +7,8 @@ import socket, ipaddress, random, time, threading, sys
 from scapy.all import IP, TCP
 from scapy.all import sr, sr1, send
 from scapy.all import conf, packet
-from auxiliary import Aux, Argument_Parser_Manager, Network
-
+from network import *
+from auxiliary import Aux, Argument_Parser_Manager
 
 
 class Port_Scanner:
