@@ -12,7 +12,7 @@ It handles input processing and command execution.
 import sys
 from auxiliary import Aux, Argument_Parser_Manager, Files
 from simple_commands import *
-from network_scanner import *
+from network_mapper import *
 from port_scanner import *
 
 
@@ -92,7 +92,7 @@ class Main: # ==================================================================
             "ip":      Get_IP(),
             "geoip":   IP_Geolocation(),
             "macdev":  MAC_To_Device(),
-            "netscan": Network_Scanner(),
+            "netscan": Network_Mapper(),
             "pscan":   Port_Scanner(),
         }
 
