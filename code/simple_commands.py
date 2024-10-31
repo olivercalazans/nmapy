@@ -14,7 +14,8 @@ THIS FILE CONTAINS THE CLASSES THAT EXECUTE SIMPLE COMMANDS.
 
 
 import ipaddress, json, urllib.request, re
-from auxiliary import Aux, Argument_Parser_Manager, Network
+from network import *
+from auxiliary import Aux, Argument_Parser_Manager
 
 
 
