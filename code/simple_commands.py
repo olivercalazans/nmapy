@@ -46,6 +46,7 @@ class Interfaces: # ============================================================
         for iface in interfaces:
             ip_address = Network._get_ip_address(iface)
             subnet_mask = Network._get_subnet_mask(iface)
+            if not iface or not ip_address or not subnet_mask: continue
             network_information = Network._get_network_information(ip_address, subnet_mask)
             print(f'# Interface: {iface}')
             print(f'    - Address.....: {ip_address}/{Network._convert_mask_to_cidr(subnet_mask)}')
