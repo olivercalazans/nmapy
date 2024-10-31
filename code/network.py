@@ -3,9 +3,11 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
+
 import socket, struct, fcntl, ipaddress
 from scapy.all import get_if_list, get_if_addr
 from auxiliary import Aux
+
 
 
 class Network: # =============================================================================================
@@ -32,6 +34,7 @@ class Network: # ===============================================================
         for index, iface in enumerate(interfaces):
             ip_addr = Network._get_ip_address(iface)
             netmask = Network._get_subnet_mask(iface)
+            if not iface or not ip_addr or not netmask: continue
             print(f'{index} - {iface} => {ip_addr}/{Network._convert_mask_to_cidr(netmask)}')
 
 
