@@ -25,12 +25,12 @@ class Command_List: # ==========================================================
     @staticmethod
     def _execute(__, _) -> None:
         for i in (
-            f'{Aux.green("iface")}.....: Display interface information',
-            f'{Aux.green("ip")}........: Get IP by name',
-            f'{Aux.green("geoip")}.....: Get geolocation of an IP',
-            f'{Aux.green("macdev")}....: Looks up a MAC',
-            f'{Aux.green("netscan")}...: Network scanner',
-            f'{Aux.green("pscan")}.....: Port scanner',
+            f'{Aux.green("iface")}....: Display interface information',
+            f'{Aux.green("ip")}.......: Get IP by name',
+            f'{Aux.green("geoip")}....: Get geolocation of an IP',
+            f'{Aux.green("macdev")}...: Looks up a MAC',
+            f'{Aux.green("netmap")}...: Network scanner',
+            f'{Aux.green("pscan")}....: Port scanner',
         ): print(i)
 
 
