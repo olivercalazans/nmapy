@@ -23,10 +23,19 @@ class Argument_Parser_Manager: # ===============================================
         This constructor sets up the main argument parser and initializes 
         the subparsers for handling different command classes.
         """
-        self._parser = argparse.ArgumentParser(description="Argument Manager")
-        self._subparser = self._parser.add_subparsers(dest="class")
+        self._parser         = argparse.ArgumentParser(description="Argument Manager")
+        self._subparser      = self._parser.add_subparsers(dest="class")
         self._argument_class = Argument_Definitions()
         self._add_all_commands()
+
+
+    def _add_all_commands(self) -> None:
+        """Reads all argument definitions from the Argument_Definitions class and adds them to the parser."""
+        for method_name in dir(self._argument_class):
+            method = getattr(self._argument_class, method_name)
+            if callable(method) and method_name.endswith('_arguments'):
+                arguments = method()
+                self._add_arguments(arguments[0], arguments[1])
 
 
     def _add_arguments(self, class_name:str, argument_list:list[dict]) -> None:
@@ -38,15 +47,6 @@ class Argument_Parser_Manager: # ===============================================
                 case 'value': class_parser.add_argument(arg[1], arg[2], type=arg[3], help=arg[4])
                 case 'opt':   class_parser.add_argument(arg[1], arg[2], nargs='?', const=True, default=False, help=arg[3])
                 case _:       class_parser.add_argument(arg[1], type=str, help=arg[2])
-
-
-    def _add_all_commands(self) -> None:
-        """Reads all argument definitions from the Argument_Definitions class and adds them to the parser."""
-        for method_name in dir(self._argument_class):
-            method = getattr(self._argument_class, method_name)
-            if callable(method) and method_name.endswith('_arguments'):
-                arguments = method()
-                self._add_arguments(arguments[0], arguments[1])
 
 
     def _parse(self, subparser_id:str, data:list) -> argparse.Namespace:
