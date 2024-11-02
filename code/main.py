@@ -53,7 +53,7 @@ class Main: # ==================================================================
         """Loop that receives input data from user."""
         while not self._stop_flag:
             print('\nWrite "help" to see the commands ' + '=' * 40)
-            input_data         = input(f'[{Aux.orange("DataSeeker")}]# ').split()
+            input_data         = input('[\033[38;5;202m' + 'DataSeeker' + '\033[0m]# ').split()
             command, arguments = self._separates_command_from_arguments(input_data)
             self._check_if_the_method_exists(command, arguments)
 
@@ -87,13 +87,13 @@ class Main: # ==================================================================
     def _get_strategy_dictionary() -> dict:
         """Returns the class dictionary."""
         return {
-            "help":    Command_List(),
-            "iface":   Interfaces(),
-            "ip":      Get_IP(),
-            "geoip":   IP_Geolocation(),
-            "macdev":  MAC_To_Device(),
-            "netscan": Network_Mapper(),
-            "pscan":   Port_Scanner(),
+            "help":   Command_List(),
+            "iface":  Interfaces(),
+            "ip":     Get_IP(),
+            "geoip":  IP_Geolocation(),
+            "macdev": MAC_To_Device(),
+            "netmap": Network_Mapper(),
+            "pscan":  Port_Scanner(),
         }
 
 
