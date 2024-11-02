@@ -89,7 +89,7 @@ class Port_Scanner:
 
 
     # NORMAL SCAN --------------------------------------------------------------------------------------------
-    def _perform_normal_scan(self) -> list:
+    def _perform_normal_scan(self) -> None:
         """Performs a normal scan on the specified target IP address."""
         self._prepare_ports(self._flags['ports'])
         packets = [self._create_tpc_ip_packet(port) for port in self._ports_to_be_used]
@@ -104,7 +104,7 @@ class Port_Scanner:
         return IP(src=source_ip, dst=self._target_ip) / TCP(dport=port, flags="S")
 
 
-    def _send_packets(self, packets:list) -> tuple[list, list]:
+    def _send_packets(self, packets:list) -> None:
         """Sends the SYN packets and receives the responses."""
         responses, unanswered = sr(packets, timeout=5, inter=0.1)
         self._responses = responses
@@ -150,7 +150,7 @@ class Port_Scanner:
 
 
     # DECOY METHODS ------------------------------------------------------------------------------------------    
-    def _perform_decoy_method(self) -> list:
+    def _perform_decoy_method(self) -> None:
         """Performs a decoy scan method using the specified port and network interface."""
         self._prepare_ports(self._flags['decoy'])
         self._my_ip_address = Network._get_ip_address(self._interface)
