@@ -3,12 +3,12 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import ipaddress, logging
-from concurrent.futures import ThreadPoolExecutor
+import logging, sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from scapy.all import  Ether, ARP, ICMP, IP
 from scapy.all import srp, sr1
 from scapy.all import conf
-from network import *
+from network   import *
 from auxiliary import Aux, Argument_Parser_Manager
 
 
@@ -19,41 +19,44 @@ class Network_Mapper:
     It has two scanning methods: one for ARP scanning and one for ping scanning.
     """
 
-    @staticmethod
-    def _execute(database, arguments:list) -> None:
+    def __init__(self) -> None:
+        self._flags     = {'ping': None}
+        self._interface = None    # str
+        self._network   = None    # ipaddress.IPv4Network
+
+
+    def _execute(self, database, arguments:list) -> None:
         """Executes the network scan and handles possible errors."""
         try:
-            ping       = None if not arguments else Network_Mapper._get_argument_and_flags(database.parser_manager, arguments)
-            interface  = Network._select_interface()
-            conf.iface = interface
-            network    = Network._get_network_information(Network._get_ip_address(interface), Network._get_subnet_mask(interface))
-            Network_Mapper._run_arp_methods(network) if not ping else Network_Mapper._run_ping_methods(network)
+            if arguments: self._get_argument_and_flags(database.parser_manager, arguments)
+            self._interface = conf.iface = Network._select_interface()
+            my_ip_address   = Network._get_ip_address(self._interface)
+            subnet_mask     = Network._get_subnet_mask(self._interface)
+            self._network   = Network._get_network_information(my_ip_address, subnet_mask)
+            self._run_arp_methods() if not self._flags['ping'] else self._run_ping_methods()
         except SystemExit: print(Aux.display_invalid_missing())
         except ValueError: print(Aux.yellow("Invalid IP"))
-        except KeyboardInterrupt:  print(Aux.orange("Process stopped"))
+        except KeyboardInterrupt:  print(Aux.yellow("Process stopped"))
         except Exception as error: print(Aux.display_unexpected_error(error))
 
 
-    @staticmethod
-    def _get_argument_and_flags(parser_manager:Argument_Parser_Manager, arguments:list) -> tuple[str, bool]:
+    def _get_argument_and_flags(self, parser_manager:Argument_Parser_Manager, arguments:list) -> None:
         """Parses arguments and flags from the command line."""
-        arguments = parser_manager._parse("Netscanner", arguments)
-        return arguments.ping
+        arguments = parser_manager._parse("Netmapper", arguments)
+        self._flags = {'ping': arguments.ping}
 
 
     # ARP NETWORK SCANNER METHODS ------------------------------------
-    @staticmethod
-    def _run_arp_methods(network:ipaddress.IPv4Network) -> None:
+    def _run_arp_methods(self) -> None:
         """Performs network scanning using ARP requests."""
-        packet   = Network_Mapper._create_arp_packet(network)
-        answered = Network_Mapper._perform_arp_sweep(packet)
-        Network_Mapper._display_arp_result(answered)
+        packet   = self._create_arp_packet()
+        answered = self._perform_arp_sweep(packet)
+        self._display_arp_result(answered)
 
 
-    @staticmethod
-    def _create_arp_packet(network:ipaddress.IPv4Network) -> Ether:
+    def _create_arp_packet(self) -> Ether:
         """Creates an ARP request packet to be sent over the network."""
-        arp_request = ARP(pdst=str(network))
+        arp_request = ARP(pdst=str(self._network))
         broadcast   = Ether(dst="ff:ff:ff:ff:ff:ff")
         return broadcast / arp_request
 
@@ -73,32 +76,34 @@ class Network_Mapper:
 
 
     # PING NETWORK SCANNER METHODS -----------------------------------
-    @staticmethod
-    def _run_ping_methods(network:ipaddress.IPv4Network) ->None:
+    def _run_ping_methods(self) ->None:
         """Performs network scanning using ICMP ping requests."""
-        futures      = Network_Mapper._ping_sweep(network)
-        active_hosts = Network_Mapper._process_result(futures)
-        Network_Mapper._display_ping_result(active_hosts)
+        futures      = self._ping_sweep()
+        active_hosts = self._process_result(futures)
+        self._display_ping_result(active_hosts)
 
 
-    @staticmethod
-    def _ping_sweep(network:ipaddress.IPv4Network) -> dict:
+    def _ping_sweep(self) -> dict:
         """Performs a ping sweep over the network by sending ICMP requests."""
         logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
-        conf.verb = 0
+        conf.verb    = 0
+        total_hosts  = self._network.num_addresses - 2
         with ThreadPoolExecutor(max_workers=100) as executor:
-            return {executor.submit(Network_Mapper._send_ping, str(ip)): ip for ip in network.hosts()}
+            futures = {executor.submit(self._send_ping, str(ip)): ip for ip in self._network.hosts()}
+            for i, _ in enumerate(as_completed(futures), 1):
+                sys.stdout.write(f'\r{Aux.green("Packet sent")}: {i}/{total_hosts}')
+                sys.stdout.flush()
+        return futures
 
 
     @staticmethod
-    def _send_ping(ip: str) -> bool:
+    def _send_ping(ip:str) -> bool:
         """Sends an ICMP ping to the specified IP address using Scapy."""
         packet = IP(dst=ip)/ICMP()
         reply  = sr1(packet, timeout=2, verbose=0)
         return reply is not None
 
 
-    # PROCESS RESULT -----------------------------------------------------------------------------------------
     @staticmethod
     def _process_result(future_to_ip:dict) -> list:
         """Processes the ping responses, collecting active hosts."""
@@ -108,12 +113,13 @@ class Network_Mapper:
             try:
                 if future.result(): active_hosts.append(str(ip))
             except Exception as error:
-                print(f"{Aux.orange('Error pinging')} {ip}: {error}")
+                print(f"{Aux.yellow('Error pinging')} {ip}: {error}")
         return active_hosts
 
 
     @staticmethod
     def _display_ping_result(active_hosts:list) -> None:
         """Displays the results of the ping scan, showing active hosts."""
+        print('\n')
         for ip in active_hosts:
             print(f'{Aux.green("Active host")}: {ip}')
