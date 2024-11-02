@@ -123,7 +123,7 @@ class Files: # =================================================================
 
 class Aux: # =================================================================================================
     """This class provides utility methods to format messages for better visibility."""
-
+    
     @staticmethod
     def red(message:str) -> str:
         return '\033[31m' + message + '\033[0m'
@@ -135,10 +135,6 @@ class Aux: # ===================================================================
     @staticmethod
     def yellow(message:str) -> str:
         return '\033[33m' + message + '\033[0m'
-
-    @staticmethod
-    def orange(message:str) -> str:
-        return '\033[38;5;214m' + message + '\033[0m'
 
     @staticmethod
     def display_unexpected_error(error:str) -> str:
