@@ -78,7 +78,7 @@ class Argument_Definitions: # ==================================================
 
     @staticmethod
     def _netscanner_arguments():
-        return "Netscanner", [("bool", "-p", "--ping", "Use ping instead of an ARP packet")]
+        return "Netmapper", [("bool", "-p", "--ping", "Use ping instead of an ARP packet")]
 
 
     @staticmethod
