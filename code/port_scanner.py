@@ -15,17 +15,15 @@ class Port_Scanner:
     """Performs a port scan on a specified host."""
 
     def __init__(self) -> None:
-        self._host                 = None
-        self._flags                = None
-        self._ports_to_be_used     = None
-        self._target_ip            = None
-        self._interface            = None
-        self._async_responses      = list()
-        self._lock                 = threading.Lock()
-        self._real_packet_response = None
-        self._my_ip_address        = None
-        self._responses            = None
-        self._all_ports            = { 
+        self._host             = None
+        self._flags            = None
+        self._ports_to_be_used = None
+        self._target_ip        = None
+        self._responses        = list()
+        self._interface        = None
+        self._lock             = threading.Lock()
+        self._my_ip_address    = None
+        self._all_ports        = { 
             21   : 'FTP - File Transfer Protocol',  
             22   : 'SSH - Secure Shell',  
             23   : 'Telnet',  
@@ -85,10 +83,9 @@ class Port_Scanner:
     def _get_result_by_transmission_method(self) -> list:
         """Retrieves the scan results based on the specified transmission method."""
         if isinstance(self._flags['decoy'], str):
-            response = self._perform_decoy_method()
+            self._perform_decoy_method()
         else:
-            response = self._perform_normal_scan()
-        self._responses = response
+            self._perform_normal_scan()
 
 
     # NORMAL SCAN --------------------------------------------------------------------------------------------
@@ -97,10 +94,9 @@ class Port_Scanner:
         self._prepare_ports(self._flags['ports'])
         packets = [self._create_tpc_ip_packet(port) for port in self._ports_to_be_used]
         if self._flags['delay']: 
-            responses = self._async_sending(packets)
+            self._async_sending(packets)
         else: 
-            responses, _ = self._send_packets(packets)
-        return responses
+            self._send_packets(packets)
 
 
     def _create_tpc_ip_packet(self, port, source_ip=None) -> list:
@@ -108,11 +104,10 @@ class Port_Scanner:
         return IP(src=source_ip, dst=self._target_ip) / TCP(dport=port, flags="S")
 
 
-    @staticmethod
-    def _send_packets(packets:list) -> tuple[list, list]:
+    def _send_packets(self, packets:list) -> tuple[list, list]:
         """Sends the SYN packets and receives the responses."""
         responses, unanswered = sr(packets, timeout=5, inter=0.1)
-        return (responses, unanswered)
+        self._responses = responses
 
 
     def _async_sending(self, packets:list) -> None:
@@ -129,7 +124,6 @@ class Port_Scanner:
         for thread in threads:
             thread.join()
         print('\n')
-        return self._async_responses
 
 
     @staticmethod
@@ -152,7 +146,7 @@ class Port_Scanner:
         """Sends a single TCP SYN packet asynchronously and stores the response."""
         response = sr1(packet, timeout=5, verbose=False)
         with self._lock:
-            self._async_responses.append((packet, response))
+            self._responses.append((packet, response))
 
 
     # DECOY METHODS ------------------------------------------------------------------------------------------    
@@ -163,7 +157,6 @@ class Port_Scanner:
         netmask             = Network._get_subnet_mask(self._interface)
         ips                 = self._prepare_decoy_and_real_ips(netmask)
         self._send_decoy_and_real_packets(ips)
-        return self._real_packet_response
 
 
     def _prepare_decoy_and_real_ips(self, subnet_mask:str) -> list:
@@ -207,7 +200,7 @@ class Port_Scanner:
         """Sends a real TCP SYN packet to the specified target IP address."""
         real_packet = self._create_tpc_ip_packet(self._ports_to_be_used[0])
         response    = sr1(real_packet, verbose=0)
-        self._real_packet_response = [(real_packet, response)]
+        self._responses = [(real_packet, response)]
 
 
     def _send_decoy_packet(self, decoy_ip:str) -> None:
