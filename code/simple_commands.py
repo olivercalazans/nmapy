@@ -65,8 +65,8 @@ class Get_IP: # ================================================================
     def _execute(database, data:list) -> None:
         """Executes the process to retrieve the IP address based on the provided hostname."""
         try:   argument = Get_IP._get_argument(database.parser_manager, data)
-        except SystemExit:         print(Aux.display_error("Invalid/missing argument"))
-        except Exception as error: print(Aux.display_unexpected_error(error))
+        except SystemExit as error: print(Aux.display_invalid_missing()) if not error.code == 0 else print()
+        except Exception  as error: print(Aux.display_unexpected_error(error))
         else:  Get_IP._ip(argument)
 
 
@@ -99,8 +99,8 @@ class IP_Geolocation: # ========================================================
             data   = IP_Geolocation._get_geolocation(ip)
             result = IP_Geolocation._process_data(data)
             IP_Geolocation._display_result(result)
-        except SystemExit: print(Aux.display_invalid_missing())
-        except Exception as error: print(Aux.display_unexpected_error(error))
+        except SystemExit as error: print(Aux.display_invalid_missing()) if not error.code == 0 else print()
+        except Exception  as error: print(Aux.display_unexpected_error(error))
 
 
     @staticmethod
@@ -153,9 +153,9 @@ class MAC_To_Device: # =========================================================
             mac    = MAC_To_Device._normalize_mac(mac)
             result = MAC_To_Device._lookup_mac(database.mac_dictionary, mac)
             MAC_To_Device._display_result(mac, result)
-        except SystemExit: print(Aux.display_invalid_missing())
+        except SystemExit as error: print(Aux.display_invalid_missing()) if not error.code == 0 else print()
         except ValueError as error: print(Aux.display_error(error))
-        except Exception as error: print(Aux.display_unexpected_error(error))
+        except Exception  as error: print(Aux.display_unexpected_error(error))
 
 
     @staticmethod
