@@ -34,10 +34,10 @@ class Network_Mapper:
             subnet_mask     = Network._get_subnet_mask(self._interface)
             self._network   = Network._get_network_information(my_ip_address, subnet_mask)
             self._run_arp_methods() if not self._flags['ping'] else self._run_ping_methods()
-        except SystemExit: print(Aux.display_invalid_missing())
-        except ValueError: print(Aux.yellow("Invalid IP"))
-        except KeyboardInterrupt:  print(Aux.yellow("Process stopped"))
-        except Exception as error: print(Aux.display_unexpected_error(error))
+        except SystemExit as error: print(Aux.display_invalid_missing()) if not error.code == 0 else print()
+        except ValueError:          print(Aux.yellow("Invalid IP"))
+        except KeyboardInterrupt:   print(Aux.yellow("Process stopped"))
+        except Exception as error:  print(Aux.display_unexpected_error(error))
 
 
     def _get_argument_and_flags(self, parser_manager:Argument_Parser_Manager, arguments:list) -> None:
