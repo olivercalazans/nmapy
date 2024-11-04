@@ -3,7 +3,7 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import logging, sys
+import logging, sys, signal
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from scapy.all import  Ether, ARP, ICMP, IP
 from scapy.all import srp, sr1
@@ -46,7 +46,7 @@ class Network_Mapper:
         self._flags = {'ping': arguments.ping}
 
 
-    # ARP NETWORK SCANNER METHODS ------------------------------------
+    # ARP NETWORK SCANNER METHODS -----------------------------------------------------------------------------
     def _run_arp_methods(self) -> None:
         """Performs network scanning using ARP requests."""
         packet   = self._create_arp_packet()
@@ -75,10 +75,10 @@ class Network_Mapper:
             print(f'{Aux.green("Active host")}: IP {received.psrc:<15}, MAC {received.hwsrc}')
 
 
-    # PING NETWORK SCANNER METHODS -----------------------------------
-    def _run_ping_methods(self) ->None:
+    # PING NETWORK SCANNER METHODS -------------------------------------------------------------------------
+    def _run_ping_methods(self) -> None:
         """Performs network scanning using ICMP ping requests."""
-        futures      = self._ping_sweep()
+        futures = self._ping_sweep()
         active_hosts = self._process_result(futures)
         self._display_ping_result(active_hosts)
 
@@ -86,22 +86,46 @@ class Network_Mapper:
     def _ping_sweep(self) -> dict:
         """Performs a ping sweep over the network by sending ICMP requests."""
         logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
-        conf.verb    = 0
-        total_hosts  = self._network.num_addresses - 2
+        conf.verb = 0
+        total_hosts = self._network.num_addresses - 2
         with ThreadPoolExecutor(max_workers=100) as executor:
-            futures = {executor.submit(self._send_ping, str(ip)): ip for ip in self._network.hosts()}
-            for i, _ in enumerate(as_completed(futures), 1):
-                sys.stdout.write(f'\r{Aux.green("Packet sent")}: {i}/{total_hosts}')
-                sys.stdout.flush()
+            signal.signal(signal.SIGINT, lambda signum, frame: self._handle_interrupt(signum, frame, executor))
+            futures = self._create_ping_tasks(executor)
+            try:   self._process_ping_tasks(futures, total_hosts, executor)
+            except Exception: executor.shutdown(wait=False, cancel_futures=True)
         return futures
+
+
+    def _create_ping_tasks(self, executor:ThreadPoolExecutor) -> dict:
+        """Creates ping tasks for each host in the network."""
+        return {executor.submit(self._send_ping, str(ip)): ip for ip in self._network.hosts()}
+
+
+    def _process_ping_tasks(self, futures:dict, total_hosts:int, executor:ThreadPoolExecutor) -> None:
+        """Processes the results of ping tasks as they complete."""
+        for i, _ in enumerate(as_completed(futures), 1):
+            if executor._shutdown: break
+            self._update_progress(i, total_hosts)
+
+
+    def _update_progress(self, current:int, total:int) -> None:
+        """Updates progress in the console."""
+        sys.stdout.write(f'\r{Aux.green("Packet sent")}: {current}/{total}')
+        sys.stdout.flush()
 
 
     @staticmethod
     def _send_ping(ip:str) -> bool:
         """Sends an ICMP ping to the specified IP address using Scapy."""
         packet = IP(dst=ip)/ICMP()
-        reply  = sr1(packet, timeout=2, verbose=0)
+        reply = sr1(packet, timeout=2, verbose=0)
         return reply is not None
+
+
+    def _handle_interrupt(self, signum, frame, executor:ThreadPoolExecutor):
+        """Handles user interrupt (Ctrl + C) to stop threads gracefully."""
+        print("\nInterrupted by user. Shutting down threads...")
+        executor.shutdown(wait=False, cancel_futures=True)
 
 
     @staticmethod
@@ -112,8 +136,8 @@ class Network_Mapper:
             ip = future_to_ip[future]
             try:
                 if future.result(): active_hosts.append(str(ip))
-            except Exception as error:
-                print(f"{Aux.yellow('Error pinging')} {ip}: {error}")
+            except Exception:
+                continue
         return active_hosts
 
 
