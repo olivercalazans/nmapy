@@ -40,7 +40,7 @@ class Port_Scanner:
             8080 : 'Jakarta Tomcat',
             27017: 'MongoDB'
         }
-        
+
 
     def _execute(self, database, data:list) -> None:
         """ Executes the port scanning process with error handling."""
@@ -52,11 +52,11 @@ class Port_Scanner:
             conf.verb       = 0 if not self._flags['verbose'] else 1
             self._get_result_by_transmission_method()
             self._process_responses()
-        except SystemExit:         print(Aux.display_invalid_missing())
-        except KeyboardInterrupt:  print(Aux.orange("Process stopped"))
-        except socket.gaierror:    print(Aux.display_error('An error occurred in resolving the host'))
-        except socket.error:       print(Aux.display_error(f'It was not possible to connect to "{self._host}"'))
-        except Exception as error: print(Aux.display_unexpected_error(error))
+        except SystemExit as error: print(Aux.display_invalid_missing()) if not error.code == 0 else print()
+        except KeyboardInterrupt:   print(Aux.red("Process stopped"))
+        except socket.gaierror:     print(Aux.display_error('An error occurred in resolving the host'))
+        except socket.error:        print(Aux.display_error(f'It was not possible to connect to "{self._host}"'))
+        except Exception as error:  print(Aux.display_unexpected_error(error))
 
 
     def _get_argument_and_flags(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
