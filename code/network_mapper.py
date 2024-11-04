@@ -108,7 +108,8 @@ class Network_Mapper:
             self._update_progress(i, total_hosts)
 
 
-    def _update_progress(self, current:int, total:int) -> None:
+    @staticmethod
+    def _update_progress(current:int, total:int) -> None:
         """Updates progress in the console."""
         sys.stdout.write(f'\r{Aux.green("Packet sent")}: {current}/{total}')
         sys.stdout.flush()
@@ -122,7 +123,8 @@ class Network_Mapper:
         return reply is not None
 
 
-    def _handle_interrupt(self, signum, frame, executor:ThreadPoolExecutor):
+    @staticmethod
+    def _handle_interrupt(signum, frame, executor:ThreadPoolExecutor):
         """Handles user interrupt (Ctrl + C) to stop threads gracefully."""
         print("\nInterrupted by user. Shutting down threads...")
         executor.shutdown(wait=False, cancel_futures=True)
