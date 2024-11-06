@@ -8,7 +8,7 @@ from scapy.all import IP, TCP
 from scapy.all import sr, sr1, send
 from scapy.all import conf, packet
 from network   import *
-from auxiliary import Aux, Argument_Parser_Manager
+from auxiliary import Color, Argument_Parser_Manager
 
 
 class Port_Scanner:
@@ -52,11 +52,11 @@ class Port_Scanner:
             conf.verb       = 0 if not self._flags['verbose'] else 1
             self._get_result_by_transmission_method()
             self._process_responses()
-        except SystemExit as error: print(Aux.display_invalid_missing()) if not error.code == 0 else print()
-        except KeyboardInterrupt:   print(Aux.red("Process stopped"))
-        except socket.gaierror:     print(Aux.display_error('An error occurred in resolving the host'))
-        except socket.error:        print(Aux.display_error(f'It was not possible to connect to "{self._host}"'))
-        except Exception as error:  print(Aux.display_unexpected_error(error))
+        except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
+        except KeyboardInterrupt:   print(Color.red("Process stopped"))
+        except socket.gaierror:     print(Color.display_error('An error occurred in resolving the host'))
+        except socket.error:        print(Color.display_error(f'It was not possible to connect to "{self._host}"'))
+        except Exception as error:  print(Color.display_unexpected_error(error))
 
 
     def _get_argument_and_flags(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
@@ -192,7 +192,7 @@ class Port_Scanner:
             else:
                 self._send_decoy_packet(ip)
             delay = random.uniform(1, 3)
-            print(f'{Aux.green("Packet sent")}: {ip}, Delay: {delay:.2}')
+            print(f'{Color.green("Packet sent")}: {ip}, Delay: {delay:.2}')
             time.sleep(delay)
 
 
@@ -223,11 +223,11 @@ class Port_Scanner:
     def _display_result(response:str|None, port:int, description:str) -> None:
         """Displays the scan result for each port."""
         match response:
-            case "SA": status = Aux.green('Opened')
-            case "S":  status = Aux.yellow('Potentially Open')
-            case "RA": status = Aux.red('Closed')
-            case "F":  status = Aux.red('Connection Closed')
-            case "R":  status = Aux.red('Reset')
-            case None: status = Aux.red('Filtered')
-            case _:    status = Aux.red('Unknown Status')
+            case "SA": status = Color.green('Opened')
+            case "S":  status = Color.yellow('Potentially Open')
+            case "RA": status = Color.red('Closed')
+            case "F":  status = Color.red('Connection Closed')
+            case "R":  status = Color.red('Reset')
+            case None: status = Color.red('Filtered')
+            case _:    status = Color.red('Unknown Status')
         print(f'Status: {status:>17} -> {port:>5} - {description}')
