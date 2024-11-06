@@ -6,7 +6,7 @@
 
 import socket, struct, fcntl, ipaddress
 from scapy.all import get_if_list, get_if_addr
-from auxiliary import Aux
+from auxiliary import Color
 
 
 
@@ -81,7 +81,7 @@ class Network: # ===============================================================
                 ip = ip[0]
             elif select:
                 ip = Network._select_an_ip(ip)
-        except: ip = Aux.display_error(f'Invalid hostname ({hostname})')
+        except: ip = Color.display_error(f'Invalid hostname ({hostname})')
         return  ip
 
 
@@ -109,5 +109,5 @@ class Network: # ===============================================================
                 if number >= 0 and number < len(options):
                     return options[number]
                 else:
-                    print(Aux.yellow(f'Choose a number between 0 and {len(options) - 1}'))
-            except: print(Aux.yellow('Choose a number'))
+                    print(Color.yellow(f'Choose a number between 0 and {len(options) - 1}'))
+            except: print(Color.yellow('Choose a number'))
