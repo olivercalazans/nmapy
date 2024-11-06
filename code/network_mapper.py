@@ -30,9 +30,8 @@ class Network_Mapper:
         try:
             if arguments: self._get_argument_and_flags(database.parser_manager, arguments)
             self._interface = conf.iface = Network._select_interface()
-            my_ip_address   = Network._get_ip_address(self._interface)
-            subnet_mask     = Network._get_subnet_mask(self._interface)
-            self._network   = Network._get_network_information(my_ip_address, subnet_mask)
+            network_info    = Network._get_ip_and_subnet_mask(self._interface)
+            self._network   = Network._get_network_information(network_info['ip'], network_info['netmask'])
             self._run_arp_methods() if not self._flags['ping'] else self._run_ping_methods()
         except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
         except ValueError:          print(Color.yellow("Invalid IP"))
