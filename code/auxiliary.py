@@ -121,7 +121,7 @@ class Files: # =================================================================
 
 
 
-class Aux: # =================================================================================================
+class Color: # =================================================================================================
     """This class provides utility methods to format messages for better visibility."""
     
     @staticmethod
@@ -138,12 +138,12 @@ class Aux: # ===================================================================
 
     @staticmethod
     def display_unexpected_error(error:str) -> str:
-        return Aux.red('Unexpected error') + f'\nERROR: {error}'
+        return Color.red('Unexpected error') + f'\nERROR: {error}'
 
     @staticmethod
     def display_error(message:str) -> str:
-        return Aux.yellow('ERROR: ') + message
+        return Color.yellow('ERROR: ') + message
 
     @staticmethod
     def display_invalid_missing() -> str:
-        return Aux.yellow(f'Invalid or missing argument/flag. Please, check --help')
+        return Color.yellow(f'Invalid or missing argument/flag. Please, check --help')
