@@ -4,8 +4,7 @@
 
 
 
-import socket, struct, fcntl, ipaddress
-from scapy.all import get_if_list, get_if_addr
+import psutil, socket, ipaddress
 from auxiliary import Color
 
 
@@ -14,49 +13,33 @@ class Network: # ===============================================================
     """Contains common network-related methods used by multiple classes."""
 
     @staticmethod
-    def _get_network_interfaces() -> list[str]:
-        """Get the device's network interfaces"""
-        return get_if_list()
-
-
-    @staticmethod
     def _select_interface() -> str:
         """Selects a network interface by retrieving available interfaces, displaying them, and validating the user's input."""
-        interfaces = Network._get_network_interfaces()
-        Network._display_interfaces(interfaces)
-        interface  = Network._validate_input(interfaces)
+        Network._display_interfaces()
+        interface  = Network._validate_input(list(psutil.net_if_addrs().keys()))
         return interface
 
 
     @staticmethod
-    def _display_interfaces(interfaces:list) -> None:
+    def _get_interface_information() -> dict:
+        interface_stats = psutil.net_if_stats()
+        information     = list()
+        for iface_name, iface_addresses in psutil.net_if_addrs().items():
+            if iface_name in interface_stats and interface_stats[iface_name].isup:
+                ipv4 = [(address.address, address.netmask) for address in iface_addresses if address.family == socket.AF_INET]
+                ipv6 = [(address.address, address.netmask) for address in iface_addresses if address.family == socket.AF_INET6]
+                information.append({'iface': iface_name,
+                                    'ipv4' : f'{ipv4[0][0]}/{Network._convert_mask_to_cidr_ipv4(ipv4[0][1])}', 
+                                    'ipv6' : f'{ipv6[0][0]}/{Network._convert_mask_to_cidr_ipv6(ipv6[0][1])}'})
+        return information
+
+
+    @staticmethod
+    def _display_interfaces() -> None:
         """Displays the available network interfaces along with their IP addresses and subnet masks in CIDR notation."""
+        interfaces = Network._get_interface_information()
         for index, iface in enumerate(interfaces):
-            ip_addr = Network._get_ip_address(iface)
-            netmask = Network._get_subnet_mask(iface)
-            if not iface or not ip_addr or not netmask: continue
-            print(f'{index} - {iface} => {ip_addr}/{Network._convert_mask_to_cidr(netmask)}')
-
-
-    @staticmethod
-    def _get_ip_address(interface:str) -> str:
-        """Get the IP address of the specified network interface."""
-        try:   return get_if_addr(interface)
-        except Exception: return 'Unknown/error'
-
-
-    @staticmethod
-    def _get_subnet_mask(interface:str) -> str|None:
-        """Get the subnet mask of the specified network interface."""
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as temporary_socket:
-                return socket.inet_ntoa(fcntl.ioctl(
-                    temporary_socket.fileno(),
-                    0x891b,  # SIOCGIFNETMASK
-                    struct.pack('256s', interface[:15].encode('utf-8'))
-                )[20:24])
-        except Exception:
-            return None
+            print(f'{index} - {iface['iface']:<6} => {iface['ipv4']:<15}, {iface['ipv6']}')
 
 
     @staticmethod
@@ -66,9 +49,24 @@ class Network: # ===============================================================
 
 
     @staticmethod
-    def _convert_mask_to_cidr(subnet_mask:str) -> int:
+    def _convert_mask_to_cidr_ipv4(subnet_mask:str) -> int:
         """Converts a subnet mask to CIDR (Classless Inter-Domain Routing) notation."""
         return ipaddress.IPv4Network(f'0.0.0.0/{subnet_mask}').prefixlen
+    
+
+    @staticmethod
+    def _convert_mask_to_cidr_ipv6(hex_mask:str) -> int:
+        if '::' in hex_mask: hex_mask = hex_mask.replace('::', '')
+        bin_mask = ''.join(format(int(block, 16), '016b') for block in hex_mask.split(':'))
+        cidr     = bin_mask.count('1')
+        return cidr
+    
+
+    @staticmethod
+    def _get_ip_and_subnet_mask(interface:str) -> tuple[str,str]:
+        iface_addresses = psutil.net_if_addrs()[interface]
+        net_info = [(address.address, address.netmask) for address in iface_addresses if address.family == socket.AF_INET]
+        return {'ip': net_info[0][0], 'netmask': net_info[0][1]}
 
 
     @staticmethod
