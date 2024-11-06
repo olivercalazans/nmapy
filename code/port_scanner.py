@@ -49,7 +49,6 @@ class Port_Scanner:
             self._target_ip = Network._get_ip_by_name(self._host, True)
             self._interface = Network._select_interface()
             conf.iface      = self._interface
-            conf.verb       = 0 if not self._flags['verbose'] else 1
             self._get_result_by_transmission_method()
             self._process_responses()
         except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
@@ -65,9 +64,8 @@ class Port_Scanner:
         self._host  = arguments.host
         self._flags = {
             'ports':   arguments.port,
-            'verbose': arguments.verbose,
             'random':  arguments.random_order,
-            'delay':   arguments.random_delay,
+            'delay':   arguments.delay,
             'decoy':   arguments.decoy,
         }
 
@@ -153,9 +151,9 @@ class Port_Scanner:
     def _perform_decoy_method(self) -> None:
         """Performs a decoy scan method using the specified port and network interface."""
         self._prepare_ports(self._flags['decoy'])
-        self._my_ip_address = Network._get_ip_address(self._interface)
-        netmask             = Network._get_subnet_mask(self._interface)
-        ips                 = self._prepare_decoy_and_real_ips(netmask)
+        network_info        = Network._get_ip_and_subnet_mask(self._interface)
+        self._my_ip_address = network_info['ip']
+        ips                 = self._prepare_decoy_and_real_ips(network_info['netmask'])
         self._send_decoy_and_real_packets(ips)
 
 
