@@ -85,11 +85,10 @@ class Argument_Definitions: # ==================================================
     def _portscanner_arguments():
         return "PortScanner", [
             ("arg",   "host", "Host name"),
-            ("bool",  "-v", "--verbose", "Enable verbose output"),
             ("bool",  "-r", "--random-order", "Use the ports in random order"),
             ("value", "-p", "--port", str, "Specify a port to scan"),
             ("value", "-D", "--decoy", str, "Uses decoy method"),
-            ("opt",  "-R", "--random-delay", "Add a delay between packet transmissions."),
+            ("opt",  "-d",  "--delay", "Add a delay between packet transmissions."),
         ]
 
 
