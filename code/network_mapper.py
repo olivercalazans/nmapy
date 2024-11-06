@@ -9,7 +9,7 @@ from scapy.all import  Ether, ARP, ICMP, IP
 from scapy.all import srp, sr1
 from scapy.all import conf
 from network   import *
-from auxiliary import Aux, Argument_Parser_Manager
+from auxiliary import Color, Argument_Parser_Manager
 
 
 
@@ -34,10 +34,10 @@ class Network_Mapper:
             subnet_mask     = Network._get_subnet_mask(self._interface)
             self._network   = Network._get_network_information(my_ip_address, subnet_mask)
             self._run_arp_methods() if not self._flags['ping'] else self._run_ping_methods()
-        except SystemExit as error: print(Aux.display_invalid_missing()) if not error.code == 0 else print()
-        except ValueError:          print(Aux.yellow("Invalid IP"))
-        except KeyboardInterrupt:   print(Aux.yellow("Process stopped"))
-        except Exception as error:  print(Aux.display_unexpected_error(error))
+        except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
+        except ValueError:          print(Color.yellow("Invalid IP"))
+        except KeyboardInterrupt:   print(Color.yellow("Process stopped"))
+        except Exception as error:  print(Color.display_unexpected_error(error))
 
 
     def _get_argument_and_flags(self, parser_manager:Argument_Parser_Manager, arguments:list) -> None:
@@ -72,7 +72,7 @@ class Network_Mapper:
     def _display_arp_result(answered:list[tuple]) -> None:
         """Displays the results of the ARP scan, showing active hosts."""
         for _, received in answered:
-            print(f'{Aux.green("Active host")}: IP {received.psrc:<15}, MAC {received.hwsrc}')
+            print(f'{Color.green("Active host")}: IP {received.psrc:<15}, MAC {received.hwsrc}')
 
 
     # PING NETWORK SCANNER METHODS -------------------------------------------------------------------------
@@ -111,7 +111,7 @@ class Network_Mapper:
     @staticmethod
     def _update_progress(current:int, total:int) -> None:
         """Updates progress in the console."""
-        sys.stdout.write(f'\r{Aux.green("Packet sent")}: {current}/{total}')
+        sys.stdout.write(f'\r{Color.green("Packet sent")}: {current}/{total}')
         sys.stdout.flush()
 
 
@@ -148,4 +148,4 @@ class Network_Mapper:
         """Displays the results of the ping scan, showing active hosts."""
         print('\n')
         for ip in active_hosts:
-            print(f'{Aux.green("Active host")}: {ip}')
+            print(f'{Color.green("Active host")}: {ip}')
