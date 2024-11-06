@@ -10,7 +10,7 @@ It handles input processing and command execution.
 
 
 import sys
-from auxiliary import Aux, Argument_Parser_Manager, Files
+from auxiliary import Color, Argument_Parser_Manager, Files
 from simple_commands import *
 from network_mapper import *
 from port_scanner import *
@@ -46,7 +46,7 @@ class Main: # ==================================================================
         """This method is used to do error handling of the loop"""
         try:   self._loop()
         except KeyboardInterrupt:  sys.exit()
-        except Exception as error: print(Aux.display_unexpected_error(error))
+        except Exception as error: print(Color.display_unexpected_error(error))
 
 
     def _loop(self) -> None:
@@ -73,14 +73,14 @@ class Main: # ==================================================================
         elif command == 'exit':
             self._stop
         else:
-            print(f'{Aux.yellow("Unknown command")} "{command}"')
+            print(f'{Color.yellow("Unknown command")} "{command}"')
 
 
     def _run_command(self, command:str, arguments:str) -> None:
         """Executes the command by calling the corresponding class method."""
         strategy = self._get_strategy_dictionary().get(command)
         try:   strategy._execute(self._database, arguments)
-        except Exception as error: print(f'{Aux.red("Error while trying to execute the command")}.\nERROR: {error}')
+        except Exception as error: print(f'{Color.red("Error while trying to execute the command")}.\nERROR: {error}')
 
 
     @staticmethod
@@ -91,7 +91,7 @@ class Main: # ==================================================================
             "iface":  Interfaces(),
             "ip":     Get_IP(),
             "geoip":  IP_Geolocation(),
-            "macdev": MAC_To_Device(),
+            "dev":    MAC_To_Device(),
             "netmap": Network_Mapper(),
             "pscan":  Port_Scanner(),
         }
