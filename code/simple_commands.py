@@ -13,9 +13,9 @@ THIS FILE CONTAINS THE CLASSES THAT EXECUTE SIMPLE COMMANDS.
 """
 
 
-import ipaddress, json, urllib.request, re
+import psutil, ipaddress, json, urllib.request, re
 from network import *
-from auxiliary import Aux, Argument_Parser_Manager
+from auxiliary import Color, Argument_Parser_Manager
 
 
 
@@ -25,12 +25,12 @@ class Command_List: # ==========================================================
     @staticmethod
     def _execute(__, _) -> None:
         for i in (
-            f'{Aux.green("iface")}....: Display interface information',
-            f'{Aux.green("ip")}.......: Get IP by name',
-            f'{Aux.green("geoip")}....: Get geolocation of an IP',
-            f'{Aux.green("macdev")}...: Looks up a MAC',
-            f'{Aux.green("netmap")}...: Network scanner',
-            f'{Aux.green("pscan")}....: Port scanner',
+            f'{Color.green("iface")}....: Display interface information',
+            f'{Color.green("ip")}.......: Get IP by name',
+            f'{Color.green("geoip")}....: Get geolocation of an IP',
+            f'{Color.green("dev")}...: Looks up a MAC',
+            f'{Color.green("netmap")}...: Network scanner',
+            f'{Color.green("pscan")}....: Port scanner',
         ): print(i)
 
 
@@ -41,19 +41,19 @@ class Interfaces: # ============================================================
     """Displays network interfaces information."""
 
     @staticmethod
-    def _execute(__, _):
-        interfaces  = Network._get_network_interfaces()
-        for iface in interfaces:
-            ip_address = Network._get_ip_address(iface)
-            subnet_mask = Network._get_subnet_mask(iface)
-            if not iface or not ip_address or not subnet_mask: continue
-            network_information = Network._get_network_information(ip_address, subnet_mask)
-            print(f'# Interface: {iface}')
-            print(f'    - Address.....: {ip_address}/{Network._convert_mask_to_cidr(subnet_mask)}')
-            print(f'    - Network addr: {network_information.network_address}')
-            print(f'    - Netmask.....: {subnet_mask}')
-            print(f'    - Broadcast...: {network_information.broadcast_address}')
-            print(f'    - Valid hosts.: {network_information.num_addresses - 2}\n')
+    def _execute(database, _):
+        for iface_name, iface_addresses in psutil.net_if_addrs().items():
+            print(f"\n{Color.green("Interface")}: {iface_name}")
+            for address in iface_addresses:
+                if address.family == socket.AF_INET:
+                    print(f"  - IPv4 Address...: {address.address}")
+                    print(f"  - Netmask........: {address.netmask} - /{Network._convert_mask_to_cidr(address.netmask)}")
+                    print(f"  - Broadcast IP...: {address.broadcast}")
+                elif address.family == socket.AF_INET6:
+                    print(f"  - IPv6 Address...: {address.address}")
+                    print(f"  - Netmask........: {address.netmask}")
+                elif address.family == psutil.AF_LINK:
+                    print(f"  - MAC Address....: {address.address} ({MAC_To_Device._lookup_mac(database.mac_dictionary, address.address)})")
 
 
 
@@ -65,8 +65,8 @@ class Get_IP: # ================================================================
     def _execute(database, data:list) -> None:
         """Executes the process to retrieve the IP address based on the provided hostname."""
         try:   argument = Get_IP._get_argument(database.parser_manager, data)
-        except SystemExit as error: print(Aux.display_invalid_missing()) if not error.code == 0 else print()
-        except Exception  as error: print(Aux.display_unexpected_error(error))
+        except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
+        except Exception  as error: print(Color.display_unexpected_error(error))
         else:  Get_IP._ip(argument)
 
 
@@ -99,8 +99,8 @@ class IP_Geolocation: # ========================================================
             data   = IP_Geolocation._get_geolocation(ip)
             result = IP_Geolocation._process_data(data)
             IP_Geolocation._display_result(result)
-        except SystemExit as error: print(Aux.display_invalid_missing()) if not error.code == 0 else print()
-        except Exception  as error: print(Aux.display_unexpected_error(error))
+        except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
+        except Exception  as error: print(Color.display_unexpected_error(error))
 
 
     @staticmethod
@@ -150,12 +150,11 @@ class MAC_To_Device: # =========================================================
         """Executes the manufacturer lookup process and handles errors."""
         try: 
             mac    = MAC_To_Device._get_argument_and_flags(database.parser_manager, argument)
-            mac    = MAC_To_Device._normalize_mac(mac)
             result = MAC_To_Device._lookup_mac(database.mac_dictionary, mac)
             MAC_To_Device._display_result(mac, result)
-        except SystemExit as error: print(Aux.display_invalid_missing()) if not error.code == 0 else print()
-        except ValueError as error: print(Aux.display_error(error))
-        except Exception  as error: print(Aux.display_unexpected_error(error))
+        except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
+        except ValueError as error: print(Color.display_error(error))
+        except Exception  as error: print(Color.display_unexpected_error(error))
 
 
     @staticmethod
@@ -177,6 +176,7 @@ class MAC_To_Device: # =========================================================
     @staticmethod
     def _lookup_mac(mac_dictionary:list[dict], mac:str) -> None:
         """Looks up the manufacturer associated with the provided MAC address."""
+        mac = MAC_To_Device._normalize_mac(mac)
         return mac_dictionary.get(mac, 'Not found')
         
 
