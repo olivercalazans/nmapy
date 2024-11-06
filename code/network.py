@@ -39,7 +39,7 @@ class Network: # ===============================================================
         """Displays the available network interfaces along with their IP addresses and subnet masks in CIDR notation."""
         interfaces = Network._get_interface_information()
         for index, iface in enumerate(interfaces):
-            print(f'{index} - {iface['iface']:<6} => {iface['ipv4']:<15}, {iface['ipv6']}')
+            print(f'{index} - {iface['iface']:<6} => {Color.pink(iface['ipv4']):<23}, {Color.blue(iface['ipv6'])}')
 
 
     @staticmethod
