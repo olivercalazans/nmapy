@@ -46,11 +46,11 @@ class Interfaces: # ============================================================
             print(f"\n{Color.green("Interface")}: {iface_name}")
             for address in iface_addresses:
                 if address.family == socket.AF_INET:
-                    print(f"  - IPv4 Address...: {address.address}")
-                    print(f"  - Netmask........: {address.netmask} - /{Network._convert_mask_to_cidr(address.netmask)}")
+                    print(f"  - IPv4 Address...: {Color.pink(address.address)}")
+                    print(f"  - Netmask........: {address.netmask} - /{Network._convert_mask_to_cidr_ipv4(address.netmask)}")
                     print(f"  - Broadcast IP...: {address.broadcast}")
                 elif address.family == socket.AF_INET6:
-                    print(f"  - IPv6 Address...: {address.address}")
+                    print(f"  - IPv6 Address...: {Color.blue(address.address)}")
                     print(f"  - Netmask........: {address.netmask}")
                 elif address.family == psutil.AF_LINK:
                     print(f"  - MAC Address....: {address.address} ({MAC_To_Device._lookup_mac(database.mac_dictionary, address.address)})")
