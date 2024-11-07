@@ -22,24 +22,25 @@ class Network: # ===============================================================
 
     @staticmethod
     def _get_interface_information() -> dict:
-        interface_stats = psutil.net_if_stats()
-        information     = list()
+        interface_information = list()
         for iface_name, iface_addresses in psutil.net_if_addrs().items():
-            if iface_name in interface_stats and interface_stats[iface_name].isup:
-                ipv4 = [(address.address, address.netmask) for address in iface_addresses if address.family == socket.AF_INET]
-                ipv6 = [(address.address, address.netmask) for address in iface_addresses if address.family == socket.AF_INET6]
-                information.append({'iface': iface_name,
-                                    'ipv4' : f'{ipv4[0][0]}/{Network._convert_mask_to_cidr_ipv4(ipv4[0][1])}', 
-                                    'ipv6' : f'{ipv6[0][0]}/{Network._convert_mask_to_cidr_ipv6(ipv6[0][1])}'})
-        return information
+            status    = Color.green('UP') if psutil.net_if_stats()[iface_name].isup else Color.red('DOWN')
+            interface = {'iface': iface_name, 'status': status}
+            for address in iface_addresses:
+                if   address.family == socket.AF_INET:  interface.update({'ipv4': {'addr': address.address, 'mask': address.netmask, 'broad': address.broadcast}})
+                elif address.family == socket.AF_INET6: interface.update({'ipv6': {'addr': address.address, 'mask': address.netmask, 'broad': address.broadcast}})
+            interface_information.append(interface)
+        return interface_information
 
 
     @staticmethod
     def _display_interfaces() -> None:
         """Displays the available network interfaces along with their IP addresses and subnet masks in CIDR notation."""
-        interfaces = Network._get_interface_information()
+        interfaces = [iface for iface in Network._get_interface_information() if iface['status'] == Color.green('UP')]
         for index, iface in enumerate(interfaces):
-            print(f'{index} - {iface['iface']:<6} => {Color.pink(iface['ipv4']):<23}, {Color.blue(iface['ipv6'])}')
+            ipv4 = f'{iface['ipv4']['addr']}/{Network._convert_mask_to_cidr_ipv4(iface['ipv4']['mask'])}'
+            ipv6 = f'{iface['ipv6']['addr']}/{Network._convert_mask_to_cidr_ipv6(iface['ipv6']['mask'])}'
+            print(f'{index} - {iface['iface']:<6} => {Color.pink(ipv4):<23}, {Color.blue(ipv6)}')
 
 
     @staticmethod
