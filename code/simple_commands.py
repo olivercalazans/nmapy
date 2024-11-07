@@ -1,5 +1,6 @@
 # MIT License
 # Copyright (c) 2024 Oliver Ribeiro Calazans Jeronimo
+# Repository: https://github.com/olivercalazans/DataSeeker
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
@@ -13,7 +14,7 @@ THIS FILE CONTAINS THE CLASSES THAT EXECUTE SIMPLE COMMANDS.
 """
 
 
-import psutil, ipaddress, json, urllib.request, re
+import ipaddress, json, urllib.request, re
 from network import *
 from auxiliary import Color, Argument_Parser_Manager
 
