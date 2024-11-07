@@ -49,6 +49,7 @@ class Port_Scanner:
             self._target_ip = Network._get_ip_by_name(self._host, True)
             self._interface = Network._select_interface()
             conf.iface      = self._interface
+            conf.verb       = 0
             self._get_result_by_transmission_method()
             self._process_responses()
         except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
