@@ -51,6 +51,8 @@ class Main: # ==================================================================
 
     def _loop(self) -> None:
         """Loop that receives input data from user."""
+        print("\nFor more information and detailed documentation, please visit the GitHub repository:")
+        print("https://github.com/olivercalazans/DataSeeker")
         while not self._stop_flag:
             print('\nWrite "help" to see the commands ' + '=' * 40)
             input_data         = input('[\033[38;5;202m' + 'DataSeeker' + '\033[0m]# ').split()
