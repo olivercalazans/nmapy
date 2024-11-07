@@ -16,7 +16,8 @@ class Network: # ===============================================================
     def _select_interface() -> str:
         """Selects a network interface by retrieving available interfaces, displaying them, and validating the user's input."""
         Network._display_interfaces()
-        interface  = Network._validate_input(list(psutil.net_if_addrs().keys()))
+        interface_list = [iface for iface in list(psutil.net_if_addrs().keys()) if psutil.net_if_stats()[iface].isup]
+        interface      = Network._validate_input(interface_list)
         return interface
 
 
@@ -103,9 +104,9 @@ class Network: # ===============================================================
     def _validate_input(options:list[str]) -> str:
         """Prompts the user to select an option from a list and validates the input."""
         while True:
-            try: 
+            try:
                 number = int(input('Choose one: '))
-                if number >= 0 and number < len(options) - 1:
+                if number >= 0 and number < len(options):
                     return options[number]
                 else:
                     print(Color.yellow(f'Choose a number between 0 and {len(options) - 1}'))
