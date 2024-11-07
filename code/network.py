@@ -105,7 +105,7 @@ class Network: # ===============================================================
         while True:
             try: 
                 number = int(input('Choose one: '))
-                if number >= 0 and number < len(options):
+                if number >= 0 and number < len(options) - 1:
                     return options[number]
                 else:
                     print(Color.yellow(f'Choose a number between 0 and {len(options) - 1}'))
