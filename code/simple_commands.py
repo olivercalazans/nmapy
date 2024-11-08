@@ -45,16 +45,16 @@ class Interfaces: # ============================================================
     def _execute(database, _):
         interface_information = Network._get_interface_information()
         for iface in interface_information:
-            print(f"\n{Color.green("Interface")}: {iface['iface']} - Status: {iface['status']}")
+            print(f'\n{Color.green("Interface")}: {iface["iface"]} - Status: {iface["status"]}')
             if 'ipv4' in iface:
                 ipv4 = iface['ipv4']
-                print(f"  - IPv4 Address...: {Color.pink(ipv4['addr'])}")
-                print(f"  - Netmask........: {ipv4['mask']} - /{Network._convert_mask_to_cidr_ipv4(ipv4['mask'])}")
-                print(f"  - Broadcast IP...: {ipv4['broad']}")
+                print(f'  - IPv4 Address...: {Color.pink(ipv4["addr"])}')
+                print(f'  - Netmask........: {ipv4["mask"]} - /{Network._convert_mask_to_cidr_ipv4(ipv4["mask"])}')
+                print(f'  - Broadcast IP...: {ipv4["broad"]}')
             if 'ipv6' in iface:
                 ipv6 = iface['ipv6']
-                print(f"  - IPv6 Address...: {Color.blue(ipv6['addr'])}")
-                print(f"  - Netmask........: {ipv6['mask']}")
+                print(f'  - IPv6 Address...: {Color.blue(ipv6["addr"])}')
+                print(f'  - Netmask........: {ipv6["mask"]}')
 
 
 
