@@ -23,6 +23,16 @@ class Network: # ===============================================================
 
 
     @staticmethod
+    def _display_interfaces() -> None:
+        """Displays the available network interfaces along with their IP addresses and subnet masks in CIDR notation."""
+        interfaces = [iface for iface in Network._get_interface_information() if iface['status'] == Color.green('UP')]
+        for index, iface in enumerate(interfaces):
+            ipv4 = f'{iface["ipv4"]["addr"]}/{Network._convert_mask_to_cidr_ipv4(iface["ipv4"]["mask"])}'
+            ipv6 = f'{iface["ipv6"]["addr"]}/{Network._convert_mask_to_cidr_ipv6(iface["ipv6"]["mask"])}'
+            print(f'{index} - {iface["iface"]:<6} => {Color.pink(ipv4):<26}, {Color.blue(ipv6)}')
+
+
+    @staticmethod
     def _get_interface_information() -> dict:
         interface_information = list()
         for iface_name, iface_addresses in psutil.net_if_addrs().items():
@@ -36,19 +46,9 @@ class Network: # ===============================================================
 
 
     @staticmethod
-    def _display_interfaces() -> None:
-        """Displays the available network interfaces along with their IP addresses and subnet masks in CIDR notation."""
-        interfaces = [iface for iface in Network._get_interface_information() if iface['status'] == Color.green('UP')]
-        for index, iface in enumerate(interfaces):
-            ipv4 = f'{iface['ipv4']['addr']}/{Network._convert_mask_to_cidr_ipv4(iface['ipv4']['mask'])}'
-            ipv6 = f'{iface['ipv6']['addr']}/{Network._convert_mask_to_cidr_ipv6(iface['ipv6']['mask'])}'
-            print(f'{index} - {iface['iface']:<6} => {Color.pink(ipv4):<23}, {Color.blue(ipv6)}')
-
-
-    @staticmethod
     def _get_network_information(ip:str, subnet_mask:str) -> ipaddress.IPv4Address:
         """Returns the network information for a given IP address and subnet mask."""
-        return ipaddress.IPv4Network(f"{ip}/{subnet_mask}", strict=False)
+        return ipaddress.IPv4Network(f'{ip}/{subnet_mask}', strict=False)
 
 
     @staticmethod
