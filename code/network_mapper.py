@@ -6,10 +6,10 @@
 
 import logging, sys, signal
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from scapy.all import  Ether, ARP, ICMP, IP
-from scapy.all import srp, sr1
+from scapy.all import Ether, ARP
+from scapy.all import srp
 from scapy.all import conf
-from network   import *
+from network   import Network
 from auxiliary import Color, Argument_Parser_Manager
 
 
@@ -118,8 +118,8 @@ class Network_Mapper:
     @staticmethod
     def _send_ping(ip:str) -> bool:
         """Sends an ICMP ping to the specified IP address using Scapy."""
-        packet = IP(dst=ip)/ICMP()
-        reply = sr1(packet, timeout=2, verbose=0)
+        packet = Network._create_ip_icmp_packet(ip)
+        reply  = Network._send_single_packet(packet)
         return reply is not None
 
 
