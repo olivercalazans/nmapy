@@ -15,7 +15,7 @@ THIS FILE CONTAINS THE CLASSES THAT EXECUTE SIMPLE COMMANDS.
 
 
 import ipaddress, json, urllib.request, re
-from network import *
+from network   import Network
 from auxiliary import Color, Argument_Parser_Manager
 
 
@@ -25,14 +25,15 @@ class Command_List: # ==========================================================
 
     @staticmethod
     def _execute(__, _) -> None:
-        for i in (
+        for command in (
             f'{Color.green("iface")}....: Display interface information',
             f'{Color.green("ip")}.......: Get IP by name',
             f'{Color.green("geoip")}....: Get geolocation of an IP',
             f'{Color.green("dev")}......: Looks up a MAC',
             f'{Color.green("netmap")}...: Network scanner',
             f'{Color.green("pscan")}....: Port scanner',
-        ): print(i)
+            f'{Color.green("osfing")}...: OS Fingerprint',
+        ): print(command)
 
 
 
@@ -42,7 +43,7 @@ class Interfaces: # ============================================================
     """Displays network interfaces information."""
 
     @staticmethod
-    def _execute(database, _):
+    def _execute(__, _):
         interface_information = Network._get_interface_information()
         for iface in interface_information:
             print(f'\n{Color.green("Interface")}: {iface["iface"]} - Status: {iface["status"]}')
