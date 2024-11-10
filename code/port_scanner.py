@@ -6,9 +6,9 @@
 
 import socket, ipaddress, random, time, threading, sys
 from scapy.all import IP, TCP
-from scapy.all import sr, sr1, send
-from scapy.all import conf, packet
-from network   import *
+from scapy.all import sr, send
+from scapy.all import conf, Packet
+from network   import Network
 from auxiliary import Color, Argument_Parser_Manager
 
 
@@ -142,9 +142,9 @@ class Port_Scanner:
         return [values[0] for _ in range(packet_number)]
 
 
-    def _async_send_packet(self, packet:packet) -> None:
+    def _async_send_packet(self, packet:Packet) -> None:
         """Sends a single TCP SYN packet asynchronously and stores the response."""
-        response = sr1(packet, timeout=5, verbose=False)
+        response = Network._send_single_packet(packet)
         with self._lock:
             self._responses.append((packet, response))
 
@@ -199,7 +199,7 @@ class Port_Scanner:
     def _send_real_packet(self) -> None:
         """Sends a real TCP SYN packet to the specified target IP address."""
         real_packet = self._create_tpc_ip_packet(self._ports_to_be_used[0])
-        response    = sr1(real_packet, verbose=0)
+        response    = Network._send_single_packet(real_packet)
         self._responses = [(real_packet, response)]
 
 
