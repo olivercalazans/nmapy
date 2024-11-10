@@ -87,10 +87,15 @@ class Argument_Definitions: # ==================================================
         return "PortScanner", [
             ("arg",   "host", "Host name"),
             ("bool",  "-r", "--random-order", "Use the ports in random order"),
-            ("value", "-p", "--port", str, "Specify a port to scan"),
+            ("value", "-p", "--port",  str, "Specify a port to scan"),
             ("value", "-D", "--decoy", str, "Uses decoy method"),
             ("opt",   "-d", "--delay", "Add a delay between packet transmissions."),
         ]
+
+
+    @staticmethod
+    def _os_fingerprint_arguments():
+        return "OSFingerprint", [("arg", "target", "Target IP")]
 
 
 
@@ -123,11 +128,11 @@ class Files: # =================================================================
 
 class Color: # =================================================================================================
     """This class provides utility methods to format messages for better visibility."""
-    
+
     @staticmethod
     def green(message:str) -> str:
         return '\033[32m' + message + '\033[0m'
-    
+
     @staticmethod
     def red(message:str) -> str:
         return '\033[31m' + message + '\033[0m'
@@ -135,7 +140,7 @@ class Color: # =================================================================
     @staticmethod
     def yellow(message:str) -> str:
         return '\033[33m' + message + '\033[0m'
-    
+
     @staticmethod
     def blue(message:str) -> str:
         return '\033[34m' + message + '\033[0m'
