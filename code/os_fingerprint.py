@@ -5,7 +5,6 @@
 
 
 
-from scapy.all import conf
 from network   import Network
 from auxiliary import Argument_Parser_Manager, Color
 
@@ -19,7 +18,6 @@ class OS_Fingerprint:
     def _execute(self, database, data:list) -> None:
         try:
             self._get_argument(database.parser_manager, data)
-            conf.iface = Network._select_interface()
             self._perform_icmp_fingerprint()
         except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
         except KeyboardInterrupt:   print(Color.red("Process stopped"))
