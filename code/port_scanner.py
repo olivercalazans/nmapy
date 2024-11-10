@@ -21,7 +21,6 @@ class Port_Scanner:
         self._ports_to_be_used = None
         self._target_ip        = None
         self._responses        = list()
-        self._interface        = None
         self._lock             = threading.Lock()
         self._my_ip_address    = None
         self._all_ports        = { 
@@ -48,8 +47,6 @@ class Port_Scanner:
         try:
             self._get_argument_and_flags(database.parser_manager, data)
             self._target_ip = Network._get_ip_by_name(self._host, True)
-            self._interface = Network._select_interface()
-            conf.iface      = self._interface
             conf.verb       = 0
             self._get_result_by_transmission_method()
             self._process_responses()
@@ -153,10 +150,11 @@ class Port_Scanner:
     def _perform_decoy_method(self) -> None:
         """Performs a decoy scan method using the specified port and network interface."""
         self._prepare_ports(self._flags['decoy'])
-        network_info        = Network._get_ip_and_subnet_mask(self._interface)
+        interface           = Network._select_interface()
+        network_info        = Network._get_ip_and_subnet_mask(interface)
         self._my_ip_address = network_info['ip']
-        ips                 = self._prepare_decoy_and_real_ips(network_info['netmask'])
-        self._send_decoy_and_real_packets(ips)
+        ip_list             = self._prepare_decoy_and_real_ips(network_info['netmask'])
+        self._send_decoy_and_real_packets(ip_list)
 
 
     def _prepare_decoy_and_real_ips(self, subnet_mask:str) -> list:
