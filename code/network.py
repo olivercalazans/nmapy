@@ -6,44 +6,14 @@
 
 
 import psutil, socket, ipaddress
+from scapy.all import IP, ICMP, Packet
+from scapy.all import sr1
 from auxiliary import Color
 
 
 
-class Network: # =============================================================================================
+class Network:
     """Contains common network-related methods used by multiple classes."""
-
-    @staticmethod
-    def _select_interface() -> str:
-        """Selects a network interface by retrieving available interfaces, displaying them, and validating the user's input."""
-        Network._display_interfaces()
-        interface_list = [iface for iface in list(psutil.net_if_addrs().keys()) if psutil.net_if_stats()[iface].isup]
-        interface      = Network._validate_input(interface_list)
-        return interface
-
-
-    @staticmethod
-    def _display_interfaces() -> None:
-        """Displays the available network interfaces along with their IP addresses and subnet masks in CIDR notation."""
-        interfaces = [iface for iface in Network._get_interface_information() if iface['status'] == Color.green('UP')]
-        for index, iface in enumerate(interfaces):
-            ipv4 = f'{iface["ipv4"]["addr"]}/{Network._convert_mask_to_cidr_ipv4(iface["ipv4"]["mask"])}'
-            ipv6 = f'{iface["ipv6"]["addr"]}/{Network._convert_mask_to_cidr_ipv6(iface["ipv6"]["mask"])}'
-            print(f'{index} - {iface["iface"]:<6} => {Color.pink(ipv4):<26}, {Color.blue(ipv6)}')
-
-
-    @staticmethod
-    def _get_interface_information() -> dict:
-        interface_information = list()
-        for iface_name, iface_addresses in psutil.net_if_addrs().items():
-            status    = Color.green('UP') if psutil.net_if_stats()[iface_name].isup else Color.red('DOWN')
-            interface = {'iface': iface_name, 'status': status}
-            for address in iface_addresses:
-                if   address.family == socket.AF_INET:  interface.update({'ipv4': {'addr': address.address, 'mask': address.netmask, 'broad': address.broadcast}})
-                elif address.family == socket.AF_INET6: interface.update({'ipv6': {'addr': address.address, 'mask': address.netmask, 'broad': address.broadcast}})
-            interface_information.append(interface)
-        return interface_information
-
 
     @staticmethod
     def _get_network_information(ip:str, subnet_mask:str) -> ipaddress.IPv4Address:
@@ -55,7 +25,7 @@ class Network: # ===============================================================
     def _convert_mask_to_cidr_ipv4(subnet_mask:str) -> int:
         """Converts a subnet mask to CIDR (Classless Inter-Domain Routing) notation."""
         return ipaddress.IPv4Network(f'0.0.0.0/{subnet_mask}').prefixlen
-    
+
 
     @staticmethod
     def _convert_mask_to_cidr_ipv6(hex_mask:str) -> int:
@@ -63,7 +33,7 @@ class Network: # ===============================================================
         bin_mask = ''.join(format(int(block, 16), '016b') for block in hex_mask.split(':'))
         cidr     = bin_mask.count('1')
         return cidr
-    
+
 
     @staticmethod
     def _get_ip_and_subnet_mask(interface:str) -> tuple[str,str]:
@@ -112,3 +82,49 @@ class Network: # ===============================================================
                 else:
                     print(Color.yellow(f'Choose a number between 0 and {len(options) - 1}'))
             except: print(Color.yellow('Choose a number'))
+
+
+    # INTERFACES ---------------------------------------------------------------------------------------------
+    @staticmethod
+    def _select_interface() -> str:
+        """Selects a network interface by retrieving available interfaces, displaying them, and validating the user's input."""
+        Network._display_interfaces()
+        interface_list = [iface for iface in list(psutil.net_if_addrs().keys()) if psutil.net_if_stats()[iface].isup]
+        interface      = Network._validate_input(interface_list)
+        return interface
+
+
+    @staticmethod
+    def _display_interfaces() -> None:
+        """Displays the available network interfaces along with their IP addresses and subnet masks in CIDR notation."""
+        interfaces = [iface for iface in Network._get_interface_information() if iface['status'] == Color.green('UP')]
+        for index, iface in enumerate(interfaces):
+            ipv4 = f'{iface["ipv4"]["addr"]}/{Network._convert_mask_to_cidr_ipv4(iface["ipv4"]["mask"])}'
+            ipv6 = f'{iface["ipv6"]["addr"]}/{Network._convert_mask_to_cidr_ipv6(iface["ipv6"]["mask"])}'
+            print(f'{index} - {iface["iface"]:<6} => {Color.pink(ipv4):<26}, {Color.blue(ipv6)}')
+
+
+    @staticmethod
+    def _get_interface_information() -> dict:
+        interface_information = list()
+        for iface_name, iface_addresses in psutil.net_if_addrs().items():
+            status    = Color.green('UP') if psutil.net_if_stats()[iface_name].isup else Color.red('DOWN')
+            interface = {'iface': iface_name, 'status': status}
+            for address in iface_addresses:
+                if   address.family == socket.AF_INET:  interface.update({'ipv4': {'addr': address.address, 'mask': address.netmask, 'broad': address.broadcast}})
+                elif address.family == socket.AF_INET6: interface.update({'ipv6': {'addr': address.address, 'mask': address.netmask, 'broad': address.broadcast}})
+            interface_information.append(interface)
+        return interface_information
+
+
+    # PACKETS ------------------------------------------------------------------------------------------------
+    @staticmethod
+    def _create_ip_icmp_packet(target_ip:str) -> Packet:
+        "Creates an IP/ICMP packet for the specified target IP address."
+        return IP(dst=target_ip)/ICMP()
+
+
+    # SENDING METHODS -------------------------------------------------------------------------------------------
+    @staticmethod
+    def _send_single_packet(packet:Packet) -> Packet|None:
+        return sr1(packet, timeout=3, verbose=0)
