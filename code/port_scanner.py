@@ -5,7 +5,7 @@
 
 
 import socket, ipaddress, random, time, threading, sys
-from scapy.all import IP, TCP
+from scapy.all import TCP
 from scapy.all import sr, send
 from scapy.all import conf, Packet
 from network   import Network
@@ -89,16 +89,11 @@ class Port_Scanner:
     def _perform_normal_scan(self) -> None:
         """Performs a normal scan on the specified target IP address."""
         self._prepare_ports(self._flags['ports'])
-        packets = [self._create_tpc_ip_packet(port) for port in self._ports_to_be_used]
+        packets = [Network._create_tpc_ip_packet(self._target_ip, port) for port in self._ports_to_be_used]
         if self._flags['delay']: 
             self._async_sending(packets)
         else: 
             self._send_packets(packets)
-
-
-    def _create_tpc_ip_packet(self, port, source_ip=None) -> list:
-        """Creates the TCP SYN packet"""
-        return IP(src=source_ip, dst=self._target_ip) / TCP(dport=port, flags="S")
 
 
     def _send_packets(self, packets:list) -> None:
@@ -196,14 +191,14 @@ class Port_Scanner:
 
     def _send_real_packet(self) -> None:
         """Sends a real TCP SYN packet to the specified target IP address."""
-        real_packet = self._create_tpc_ip_packet(self._ports_to_be_used[0])
+        real_packet = Network._create_tpc_ip_packet(self._target_ip, self._ports_to_be_used[0])
         response    = Network._send_single_packet(real_packet)
         self._responses = [(real_packet, response)]
 
 
     def _send_decoy_packet(self, decoy_ip:str) -> None:
         """Sends a decoy TCP SYN packet to the specified target IP address."""
-        decoy_packet = self._create_tpc_ip_packet(self._ports_to_be_used, decoy_ip)
+        decoy_packet = Network._create_tpc_ip_packet(self._target_ip, self._ports_to_be_used, decoy_ip)
         send(decoy_packet, verbose=0)
 
 
