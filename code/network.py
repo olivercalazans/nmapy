@@ -6,7 +6,7 @@
 
 
 import psutil, socket, ipaddress
-from scapy.all import IP, ICMP, Packet
+from scapy.all import IP, TCP, ICMP, Packet
 from scapy.all import sr1
 from auxiliary import Color
 
@@ -21,6 +21,7 @@ class Network:
         return ipaddress.IPv4Network(f'{ip}/{subnet_mask}', strict=False)
 
 
+    # IP ADDRESS -----------------------------------------------------------------------------------
     @staticmethod
     def _convert_mask_to_cidr_ipv4(subnet_mask:str) -> int:
         """Converts a subnet mask to CIDR (Classless Inter-Domain Routing) notation."""
@@ -71,19 +72,6 @@ class Network:
             print(f'{index} - {ip}')
 
 
-    @staticmethod
-    def _validate_input(options:list[str]) -> str:
-        """Prompts the user to select an option from a list and validates the input."""
-        while True:
-            try:
-                number = int(input('Choose one: '))
-                if number >= 0 and number < len(options):
-                    return options[number]
-                else:
-                    print(Color.yellow(f'Choose a number between 0 and {len(options) - 1}'))
-            except: print(Color.yellow('Choose a number'))
-
-
     # INTERFACES ---------------------------------------------------------------------------------------------
     @staticmethod
     def _select_interface() -> str:
@@ -119,12 +107,32 @@ class Network:
 
     # PACKETS ------------------------------------------------------------------------------------------------
     @staticmethod
-    def _create_ip_icmp_packet(target_ip:str) -> Packet:
+    def _create_tpc_ip_packet(target_ip:str, port:int, source_ip=None) -> list:
+        """Creates the TCP SYN packet"""
+        return IP(src=source_ip, dst=target_ip) / TCP(dport=port, flags="S")
+
+
+    @staticmethod
+    def _create_icmp_ip_packet(target_ip:str) -> Packet:
         "Creates an IP/ICMP packet for the specified target IP address."
         return IP(dst=target_ip)/ICMP()
 
 
-    # SENDING METHODS -------------------------------------------------------------------------------------------
+    # SENDING METHODS ---------------------------------------------------------------------------------------
     @staticmethod
     def _send_single_packet(packet:Packet) -> Packet|None:
         return sr1(packet, timeout=3, verbose=0)
+
+
+    # GENERAL -----------------------------------------------------------------------------------------------
+    @staticmethod
+    def _validate_input(options:list[str]) -> str:
+        """Prompts the user to select an option from a list and validates the input."""
+        while True:
+            try:
+                number = int(input('Choose one: '))
+                if number >= 0 and number < len(options):
+                    return options[number]
+                else:
+                    print(Color.yellow(f'Choose a number between 0 and {len(options) - 1}'))
+            except: print(Color.yellow('Choose a number'))
