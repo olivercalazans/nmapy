@@ -6,12 +6,9 @@
 
 import logging, sys, signal
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from scapy.all import Ether, ARP
-from scapy.all import srp
 from scapy.all import conf
 from network   import Network
 from auxiliary import Color, Argument_Parser_Manager
-
 
 
 class Network_Mapper:
@@ -49,23 +46,9 @@ class Network_Mapper:
     # ARP NETWORK SCANNER METHODS -----------------------------------------------------------------------------
     def _run_arp_methods(self) -> None:
         """Performs network scanning using ARP requests."""
-        packet   = self._create_arp_packet()
-        answered = self._perform_arp_sweep(packet)
+        packet   = Network._create_arp_packet(self._network)
+        answered = Network._send_and_receive_layer2_packet(packet)
         self._display_arp_result(answered)
-
-
-    def _create_arp_packet(self) -> Ether:
-        """Creates an ARP request packet to be sent over the network."""
-        arp_request = ARP(pdst=str(self._network))
-        broadcast   = Ether(dst="ff:ff:ff:ff:ff:ff")
-        return broadcast / arp_request
-
-
-    @staticmethod
-    def _perform_arp_sweep(packet:Ether) -> list:
-        """Sends the ARP packet and returns a list of answered responses."""
-        answered, _ = srp(packet, timeout=2, verbose=False)
-        return answered
 
 
     @staticmethod
@@ -118,8 +101,8 @@ class Network_Mapper:
     @staticmethod
     def _send_ping(ip:str) -> bool:
         """Sends an ICMP ping to the specified IP address using Scapy."""
-        packet = Network._create_ip_icmp_packet(ip)
-        reply  = Network._send_single_packet(packet)
+        packet = Network._create_icmp_ip_packet(ip)
+        reply  = Network._send_and_receive_single_layer3_packet(packet)
         return reply is not None
 
 
