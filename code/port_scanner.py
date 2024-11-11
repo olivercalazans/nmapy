@@ -6,7 +6,6 @@
 
 import socket, ipaddress, random, time, threading, sys
 from scapy.all import TCP
-from scapy.all import sr, send
 from scapy.all import conf, Packet
 from network   import Network
 from auxiliary import Color, Argument_Parser_Manager
@@ -93,13 +92,7 @@ class Port_Scanner:
         if self._flags['delay']: 
             self._async_sending(packets)
         else: 
-            self._send_packets(packets)
-
-
-    def _send_packets(self, packets:list) -> None:
-        """Sends the SYN packets and receives the responses."""
-        responses, unanswered = sr(packets, timeout=5, inter=0.1)
-        self._responses = responses
+            self._responses = Network._send_and_receive_multiple_layer3_packets(packets)
 
 
     def _async_sending(self, packets:list) -> None:
@@ -136,7 +129,7 @@ class Port_Scanner:
 
     def _async_send_packet(self, packet:Packet) -> None:
         """Sends a single TCP SYN packet asynchronously and stores the response."""
-        response = Network._send_single_packet(packet)
+        response = Network._send_and_receive_single_layer3_packet(packet)
         with self._lock:
             self._responses.append((packet, response))
 
@@ -192,14 +185,14 @@ class Port_Scanner:
     def _send_real_packet(self) -> None:
         """Sends a real TCP SYN packet to the specified target IP address."""
         real_packet = Network._create_tpc_ip_packet(self._target_ip, self._ports_to_be_used[0])
-        response    = Network._send_single_packet(real_packet)
+        response    = Network._send_and_receive_single_layer3_packet(real_packet)
         self._responses = [(real_packet, response)]
 
 
     def _send_decoy_packet(self, decoy_ip:str) -> None:
         """Sends a decoy TCP SYN packet to the specified target IP address."""
         decoy_packet = Network._create_tpc_ip_packet(self._target_ip, self._ports_to_be_used, decoy_ip)
-        send(decoy_packet, verbose=0)
+        Network._send_a_single_layer3_packet(decoy_packet)
 
 
     # PROCESS DATA -------------------------------------------------------------------------------------------
