@@ -48,7 +48,6 @@ class Network_Mapper:
         """Performs network scanning using ARP requests."""
         packet   = Network._create_arp_packet(self._network)
         answered = Network._send_and_receive_layer2_packet(packet)
-        print(answered)
         self._display_arp_result(answered)
 
 
