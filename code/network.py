@@ -87,9 +87,7 @@ class Network:
         """Displays the available network interfaces along with their IP addresses and subnet masks in CIDR notation."""
         interfaces = [iface for iface in Network._get_interface_information() if iface['status'] == Color.green('UP')]
         for index, iface in enumerate(interfaces):
-            ipv4 = f'{iface["ipv4"]["addr"]}/{Network._convert_mask_to_cidr_ipv4(iface["ipv4"]["mask"])}'
-            ipv6 = f'{iface["ipv6"]["addr"]}/{Network._convert_mask_to_cidr_ipv6(iface["ipv6"]["mask"])}'
-            print(f'{index} - {iface["iface"]:<6} => {Color.pink(ipv4):<26}, {Color.blue(ipv6)}')
+            print(f'{index} - {iface["iface"]:<6} => {Color.pink(iface["ipv4"]["addr"])}/{Network._convert_mask_to_cidr_ipv4(iface["ipv4"]["mask"])}')
 
 
     @staticmethod
@@ -100,8 +98,7 @@ class Network:
             status    = Color.green('UP') if psutil.net_if_stats()[iface_name].isup else Color.red('DOWN')
             interface = {'iface': iface_name, 'status': status}
             for address in iface_addresses:
-                if   address.family == socket.AF_INET:  interface.update({'ipv4': {'addr': address.address, 'mask': address.netmask, 'broad': address.broadcast}})
-                elif address.family == socket.AF_INET6: interface.update({'ipv6': {'addr': address.address, 'mask': address.netmask, 'broad': address.broadcast}})
+                if address.family == socket.AF_INET: interface.update({'ipv4': {'addr': address.address, 'mask': address.netmask, 'broad': address.broadcast}})
             interface_information.append(interface)
         return interface_information
 
@@ -116,20 +113,20 @@ class Network:
     @staticmethod
     def _create_udp_ip_packet(target_ip:str, port:int, source_ip=None) -> UDP:
         """Creates a UDP packet encapsulated in an IP packet."""
-        return IP(src=source_ip, dst=target_ip)/UDP(dport=port)
+        return IP(src=source_ip, dst=target_ip) / UDP(dport=port)
 
 
     @staticmethod
     def _create_icmp_ip_packet(target_ip:str) -> ICMP:
         """Creates an ICMP packet encapsulated in an IP packet."""
-        return IP(dst=target_ip)/ICMP()
+        return IP(dst=target_ip) / ICMP()
 
 
     @staticmethod
     def _create_arp_packet(network) -> ARP:
         """Creates an ARP request packet to be sent over the network."""
         return ARP(pdst=str(network)) / Ether(dst="ff:ff:ff:ff:ff:ff")
-
+    
 
     # SENDING METHODS ---------------------------------------------------------------------------------------
     @staticmethod
