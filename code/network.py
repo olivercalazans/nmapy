@@ -76,9 +76,9 @@ class Network:
     @staticmethod
     def _display_interfaces() -> None:
         """Displays the available network interfaces along with their IP addresses and subnet masks in CIDR notation."""
-        interfaces = [iface for iface in Network._get_interface_information() if iface['status'] == Color.green('UP')]
+        interfaces = [iface for iface in Network._get_interface_information() if iface['status'] == 'UP']
         for index, iface in enumerate(interfaces):
-            print(f'{index} - {iface["iface"]:<6} => {Color.pink(iface["ipv4"]["addr"])}/{Network._convert_mask_to_cidr_ipv4(iface["ipv4"]["mask"])}')
+            print(f'{index} - {iface["iface"]:<6} => {Color.pink(iface["addr"])}/{Network._convert_mask_to_cidr_ipv4(iface["mask"])}')
 
 
     @staticmethod
@@ -86,10 +86,10 @@ class Network:
         """Retrieves network interface information for the local machine."""
         interface_information = list()
         for iface_name, iface_addresses in psutil.net_if_addrs().items():
-            status    = Color.green('UP') if psutil.net_if_stats()[iface_name].isup else Color.red('DOWN')
+            status    = 'UP' if psutil.net_if_stats()[iface_name].isup else'DOWN'
             interface = {'iface': iface_name, 'status': status}
             for address in iface_addresses:
-                if address.family == socket.AF_INET: interface.update({'ipv4': {'addr': address.address, 'mask': address.netmask, 'broad': address.broadcast}})
+                if address.family == socket.AF_INET: interface.update({'addr': address.address, 'mask': address.netmask, 'broad': address.broadcast})
             interface_information.append(interface)
         return interface_information
 
