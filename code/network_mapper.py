@@ -40,11 +40,7 @@ class Network_Mapper:
     def _get_argument_and_flags(self, parser_manager:Argument_Parser_Manager, arguments:list) -> None:
         """Parses arguments and flags from the command line."""
         arguments = parser_manager._parse("Netmapper", arguments)
-        self._flags = {
-            'ipv4': arguments.ipv4,
-            'ipv6': arguments.ipv6,
-            'ping': arguments.ping
-            }
+        self._flags = {'ping': arguments.ping}
 
 
     # ARP NETWORK SCANNER METHODS -----------------------------------------------------------------------------
