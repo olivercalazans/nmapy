@@ -18,7 +18,7 @@ class Network_Mapper:
     """
 
     def __init__(self) -> None:
-        self._flags     = {'ping': None}
+        self._flags     = {'ping': False}
         self._interface = None    # str
         self._network   = None    # ipaddress.IPv4Network
 
@@ -32,7 +32,7 @@ class Network_Mapper:
             self._network   = Network._get_network_information(network_info['ip'], network_info['netmask'])
             self._run_arp_methods() if not self._flags['ping'] else self._run_ping_methods()
         except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
-        except ValueError:          print(Color.yellow("Invalid IP"))
+        except ValueError as error: print(Color.yellow(error))
         except KeyboardInterrupt:   print(Color.yellow("Process stopped"))
         except Exception as error:  print(Color.display_unexpected_error(error))
 
@@ -40,7 +40,11 @@ class Network_Mapper:
     def _get_argument_and_flags(self, parser_manager:Argument_Parser_Manager, arguments:list) -> None:
         """Parses arguments and flags from the command line."""
         arguments = parser_manager._parse("Netmapper", arguments)
-        self._flags = {'ping': arguments.ping}
+        self._flags = {
+            'ipv4': arguments.ipv4,
+            'ipv6': arguments.ipv6,
+            'ping': arguments.ping
+            }
 
 
     # ARP NETWORK SCANNER METHODS -----------------------------------------------------------------------------
@@ -48,6 +52,7 @@ class Network_Mapper:
         """Performs network scanning using ARP requests."""
         packet   = Network._create_arp_packet(self._network)
         answered = Network._send_and_receive_layer2_packet(packet)
+        print(answered)
         self._display_arp_result(answered)
 
 
