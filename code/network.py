@@ -27,15 +27,6 @@ class Network:
 
 
     @staticmethod
-    def _convert_mask_to_cidr_ipv6(hex_mask:str) -> int:
-        """Converts an IPv6 subnet mask in hexadecimal format to its CIDR notation."""
-        if '::' in hex_mask: hex_mask = hex_mask.replace('::', '')
-        bin_mask = ''.join(format(int(block, 16), '016b') for block in hex_mask.split(':'))
-        cidr     = bin_mask.count('1')
-        return cidr
-
-
-    @staticmethod
     def _get_ip_and_subnet_mask(interface:str) -> tuple[str,str]:
         """ Retrieves the IP address and subnet mask for a specified network interface."""
         iface_addresses = psutil.net_if_addrs()[interface]
