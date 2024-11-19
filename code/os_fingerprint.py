@@ -4,7 +4,7 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-from scapy.all import TCP, UDP, packet
+from scapy.all import ICMP, TCP, UDP, Packet
 from network   import Network
 from auxiliary import Argument_Parser_Manager, Color
 
@@ -42,17 +42,40 @@ class OS_Fingerprint:
         print(f"Performing OS fingerprinting with ICMP on {self._target_ip}...")
         packet   = Network._create_icmp_ip_packet(self._target_ip)
         response = Network._send_and_receive_single_layer3_packet(packet)
-        if response: self._identify_os_by_icmp(response.ttl)
-        else: self._icmp_result = "No ICMP response received from the target."
+        if response: self._analyze_icmp_response(response)
+        else: self._icmp_result = "No ICMP response received. Host unreachable or potentially blocked by firewall."
 
 
-    def _identify_os_by_icmp(self, ttl:int) -> None:
+    def _analyze_icmp_response(self, icmp_packet:Packet) -> None:
+        """Analyzes an ICMP response to extract relevant packet characteristics."""
+        ttl_result       = self._analyze_ttl(icmp_packet.ttl)
+        icmp_type_result = self._analyse_icmp_type_and_code(icmp_packet)
+        self._icmp_result = f'\t{ttl_result}\n\t{icmp_type_result}'
+
+
+    @staticmethod
+    def _analyze_ttl(ttl:int) -> str:
         """Identifies the operating system based on the TTL value from an ICMP response."""
-        if   ttl <= 64:  os = "Probably Linux/Android"
-        elif ttl <= 128: os = "Probably Windows"
-        elif ttl > 128:  os = "Probably iOS or another system with a higher TTL"
-        else:            os = "Unknown operating system"
-        self._icmp_result = os
+        if   ttl <= 64:  ttl_result = f"Likely OS: Linux/Android (TTL={ttl})"
+        elif ttl <= 128: ttl_result = f"Likely OS: Windows (TTL={ttl})"
+        elif ttl > 128:  ttl_result = f"Likely OS: iOS or other system with higher TTL (TTL={ttl})"
+        else:            ttl_result = f"Unknown system (TTL={ttl})"
+        return ttl_result
+    
+
+    @staticmethod
+    def _analyse_icmp_type_and_code(icmp_packet:Packet) -> str:
+        """Analyzes the ICMP type and code from a given packet."""
+        if icmp_packet.haslayer(ICMP):
+            icmp_type = icmp_packet[ICMP].type
+            icmp_code = icmp_packet[ICMP].code
+            if   icmp_type == 0:  icmp_type_and_code = "Echo reply received: Target is responding to ping."
+            elif icmp_type == 3:  icmp_type_and_code = f"Destination Unreachable (Code {icmp_code}): Potential firewall or routing issue."
+            elif icmp_type == 11: icmp_type_and_code = "Time Exceeded: Possible routing or firewall filtering."
+            else:                 icmp_type_and_code = f"ICMP Type {icmp_type} (Code {icmp_code}): Unknown response."
+        else:
+            icmp_type_and_code = f"No ICMP layer in response"
+        return icmp_type_and_code
 
 
     # TCP ---------------------------------------------------------------------------------------------------------------------
@@ -67,14 +90,14 @@ class OS_Fingerprint:
             print("No TCP response received.")
 
 
-    def _identify_os_by_tcp(self, response:packet) -> None:
+    def _identify_os_by_tcp(self, response:Packet) -> None:
         """Identifies the operating system based on the TCP flags from the response."""
         if   response[TCP].flags == 18: os = "TCP response received: Likely Windows or Linux-based system."
         elif response[TCP].flags == 4:  os = "TCP reset received: Likely a filtered firewall or closed port."
         elif response[TCP].flags == 2:  os = "SYN response received: Likely a system with an open port (TCP handshake)."
         elif response[TCP].flags == 1:  os = "FIN response received: System may be closing the connection (end of session)."
         else:                           os = "Unknown TCP flag combination, further analysis required."
-        self._tcp_result = os
+        self._tcp_result = f'\t{os}'
 
 
     # UDP ---------------------------------------------------------------------------------------------------------------------
@@ -84,13 +107,13 @@ class OS_Fingerprint:
         packet   = Network._create_udp_ip_packet(self._target_ip, 53)
         response = Network._send_and_receive_single_layer3_packet(packet)
         if response and response.haslayer(UDP):
-            self._udp_result = "UDP response received: Likely Linux or Unix-based system."
+            self._udp_result = "\tUDP response received: Likely Linux or Unix-based system."
         else:
-            self._udp_result = "No UDP response received."
+            self._udp_result = "\tNo UDP response received."
 
 
     def _display_result(self) -> None:
         """Displays the results of the OS fingerprinting performed using ICMP, TCP, and UDP."""
-        print(f'ICMP result...: {self._icmp_result}')
-        print(f'TCP result....: {self._tcp_result}')
-        print(f'UDP result....: {self._udp_result}')
+        print(f'{Color.green("ICMP result")}:\n{self._icmp_result}')
+        print(f'{Color.green("TCP result")}:\n{self._tcp_result}')
+        print(f'{Color.green("UDP result")}:\n{self._udp_result}')
