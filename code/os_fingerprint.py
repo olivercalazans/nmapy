@@ -4,17 +4,20 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-from scapy.all import ICMP, TCP, UDP, Packet
+from scapy.all import ICMP, IP, TCP, UDP, Packet
 from network   import Network
 from auxiliary import Argument_Parser_Manager, Color
 
 
 class OS_Fingerprint:
     def __init__(self) -> None:
-        self._target_ip   = None
+        self._target_ip   = None    # str
+        self._icmp_packet = None    # Packet
+        self._tcp_packet  = None    # Packet
+        self._udp_packet  = None    # Packet
         self._icmp_result = None
         self._tcp_result  = None
-        self._udp_result  = None
+        self._udp_result  = dict()
 
 
     def _execute(self, database, data:list) -> None:
@@ -36,7 +39,7 @@ class OS_Fingerprint:
         self._target_ip = arguments.target
 
 
-    # ICMP --------------------------------------------------------------------------------------------------------------------
+    # ICMP ---------------------------------------------------------------------------------------------------
     def _perform_icmp_fingerprint(self) -> None:
         """Performs OS fingerprinting using ICMP by sending an ICMP packet to the target."""
         print(f"Performing OS fingerprinting with ICMP on {self._target_ip}...")
@@ -61,7 +64,7 @@ class OS_Fingerprint:
         elif ttl > 128:  ttl_result = f"Likely OS: iOS or other system with higher TTL (TTL={ttl})"
         else:            ttl_result = f"Unknown system (TTL={ttl})"
         return ttl_result
-    
+
 
     @staticmethod
     def _analyse_icmp_type_and_code(icmp_packet:Packet) -> str:
@@ -78,7 +81,7 @@ class OS_Fingerprint:
         return icmp_type_and_code
 
 
-    # TCP ---------------------------------------------------------------------------------------------------------------------
+    # TCP ----------------------------------------------------------------------------------------------------
     def _perform_tcp_fingerprint(self) -> None:
         """Performs OS fingerprinting using TCP by sending a SYN packet to the target."""
         print(f"Performing OS fingerprinting with TCP on {self._target_ip}...")
@@ -100,18 +103,49 @@ class OS_Fingerprint:
         self._tcp_result = f'\t{os}'
 
 
-    # UDP ---------------------------------------------------------------------------------------------------------------------
+    # UDP ----------------------------------------------------------------------------------------------------
     def _perform_udp_fingerprint(self) -> None:
         """Performs OS fingerprinting using UDP by sending a packet to the target."""
         print(f"Performing OS fingerprinting with UDP on {self._target_ip}...")
-        packet   = Network._create_udp_ip_packet(self._target_ip, 53)
-        response = Network._send_and_receive_single_layer3_packet(packet)
-        if response and response.haslayer(UDP):
-            self._udp_result = "\tUDP response received: Likely Linux or Unix-based system."
+        packet           = Network._create_udp_ip_packet(self._target_ip, 12345, payload='Hello')
+        self._udp_packet = Network._send_and_receive_single_layer3_packet(packet)
+        self._analyse_udp_response()
+
+
+    def _analyse_udp_response(self) -> None:
+        if self._udp_packet:
+            self._analyse_udp_packet(self._udp_packet)
         else:
-            self._udp_result = "\tNo UDP response received."
+            self._udp_result.update({'error': 'No UDP response'})
 
 
+    def _analyse_udp_packet(self) -> str:
+        ttl                = self._udp_packet[IP].ttl
+        packet_len         = len(self._udp_packet)
+        fragmentation_flag = self._udp_packet[IP].flags
+        self._udp_result.update({'ttl': ttl, 'len': packet_len, 'flags': fragmentation_flag})
+        if    self._udp_packet.haslayer(UDP):  self._analyse_udp_layer()
+        elif  self._udp_packet.haslayer(ICMP): self._analyse_icmp_layer()
+        else: self._udp_result.update({'error':'Unknown protocol'})
+
+
+    def _analyse_udp_layer(self) -> None:
+        source_port      = self._udp_packet[UDP].sport
+        destination_port = self._udp_packet[UDP].dport
+        checksum         = self._udp_packet[UDP].chksum
+        payload          = self._udp_packet[UDP].payload
+        self._udp_result.update({'sport': source_port, 'dport': destination_port, 'cksum': checksum, 'payload': payload})
+
+
+    def _analyse_icmp_layer(self) -> None:
+        type        = self._udp_packet[ICMP].type
+        code        = self._udp_packet[ICMP].code
+        description = self._udp_packet[ICMP].summary
+        self._udp_result.update({'type': type, 'code': code, 'desc': description})
+
+
+
+    # RESULTS ------------------------------------------------------------------------------------------------
     def _display_result(self) -> None:
         """Displays the results of the OS fingerprinting performed using ICMP, TCP, and UDP."""
         print(f'{Color.green("ICMP result")}:\n{self._icmp_result}')
