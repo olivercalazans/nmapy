@@ -5,7 +5,7 @@
 
 
 import psutil, socket, ipaddress
-from scapy.all import IP, TCP, UDP, ICMP, ARP, Ether, Packet
+from scapy.all import Packet, Raw, Ether, ARP, IP, TCP, UDP, ICMP
 from scapy.all import sr1, sr, send, srp
 from auxiliary import Color
 
@@ -96,28 +96,28 @@ class Network:
 
     # PACKETS ------------------------------------------------------------------------------------------------
     @staticmethod
-    def _create_tpc_ip_packet(target_ip:str, port:int, source_ip=None) -> TCP:
+    def _create_tpc_ip_packet(target_ip:str, port:int, source_ip=None) -> Packet:
         """Creates a TCP packet encapsulated in an IP packet with a SYN flag."""
         return IP(src=source_ip, dst=target_ip) / TCP(dport=port, flags="S")
 
 
     @staticmethod
-    def _create_udp_ip_packet(target_ip:str, port:int, source_ip=None) -> UDP:
+    def _create_udp_ip_packet(target_ip:str, port:int, source_ip=None, payload=None) -> Packet:
         """Creates a UDP packet encapsulated in an IP packet."""
-        return IP(src=source_ip, dst=target_ip) / UDP(dport=port)
+        return IP(src=source_ip, dst=target_ip, ttl=64) / UDP(dport=port) / Raw(load=payload)
 
 
     @staticmethod
-    def _create_icmp_ip_packet(target_ip:str) -> ICMP:
+    def _create_icmp_ip_packet(target_ip:str) -> Packet:
         """Creates an ICMP packet encapsulated in an IP packet."""
         return IP(dst=target_ip) / ICMP()
 
 
     @staticmethod
-    def _create_arp_packet(network) -> ARP:
+    def _create_arp_packet(network) -> Packet:
         """Creates an ARP request packet to be sent over the network."""
         return ARP(pdst=str(network)) / Ether(dst="ff:ff:ff:ff:ff:ff")
-    
+
 
     # SENDING METHODS ---------------------------------------------------------------------------------------
     @staticmethod
@@ -144,6 +144,35 @@ class Network:
         """Sends a packet at the data link layer (Layer 2) and waits for a response."""
         answered, _ = srp(packet, timeout=2, verbose=False)
         return answered
+
+
+    # PORTS -------------------------------------------------------------------------------------------------
+    @staticmethod
+    def _get_ports() -> dict:
+        return { 
+            21   : 'FTP - File Transfer Protocol',  
+            22   : 'SSH - Secure Shell',  
+            23   : 'Telnet',  
+            25   : 'SMTP - Simple Mail Transfer Protocol',   
+            53   : 'DNS - Domain Name System',
+            67   : 'DHCP',
+            80   : 'HTTP - HyperText Transfer Protocol', 
+            110  : 'POP3 - Post Office Protocol version 3',
+            135  : 'msrpc',
+            139  : 'Netbios - ssn',
+            443  : 'HTTPS - HTTP Protocol over TLS/SSL',
+            445  : 'Microsoft - ds',
+            3306 : 'MySQL/MariaDB',
+            3389 : 'RDP - Remote Desktop Protocol',
+            5432 : 'PostgreSQL database system',
+            5900 : 'VNC - Virtual Network Computing',
+            6379 : 'Redis',
+            8080 : 'Jakarta Tomcat',
+            2179 : 'vmrdp',
+            3389 : 'ms-wbt-server',
+            7070 : 'realserver',
+            27017: 'MongoDB'
+        }
 
 
     # GENERAL -----------------------------------------------------------------------------------------------
