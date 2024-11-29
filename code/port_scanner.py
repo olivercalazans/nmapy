@@ -15,6 +15,7 @@ class Port_Scanner:
     """Performs a port scan on a specified host."""
 
     def __init__(self) -> None:
+        self._all_ports        = Network._get_ports()
         self._host             = None
         self._flags            = None
         self._ports_to_be_used = None
@@ -22,24 +23,6 @@ class Port_Scanner:
         self._responses        = list()
         self._lock             = threading.Lock()
         self._my_ip_address    = None
-        self._all_ports        = { 
-            21   : 'FTP - File Transfer Protocol',  
-            22   : 'SSH - Secure Shell',  
-            23   : 'Telnet',  
-            25   : 'SMTP - Simple Mail Transfer Protocol',   
-            53   : 'DNS - Domain Name System',
-            67   : 'DHCP',
-            80   : 'HTTP - HyperText Transfer Protocol', 
-            110  : 'POP3 - Post Office Protocol version 3', 
-            443  : 'HTTPS - HTTP Protocol over TLS/SSL',
-            3306 : 'MySQL/MariaDB',
-            3389 : 'RDP - Remote Desktop Protocol',
-            5432 : 'PostgreSQL database system',
-            5900 : 'VNC - Virtual Network Computing',
-            6379 : 'Redis',
-            8080 : 'Jakarta Tomcat',
-            27017: 'MongoDB'
-        }
 
 
     def _execute(self, database, data:list) -> None:
