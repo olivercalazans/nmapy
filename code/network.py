@@ -5,7 +5,7 @@
 
 
 import psutil, socket, ipaddress
-from scapy.all import Packet, Raw, Ether, ARP, IP, TCP, UDP, ICMP
+from scapy.all import Packet, Ether, ARP, IP, TCP, UDP, ICMP
 from scapy.all import sr1, sr, send, srp
 from auxiliary import Color
 
@@ -102,9 +102,9 @@ class Network:
 
 
     @staticmethod
-    def _create_udp_ip_packet(target_ip:str, port:int, source_ip=None, payload=None) -> Packet:
+    def _create_udp_ip_packet(target_ip:str, port:int, source_ip=None) -> Packet:
         """Creates a UDP packet encapsulated in an IP packet."""
-        return IP(src=source_ip, dst=target_ip, ttl=64) / UDP(dport=port) / Raw(load=payload)
+        return IP(src=source_ip, dst=target_ip, ttl=64) / UDP(dport=port)
 
 
     @staticmethod
@@ -129,7 +129,7 @@ class Network:
     @staticmethod
     def _send_and_receive_multiple_layer3_packets(packets:list[Packet]) -> list[Packet]:
         """Sends multiple packets at the network layer (Layer 3) and waits for responses."""
-        answered, _ = sr(packets, timeout=5, inter=0.1)
+        answered, _ = sr(packets, timeout=5, inter=0.1, verbose=0)
         return answered
 
 
