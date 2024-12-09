@@ -46,7 +46,7 @@ class OS_Fingerprint:
 
     # ICMP echo (IE) -----------------------------------------------------------------------------------------
     @staticmethod
-    def _create_icmp_packets(target_ip: str) -> Packet:
+    def _create_icmp_echo_packets(target_ip: str) -> Packet:
         return (
             IP(dst=target_ip, tos=0, flags='DF') / ICMP(type=8, code=9, id=12345, seq=295) / Raw(load=b'\x00' * 120),
             IP(dst=target_ip, tos=4)       /       ICMP(type=8, code=0, id=12346, seq=296) / Raw(load=b'\x00' * 150)
@@ -55,7 +55,7 @@ class OS_Fingerprint:
 
     # TCP (T2–T7) --------------------------------------------------------------------------------------------
     @staticmethod
-    def _get_test_packets(target_ip:str, open_port=int, closed_port=int) -> Packet:
+    def _get_t2_through_t7_tcp_packets(target_ip:str, open_port=int, closed_port=int) -> Packet:
         COMMON_TCP_OPTIONS        = [('NOP', None), ('MSS', 265), ('Timestamp', (0xFFFFFFFF, 0)), ('SAckOK', b'')]
         COMMOM_WSCALE_AND_OPTIONS = [('WScale', 10)] + COMMON_TCP_OPTIONS    # Equivalent in hex (03030A0102040109080AFFFFFFFF000000000402)
         return (
@@ -68,6 +68,7 @@ class OS_Fingerprint:
         )
 
 
+    # UDP (U1) -----------------------------------------------------------------------------------------------
     def _prepare_udp_packet(self) -> Packet:
         packet    = Network._create_udp_ip_packet(self._target_ip, 12345)
         packet.id = 0x1042
