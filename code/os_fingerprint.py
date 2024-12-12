@@ -46,11 +46,19 @@ class OS_Fingerprint:
 
     # ICMP echo (IE) -----------------------------------------------------------------------------------------
     @staticmethod
-    def _create_icmp_echo_packets(target_ip: str) -> Packet:
+    def _get_icmp_echo_packets(target_ip: str) -> Packet:
         return (
             IP(dst=target_ip, tos=0, flags='DF') / ICMP(type=8, code=9, id=12345, seq=295) / Raw(load=b'\x00' * 120),
             IP(dst=target_ip, tos=4)       /       ICMP(type=8, code=0, id=12346, seq=296) / Raw(load=b'\x00' * 150)
             )
+
+
+    # TCP explicit congestion notification (ECN) -------------------------------------------------------------
+    def _get_ecn_syn_packet(target_ip, target_port):
+        TCP_OPTIONS        = [('WScale', 10), ('NOP', None), ('MSS', 1460), ('SACKOK', b''), ('NOP', None), ('NOP', None)]
+        packet             = IP(dst=target_ip) / TCP(dport=target_port, flags="S", window=3, options=TCP_OPTIONS)
+        packet[TCP].flags |= 0x18    # 0x18 = CWR (0b00010000) + ECE (0b00001000)
+        return packet
 
 
     # TCP (T2–T7) --------------------------------------------------------------------------------------------
@@ -69,7 +77,7 @@ class OS_Fingerprint:
 
 
     # UDP (U1) -----------------------------------------------------------------------------------------------
-    def _prepare_udp_packet(self) -> Packet:
+    def _get_udp_packet(self) -> Packet:
         packet    = Network._create_udp_ip_packet(self._target_ip, 12345)
         packet.id = 0x1042
         packet    = packet / Raw(load=b'C' * 300)
