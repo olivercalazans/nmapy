@@ -46,7 +46,7 @@ class OS_Fingerprint:
 
     # ICMP echo (IE) -----------------------------------------------------------------------------------------
     @staticmethod
-    def _get_icmp_echo_packets(target_ip: str) -> Packet:
+    def _get_icmp_echo_packets(target_ip:str) -> Packet:
         return (
             IP(dst=target_ip, tos=0, flags='DF') / ICMP(type=8, code=9, id=12345, seq=295) / Raw(load=b'\x00' * 120),
             IP(dst=target_ip, tos=4)       /       ICMP(type=8, code=0, id=12346, seq=296) / Raw(load=b'\x00' * 150)
@@ -54,7 +54,8 @@ class OS_Fingerprint:
 
 
     # TCP explicit congestion notification (ECN) -------------------------------------------------------------
-    def _get_ecn_syn_packet(target_ip, target_port):
+    @staticmethod
+    def _get_ecn_syn_packet(target_ip:str, target_port:str) -> Packet:
         TCP_OPTIONS        = [('WScale', 10), ('NOP', None), ('MSS', 1460), ('SACKOK', b''), ('NOP', None), ('NOP', None)]
         packet             = IP(dst=target_ip) / TCP(dport=target_port, flags="S", window=3, options=TCP_OPTIONS)
         packet[TCP].flags |= 0x18    # 0x18 = CWR (0b00010000) + ECE (0b00001000)
@@ -63,7 +64,7 @@ class OS_Fingerprint:
 
     # TCP (T2–T7) --------------------------------------------------------------------------------------------
     @staticmethod
-    def _get_t2_through_t7_tcp_packets(target_ip:str, open_port=int, closed_port=int) -> Packet:
+    def _get_t2_through_t7_tcp_packets(target_ip:str, open_port:int, closed_port:int) -> Packet:
         COMMON_TCP_OPTIONS        = [('NOP', None), ('MSS', 265), ('Timestamp', (0xFFFFFFFF, 0)), ('SAckOK', b'')]
         COMMOM_WSCALE_AND_OPTIONS = [('WScale', 10)] + COMMON_TCP_OPTIONS    # Equivalent in hex (03030A0102040109080AFFFFFFFF000000000402)
         return (
@@ -77,8 +78,9 @@ class OS_Fingerprint:
 
 
     # UDP (U1) -----------------------------------------------------------------------------------------------
-    def _get_udp_packet(self) -> Packet:
-        packet    = Network._create_udp_ip_packet(self._target_ip, 12345)
+    @staticmethod
+    def _get_udp_packet(target_ip:str, closed_port:int) -> Packet:
+        packet    = Network._create_udp_ip_packet(target_ip, closed_port)
         packet.id = 0x1042
         packet    = packet / Raw(load=b'C' * 300)
         return packet
