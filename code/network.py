@@ -127,9 +127,9 @@ class Network:
 
 
     @staticmethod
-    def _send_and_receive_multiple_layer3_packets(packets:list[Packet]) -> list[Packet]:
+    def _send_and_receive_multiple_layer3_packets(packets:Packet, interval=0.1) -> list[Packet]:
         """Sends multiple packets at the network layer (Layer 3) and waits for responses."""
-        answered, _ = sr(packets, timeout=5, inter=0.1, verbose=0)
+        answered, _ = sr(packets, timeout=5, inter=interval, verbose=0)
         return answered
 
 
