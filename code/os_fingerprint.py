@@ -5,13 +5,17 @@
 
 
 from scapy.all import ICMP, IP, TCP, UDP, Raw, Packet
+from math      import gcd
+from functools import reduce
 from network   import Network
 from auxiliary import Argument_Parser_Manager, Color
 
 
 class OS_Fingerprint:
     def __init__(self) -> None:
-        self._target_ip   = None    # str
+        self._target_ip   = None
+        self._open_port   = None
+        self._closed_port = None
 
 
     def _execute(self, database, data:list) -> None:
@@ -29,6 +33,8 @@ class OS_Fingerprint:
         arguments = parser_manager._parse("OSFingerprint", argument)
         self._target_ip = arguments.target
 
+
+    # PACKETS ================================================================================================
 
     # Sequence generation (SEQ, OPS, WIN, and T1) ------------------------------------------------------------
     @staticmethod
@@ -83,3 +89,39 @@ class OS_Fingerprint:
         packet.id = 0x1042
         packet    = packet / Raw(load=b'C' * 300)
         return packet
+
+
+    # RESPONSE TESTS =========================================================================================
+
+    # TCP ISN greatest common divisor (GCD) ------------------------------------------------------------------
+    def tcp_isn_gcd(self):
+        isns = self._collect_isns()
+        if len(isns) < 2:
+            print("Insufficient responses to calculate GCD.")
+            return None
+        diff1     = self._calculate_diff1(isns)
+        gcd_value = self._calculate_gcd(diff1)
+        print("Captured ISNs:", isns)
+        print("Differences (diff1):", diff1)
+        print("GCD:", gcd_value)
+
+
+    def _collect_isns(self) -> list:
+        packets   = self._get_sequence_generation_packets(self._target_ip, self._open_port)
+        responses = Network._send_and_receive_multiple_layer3_packets(packets, 0.5)
+        return [pkt.seq for pkt in responses if TCP in pkt]
+
+
+    @staticmethod
+    def _calculate_diff1(isns:list) -> list:
+        diff1 = []
+        for i in range(len(isns) - 1):
+            diff = abs(isns[i + 1] - isns[i])
+            wrapped_diff = (4294967296) - diff    # 4.294.967.296 = 2 ** 32
+            diff1.append(min(diff, wrapped_diff))
+        return diff1
+
+
+    @staticmethod
+    def _calculate_gcd(numbers):
+        return reduce(gcd, numbers)
