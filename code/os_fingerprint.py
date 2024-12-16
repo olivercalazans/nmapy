@@ -5,8 +5,9 @@
 
 
 from scapy.all import ICMP, IP, TCP, UDP, Raw, Packet
-from math      import gcd
+from math      import gcd, log2, sqrt
 from functools import reduce
+from time      import time
 from network   import Network
 from auxiliary import Argument_Parser_Manager, Color
 
@@ -94,16 +95,13 @@ class OS_Fingerprint:
     # RESPONSE TESTS =========================================================================================
 
     # TCP ISN greatest common divisor (GCD) ------------------------------------------------------------------
-    def tcp_isn_gcd(self):
+    def _tcp_isn_gcd(self):
         isns = self._collect_isns()
         if len(isns) < 2:
             print("Insufficient responses to calculate GCD.")
             return None
         diff1     = self._calculate_diff1(isns)
         gcd_value = self._calculate_gcd(diff1)
-        print("Captured ISNs:", isns)
-        print("Differences (diff1):", diff1)
-        print("GCD:", gcd_value)
 
 
     def _collect_isns(self) -> list:
@@ -114,14 +112,16 @@ class OS_Fingerprint:
 
     @staticmethod
     def _calculate_diff1(isns:list) -> list:
-        diff1 = []
+        WRAP_LIMIT = 4294967296    # 4.294.967.296 = 2 ** 32
+        diff1      = list()
         for i in range(len(isns) - 1):
-            diff = abs(isns[i + 1] - isns[i])
-            wrapped_diff = (4294967296) - diff    # 4.294.967.296 = 2 ** 32
+            diff         = abs(isns[i + 1] - isns[i])
+            wrapped_diff = WRAP_LIMIT - diff
             diff1.append(min(diff, wrapped_diff))
         return diff1
 
 
     @staticmethod
-    def _calculate_gcd(numbers):
+    def _calculate_gcd(numbers:list) -> list:
         return reduce(gcd, numbers)
+
