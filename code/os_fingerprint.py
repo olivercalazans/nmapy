@@ -17,6 +17,8 @@ class OS_Fingerprint:
         self._target_ip   = None
         self._open_port   = None
         self._closed_port = None
+        self._WRAP_LIMIT  = 4294967296    # 4.294.967.296 = 2 ** 32
+        self._diff1       = None
 
 
     def _execute(self, database, data:list) -> None:
@@ -95,13 +97,13 @@ class OS_Fingerprint:
     # RESPONSE TESTS =========================================================================================
 
     # TCP ISN greatest common divisor (GCD) ------------------------------------------------------------------
-    def _tcp_isn_gcd(self):
+    def _tcp_isn_gcd(self) -> None:
         isns = self._collect_isns()
         if len(isns) < 2:
             print("Insufficient responses to calculate GCD.")
             return None
-        diff1     = self._calculate_diff1(isns)
-        gcd_value = self._calculate_gcd(diff1)
+        self._diff1 = self._calculate_diff1(isns)
+        gcd_value   = self._calculate_gcd(self._diff1)
 
 
     def _collect_isns(self) -> list:
@@ -110,18 +112,71 @@ class OS_Fingerprint:
         return [pkt.seq for pkt in responses if TCP in pkt]
 
 
-    @staticmethod
-    def _calculate_diff1(isns:list) -> list:
-        WRAP_LIMIT = 4294967296    # 4.294.967.296 = 2 ** 32
+    def _calculate_diff1(self, isns:list) -> list:
         diff1      = list()
         for i in range(len(isns) - 1):
             diff         = abs(isns[i + 1] - isns[i])
-            wrapped_diff = WRAP_LIMIT - diff
+            wrapped_diff = self._WRAP_LIMIT - diff
             diff1.append(min(diff, wrapped_diff))
         return diff1
 
 
     @staticmethod
-    def _calculate_gcd(numbers:list) -> list:
-        return reduce(gcd, numbers)
+    def _calculate_gcd(diff1:list) -> list:
+        return reduce(gcd, diff1)
 
+
+    # TCP ISN counter rate (ISR) -----------------------------------------------------------------------------
+    def _tcp_isn_isr(self) -> int:
+        isns, times = self._collect_isns_with_time()        
+        if len(isns) < 2:
+            print("Insufficient responses to calculate ISR.")
+            return None
+        diff1 = self._calculate_diff1(isns)
+        seq_rates = self._calculate_seq_rates(diff1, times)
+        isr_value = self._calculate_isr(seq_rates)
+        return isr_value
+
+
+    def _collect_isns_with_time(self) -> tuple[list[int], list[float]]:
+        """Sends TCP SYN packets and collects ISNs and corresponding timestamps."""
+        packets     = self._get_sequence_generation_packets(self._target_ip, self._open_port)
+        isns        = list()
+        start_times = list()
+        for packet in packets:
+            start_time = time.time()
+            response = Network._send_and_receive_multiple_layer3_packets(packet, timeout=0.5)
+            if response and TCP in response:
+                isns.append(response[TCP].seq)
+                start_times.append(start_time)
+        return isns, start_times
+
+
+    def _calculate_diff1(self, isns:list[int]) -> list[int]:
+        """Calculates the differences between consecutive ISNs."""
+        diff1 = []
+        for i in range(len(isns) - 1):
+            diff = isns[i + 1] - isns[i]
+            if diff < 0: diff += self._WRAP_LIMIT
+            diff1.append(diff)
+        return diff1
+
+
+    @staticmethod
+    def _calculate_seq_rates(diff1:list[int], times:list[float]) -> list[float]:
+        """Calculates sequence rates based on diff1 and timestamps."""
+        seq_rates = []
+        for i in range(len(diff1)):
+            time_diff = times[i + 1] - times[i]
+            if time_diff > 0:
+                seq_rates.append(diff1[i] / time_diff)
+        return seq_rates
+
+
+    @staticmethod
+    def _calculate_isr(seq_rates:list[float]) -> int:
+        """Calculates the ISR value from sequence rates."""
+        if not seq_rates: return 0
+        avg_rate = sum(seq_rates) / len(seq_rates)
+        if avg_rate < 1: return 0
+        return round(8 * log2(avg_rate))
