@@ -30,7 +30,6 @@ class Command_List: # ==========================================================
             f'{Color.green("ip")}.......: Get IP by name',
             f'{Color.green("geoip")}....: Get geolocation of an IP',
             f'{Color.green("dev")}......: Looks up a MAC',
-            f'{Color.green("netmap")}...: Network scanner',
             f'{Color.green("pscan")}....: Port scanner',
             f'{Color.green("osfing")}...: OS Fingerprint',
         ): print(command)

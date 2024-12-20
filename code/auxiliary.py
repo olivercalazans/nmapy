@@ -78,11 +78,6 @@ class Argument_Definitions: # ==================================================
 
 
     @staticmethod
-    def _netscanner_arguments():
-        return "Netmapper", [("bool", "-p", "--ping", "Use ping instead of an ARP packet")]
-
-
-    @staticmethod
     def _portscanner_arguments():
         return "PortScanner", [
             ("arg",   "host", "Host name"),

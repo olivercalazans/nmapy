@@ -13,7 +13,6 @@ It handles input processing and command execution.
 import sys
 from auxiliary import Color, Argument_Parser_Manager, Files
 from simple_commands import *
-from network_mapper  import Network_Mapper
 from port_scanner    import Port_Scanner
 from os_fingerprint  import OS_Fingerprint
 
@@ -96,7 +95,6 @@ class Main: # ==================================================================
             "ip":     Get_IP(),
             "geoip":  IP_Geolocation(),
             "dev":    MAC_To_Device(),
-            "netmap": Network_Mapper(),
             "pscan":  Port_Scanner(),
             "osfing": OS_Fingerprint(),
         }
