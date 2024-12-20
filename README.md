@@ -1,5 +1,5 @@
 # DataSeeker
-DataSeeker is a command-line tool that collects information about devices and networks. Completely made in Python with only two library dependency, it provides an easy-to-use interface for network exploration. This code is designed to run on Linux systems. However, it can also be used on Windows through WSL (I've done some basic testing, but not a full evaluation).
+DataSeeker is a command-line tool that collects information about devices. Completely made in Python with only two library dependency, it provides an easy-to-use interface for network exploration. This code is designed to run on Linux systems. However, it can also be used on Windows through WSL (I've done some basic testing, but not a full evaluation).
 
 <br>
 
