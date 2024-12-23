@@ -4,9 +4,10 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import psutil, socket, ipaddress
+import socket, ipaddress, fcntl, struct
 from scapy.all import Packet, Ether, ARP, IP, TCP, UDP, ICMP
 from scapy.all import sr1, sr, send, srp
+from scapy.all import conf, get_if_addr
 from auxiliary import Color
 
 
@@ -14,12 +15,37 @@ class Network:
     """Contains common network-related methods used by multiple classes."""
 
     @staticmethod
+    def _get_default_interface() -> str:
+        return str(conf.iface)
+
+
+    @staticmethod
+    def _get_ip_address(interface:str) -> str:
+        """Get the IP address of the specified network interface."""
+        try:   return get_if_addr(interface)
+        except Exception: return 'Unknown/error'
+
+
+    @staticmethod
+    def _get_subnet_mask(interface:str) -> str|None:
+        """Get the subnet mask of the specified network interface."""
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as temporary_socket:
+                return socket.inet_ntoa(fcntl.ioctl(
+                    temporary_socket.fileno(),
+                    0x891b,  # SIOCGIFNETMASK
+                    struct.pack('256s', interface[:15].encode('utf-8'))
+                )[20:24])
+        except Exception:
+            return None
+        
+
+    @staticmethod
     def _get_network_information(ip:str, subnet_mask:str) -> ipaddress.IPv4Address:
         """Returns the network information for a given IP address and subnet mask."""
         return ipaddress.IPv4Network(f'{ip}/{subnet_mask}', strict=False)
 
 
-    # IP ADDRESS -----------------------------------------------------------------------------------
     @staticmethod
     def _convert_mask_to_cidr_ipv4(subnet_mask:str) -> int:
         """Converts a subnet mask to CIDR (Classless Inter-Domain Routing) notation."""
@@ -27,71 +53,10 @@ class Network:
 
 
     @staticmethod
-    def _get_ip_and_subnet_mask(interface:str) -> tuple[str,str]:
-        """ Retrieves the IP address and subnet mask for a specified network interface."""
-        iface_addresses = psutil.net_if_addrs()[interface]
-        net_info = [(address.address, address.netmask) for address in iface_addresses if address.family == socket.AF_INET]
-        return {'ip': net_info[0][0], 'netmask': net_info[0][1]}
-
-
-    @staticmethod
-    def _get_ip_by_name(hostname:str, select:bool) -> str:
+    def _get_ip_by_name(hostname:str) -> str:
         """Get the IP address of a given hostname."""
-        try:    
-            result = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
-            ip     = [ip[-1][0] for ip in result]
-            if len(ip) == 1:
-                ip = ip[0]
-            elif select:
-                ip = Network._select_an_ip(ip)
-        except: ip = Color.display_error(f'Invalid hostname ({hostname})')
-        return  ip
-
-
-    @staticmethod
-    def _select_an_ip(ip_list:str) -> str:
-        """Selects an IP address from a list by displaying the available options and validating the user's input."""
-        Network._display_ips(ip_list)
-        ip_list = Network._validate_input(ip_list)
-        return ip_list
-
-
-    @staticmethod
-    def _display_ips(ip_list:list[str]) -> None:
-        """Displays a list of IP addresses with an index number for each, allowing users to select an IP."""
-        for index, ip in enumerate(ip_list):
-            print(f'{index} - {ip}')
-
-
-    # INTERFACES ---------------------------------------------------------------------------------------------
-    @staticmethod
-    def _select_interface() -> str:
-        """Selects a network interface by retrieving available interfaces, displaying them, and validating the user's input."""
-        Network._display_interfaces()
-        interface_list = [iface for iface in list(psutil.net_if_addrs().keys()) if psutil.net_if_stats()[iface].isup]
-        interface      = Network._validate_input(interface_list)
-        return interface
-
-
-    @staticmethod
-    def _display_interfaces() -> None:
-        """Displays the available network interfaces along with their IP addresses and subnet masks in CIDR notation."""
-        interfaces = [iface for iface in Network._get_interface_information() if iface['status'] == 'UP']
-        for index, iface in enumerate(interfaces):
-            print(f'{index} - {iface["iface"]:<6} => {Color.pink(iface["addr"])}/{Network._convert_mask_to_cidr_ipv4(iface["mask"])}')
-
-
-    @staticmethod
-    def _get_interface_information() -> dict:
-        """Retrieves network interface information for the local machine."""
-        interface_information = list()
-        for iface_name, iface_addresses in psutil.net_if_addrs().items():
-            status    = 'UP' if psutil.net_if_stats()[iface_name].isup else'DOWN'
-            interface = {'iface': iface_name, 'status': status}
-            for address in iface_addresses:
-                if address.family == socket.AF_INET: interface.update({'addr': address.address, 'mask': address.netmask, 'broad': address.broadcast})
-            interface_information.append(interface)
-        return interface_information
+        try:    return socket.gethostbyname(hostname)
+        except: return Color.display_error(f'Invalid hostname ({hostname})')
 
 
     # PACKETS ------------------------------------------------------------------------------------------------
@@ -173,17 +138,3 @@ class Network:
             7070 : 'realserver',
             27017: 'MongoDB'
         }
-
-
-    # GENERAL -----------------------------------------------------------------------------------------------
-    @staticmethod
-    def _validate_input(options:list[str]) -> str:
-        """Prompts the user to select an option from a list and validates the input."""
-        while True:
-            try:
-                number = int(input('Choose one: '))
-                if number >= 0 and number < len(options):
-                    return options[number]
-                else:
-                    print(Color.yellow(f'Choose a number between 0 and {len(options) - 1}'))
-            except: print(Color.yellow('Choose a number'))

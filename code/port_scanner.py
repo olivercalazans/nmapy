@@ -29,7 +29,7 @@ class Port_Scanner:
         """ Executes the port scanning process with error handling."""
         try:
             self._get_argument_and_flags(database.parser_manager, data)
-            self._target_ip = Network._get_ip_by_name(self._host, True)
+            self._target_ip = Network._get_ip_by_name(self._host)
             conf.verb       = 0
             self._get_result_by_transmission_method()
             self._process_responses()
@@ -79,6 +79,7 @@ class Port_Scanner:
             self._responses = Network._send_and_receive_multiple_layer3_packets(packets)
 
 
+    # DELAY METHODS ------------------------------------------------------------------------------------------
     def _async_sending(self, packets:list) -> None:
         """Sends TCP packets in concurrent threads with an optional delay between each send."""
         delay   = self._get_delay_time_list(self._flags['delay'], len(packets))
@@ -122,10 +123,10 @@ class Port_Scanner:
     def _perform_decoy_method(self) -> None:
         """Performs a decoy scan method using the specified port and network interface."""
         self._prepare_ports(self._flags['decoy'])
-        interface           = Network._select_interface()
-        network_info        = Network._get_ip_and_subnet_mask(interface)
-        self._my_ip_address = network_info['ip']
-        ip_list             = self._prepare_decoy_and_real_ips(network_info['netmask'])
+        interface           = Network._get_default_interface()
+        netmask             = Network._get_subnet_mask(interface)
+        self._my_ip_address = Network._get_ip_address(interface)
+        ip_list             = self._prepare_decoy_and_real_ips(netmask)
         self._send_decoy_and_real_packets(ip_list)
 
 

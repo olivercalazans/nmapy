@@ -11,7 +11,7 @@ repetition and to streamline processes.
 """
 
 
-import argparse, os
+import argparse
 
 
 
@@ -63,21 +63,6 @@ class Argument_Definitions: # ==================================================
     """This class contains the definitions for all argument parsers used in the application."""
 
     @staticmethod
-    def _get_ip_arguments():
-        return "Get_Ip", [("arg", 'host', "Host name")]
-
-
-    @staticmethod
-    def _ip_geolocation_arguments():
-        return "GeoIP", [("arg", "ip", "IP or Hostname")]
-
-
-    @staticmethod
-    def _mac_to_device_arguments():
-        return "MacToDev", [("arg", "mac", "MAC to be looked up")]
-
-
-    @staticmethod
     def _portscanner_arguments():
         return "PortScanner", [
             ("arg",   "host", "Host name"),
@@ -96,26 +81,21 @@ class Argument_Definitions: # ==================================================
 
 
 
-class Files: # ===========================================================================================
-    """This class reads files to store necessary data, avoiding repetitive data loading."""
+class DataBase: # ======================================================================================
+    """
+    Stores auxiliary data and instances needed for other classes.
+    This includes managing argument parsers and storing databases like the MAC dictionary.
+    """
 
-    @staticmethod
-    def _get_path(file_name:str) -> str:
-        """Returns the full path to the specified file in the databases directory."""
-        DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-        return os.path.join(DIRECTORY, 'databases', file_name)
+    def __init__(self) -> None:
+        """Initializes the DataBase class by setting up the argument parser manager and loading necessary data."""
+        self._parser_manager   = Argument_Parser_Manager()
 
 
-    @staticmethod
-    def _get_mac_list() -> list[dict]:
-        """Reads the MAC address list file and returns a dictionary mapping MAC addresses to their manufacturers."""
-        mac_dictionary = {}
-        with open(Files._get_path('mac_list.txt'), 'r', encoding='utf-8') as file:
-            for line in file:
-                line = line.strip()
-                info = line.split('\t')
-                mac_dictionary[info[0].strip()]= info[1]
-        return mac_dictionary
+    @property
+    def parser_manager(self) -> Argument_Parser_Manager:
+        """Returns the Argument_Parser_Manager instance for handling argument parsing."""
+        return self._parser_manager
 
 
 

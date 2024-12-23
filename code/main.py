@@ -11,25 +11,14 @@ It handles input processing and command execution.
 
 
 import sys
-from auxiliary import Color, Argument_Parser_Manager, Files
-from simple_commands import *
+from auxiliary import Color, DataBase
 from port_scanner    import Port_Scanner
 from os_fingerprint  import OS_Fingerprint
 
 
 
 class Main: # ================================================================================================
-    """
-    Handles user interaction by receiving input and verifying if the given command exists.
-    
-    Methods:
-        _handle_user().................................: Manages the user input loop and handles errors.
-        _loop()........................................: Starts a loop to receive input data from the user.
-        _separates_command_from_arguments(input_data)..: Separates the command from its arguments.
-        _check_if_the_method_exists(command, arguments): Checks if the command exists and calls its corresponding function.
-        _run_command(command, arguments)...............: Executes the given command with its arguments.
-        _get_strategy_dictionary().....................: Returns a dictionary that maps commands to their respective classes.
-    """
+    """Handles user interaction by receiving input and verifying if the given command exists."""
 
     def __init__(self) -> None:
         """Initializes the Main class, setting up the stop flag and auxiliary data."""
@@ -91,10 +80,6 @@ class Main: # ==================================================================
         """Returns the class dictionary."""
         return {
             "help":   Command_List(),
-            "iface":  Interfaces(),
-            "ip":     Get_IP(),
-            "geoip":  IP_Geolocation(),
-            "dev":    MAC_To_Device(),
             "pscan":  Port_Scanner(),
             "osfing": OS_Fingerprint(),
         }
@@ -103,36 +88,16 @@ class Main: # ==================================================================
 
 
 
-class DataBase: # ======================================================================================
-    """
-    Stores auxiliary data and instances needed for other classes.
-    This includes managing argument parsers and storing databases like the MAC dictionary.
+class Command_List: # ========================================================================================
+    """Displays a list of all available commands."""
 
-    Attributes:
-        _parser_manager (Argument_Parser_Manager): Manages the argument parsers.
-        _mac_dictionary (list)...................: Stores the MAC address database.
+    @staticmethod
+    def _execute(__, _) -> None:
+        for command in (
+            f'{Color.green("pscan")}....: Port scanner',
+            f'{Color.green("osfing")}...: OS Fingerprint',
+        ): print(command)
 
-    Methods:
-        parser_manager: Returns the argument parser manager.
-        mac_dictionary: Returns the MAC address database.
-    """
-
-    def __init__(self) -> None:
-        """Initializes the DataBase class by setting up the argument parser manager and loading necessary data."""
-        self._parser_manager   = Argument_Parser_Manager()
-        self._mac_dictionary   = Files()._get_mac_list()
-
-
-    @property
-    def parser_manager(self) -> Argument_Parser_Manager:
-        """Returns the Argument_Parser_Manager instance for handling argument parsing."""
-        return self._parser_manager
-
-
-    @property
-    def mac_dictionary(self) -> list[dict]:
-        """Returns the MAC address dictionary used to find the device manufacturer."""
-        return self._mac_dictionary
 
 
 
