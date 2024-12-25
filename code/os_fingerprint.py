@@ -133,21 +133,13 @@ class OS_Fingerprint:
                 self._isns.append(response[TCP].seq)
                 self._times.append(response_time)
 
-    # =====================================================
+
     def _calculate_diff1(self, isns:list) -> None:
         for i in range(len(isns) - 1):
             diff         = abs(isns[i + 1] - isns[i])
             wrapped_diff = self._WRAP_LIMIT - diff
             self._diff1.append(min(diff, wrapped_diff))
 
-    def _calculate_diff1(self, isns:list[int]) -> list[int]:
-        diff1 = []
-        for i in range(len(isns) - 1):
-            diff = isns[i + 1] - isns[i]
-            if diff < 0: diff += self._WRAP_LIMIT
-            diff1.append(diff)
-        return diff1
-    # =====================================================
 
     def _calculate_gcd(self) -> None:
         self._gdc = reduce(gcd, self._diff1)
