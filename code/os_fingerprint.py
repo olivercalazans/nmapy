@@ -4,11 +4,10 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import threading
+import threading, sched, time
 from scapy.all import TCP, Packet
 from math      import gcd, log2
 from functools import reduce
-from time      import perf_counter, sleep
 from network   import OS_Fingerprint_Packets, Network
 from auxiliary import Argument_Parser_Manager, Color
 
@@ -80,18 +79,21 @@ class OS_Fingerprint:
 
 
     def _collect_isns_with_time(self) -> None:
-        start_time = perf_counter()
+        scheduler = sched.scheduler(time.time, time.sleep)
         for i, packet in enumerate(self._get_sequence_generation_packets()):
-            threading.Thread(target=self._send_packet, args=(packet,)).start()
-            expected_time = start_time + (i * 0.5)
-            time_to_wait  = expected_time - perf_counter()
-            sleep(time_to_wait)
+            scheduler.enter(i * 0.5, 1, self._create_thread, argument=(packet,))
+        scheduler.run()
+
+
+    def _create_thread(self, packet:Packet) -> None:
+        thread = threading.Thread(target=self._send_packet, args=(packet,))
+        thread.start()
 
 
     def _send_packet(self, packet:Packet) -> None:
-        initial_time = perf_counter()
+        initial_time = time.perf_counter()
         response     = Network._send_a_single_layer3_packet(packet)
-        final_time   = perf_counter()
+        final_time   = time.perf_counter()
         self._collect_isns_and_time(response, final_time - initial_time)
 
 
