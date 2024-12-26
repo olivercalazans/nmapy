@@ -3,15 +3,23 @@ DataSeeker is a command-line tool that collects information about devices. Compl
 
 <br>
 
+## Tech Stack
+![Python](https://img.shields.io/badge/Python-blue?style=for-the-badge)
+![Scapy](https://img.shields.io/badge/Scapy-brightgreen?style=for-the-badge)
+![Linux](https://img.shields.io/badge/Linux-black?style=for-the-badge)
+
+
+<br>
+
 ## Documentation
 For detailed documentation on installation, usage, and more about DataSeeker, visit our [Wiki](https://github.com/olivercalazans/DataSeeker/wiki).
   
 <br>
 
 ## Installation
-This script is written in Python, so there's no need to install it. You only need to install the required library, scapy, for it to work. 
+There's no need to install it. **You only need to install the required library**, scapy, for it to work. 
 It’s recommended to install these libraries in a Python virtual environment for better dependency management. 
-For detailed information, please refer to the [wiki](https://github.com/olivercalazans/DataSeeker/wiki/Installation).
+For detailed information, please refer to the [Wiki](https://github.com/olivercalazans/DataSeeker/wiki/Installation).
 
 <br>
 
