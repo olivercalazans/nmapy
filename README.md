@@ -17,8 +17,7 @@ For detailed documentation on installation, usage, and more about DataSeeker, vi
 <br>
 
 ## Installation
-There's no need to install it. **You only need to install the required library**, scapy, for it to work. 
-It’s recommended to install these libraries in a Python virtual environment for better dependency management. 
+Simply run the **setup.sh** script, and everything will be set up for you.
 For detailed information, please refer to the [Wiki](https://github.com/olivercalazans/DataSeeker/wiki/Installation).
 
 <br>
