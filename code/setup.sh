@@ -10,7 +10,7 @@ PATH1=$(find $HOME -name os_fingerprint.py -exec dirname {} \; 2>/dev/null)
 PATH2=${PATH1%/*}
 
 # Define the installation directory path
-DIR="$HOME/.dataseeker/"
+DIR="$HOME/.dataseeker"
 
 # Create the wrapper script with the necessary commands to run the Python script
 echo "#!/bin/bash" > $FILE
@@ -26,7 +26,7 @@ sudo chmod +x /usr/bin/$FILE
 mkdir -p $DIR
 
 # Copy all Python files from the found directory to the installation directory
-cp "$PATH1/*.py" $DIR
+cp "$PATH1"/*.py "$DIR"
 
 # Copy the LICENSE file from the parent directory to the installation directory, suppressing errors
 cp "$PATH2/LICENSE" $DIR 2> /dev/null
