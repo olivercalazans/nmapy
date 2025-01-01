@@ -4,9 +4,8 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import threading, sched, time
+import threading, sched, time, math
 from scapy.all import TCP, Packet
-from math      import gcd, log2
 from functools import reduce
 from network   import OS_Fingerprint_Packets, Network
 from auxiliary import Argument_Parser_Manager, Color
@@ -25,6 +24,7 @@ class OS_Fingerprint:
         self._gcd         = None
         self._seq_rates   = list()
         self._isr         = None
+        self._sp          = None
 
 
     def _execute(self, database, data:list) -> None:
@@ -112,7 +112,7 @@ class OS_Fingerprint:
 
 
     def _calculate_gcd(self) -> None:
-        self._gdc = reduce(gcd, self._diff1)
+        self._gdc = reduce(math.gcd, self._diff1)
 
 
     def _calculate_sequence_rates(self) -> None:
@@ -126,4 +126,29 @@ class OS_Fingerprint:
         if not self._seq_rates: return 0
         avg_rate = sum(self._seq_rates) / len(self._seq_rates)
         if avg_rate < 1: return 0
-        self._isr = round(8 * log2(avg_rate))
+        self._isr = round(8 * math.log2(avg_rate))
+
+
+    def calculate_sp(self):
+        if len(self._seq_rates) < 4:
+            raise ValueError("At least 4 responses are required to calculate SP.")
+        if self._gcd > 9: normalized_rates = [rate / self._gcd for rate in self._seq_rates]
+        else:             normalized_rates = self._seq_rates
+        mean     = self._calculate_mean(normalized_rates)
+        variance = self._calculate_variance(mean, normalized_rates)
+        std_dev  = self._calculate_standard_deviation(variance)
+        if std_dev <= 1: self._sp = 0
+        else:            self._sp = int(round(math.log2(std_dev) * 8))
+
+
+    @staticmethod
+    def _calculate_mean(normalized_rates:list) -> float:
+        return sum(normalized_rates) / len(normalized_rates)
+
+    @staticmethod
+    def _calculate_variance(mean:float , normalized_rates:list) -> float:
+        return sum((x - mean) ** 2 for x in normalized_rates) / len(normalized_rates)
+
+    @staticmethod
+    def _calculate_standard_deviation(variance:float) -> float:
+        return math.sqrt(variance)
