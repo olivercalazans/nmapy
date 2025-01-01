@@ -34,6 +34,7 @@ class OS_Fingerprint:
             print('function still under development')
         except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
         except KeyboardInterrupt:   print(Color.red("Process stopped"))
+        except ValueError as error: print(Color.display_error(error))
         except Exception as error:  print(Color.display_unexpected_error(error))
 
 
@@ -129,7 +130,8 @@ class OS_Fingerprint:
         self._isr = round(8 * math.log2(avg_rate))
 
 
-    def calculate_sp(self):
+    # TCP ISN sequence predictability index (SP) -------------------------------------------------------------
+    def _calculate_sp(self) -> None:
         if len(self._seq_rates) < 4:
             raise ValueError("At least 4 responses are required to calculate SP.")
         if self._gcd > 9: normalized_rates = [rate / self._gcd for rate in self._seq_rates]
