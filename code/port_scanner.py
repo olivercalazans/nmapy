@@ -25,6 +25,13 @@ class Port_Scanner:
         self._my_ip_address    = None
 
 
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+
+
     def _execute(self, database, data:list) -> None:
         """ Executes the port scanning process with error handling."""
         try:

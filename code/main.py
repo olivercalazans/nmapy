@@ -70,9 +70,9 @@ class Main: # ==================================================================
 
     def _run_command(self, command:str, arguments:str) -> None:
         """Executes the command by calling the corresponding class method."""
-        strategy = self._get_strategy_dictionary().get(command)
-        try:   strategy._execute(self._database, arguments)
-        except Exception as error: print(f'{Color.red("Error while trying to execute the command")}.\nERROR: {error}')
+        with self._get_strategy_dictionary().get(command) as strategy:
+            try:   strategy._execute(self._database, arguments)
+            except Exception as error: print(f'{Color.red("Error while trying to execute the command")}.\nERROR: {error}')
 
 
     @staticmethod
