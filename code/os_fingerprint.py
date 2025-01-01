@@ -28,6 +28,13 @@ class OS_Fingerprint:
         self._sp          = None
 
 
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+
+
     def _execute(self, database, data:list) -> None:
         """Executes the fingerprinting process on the provided data."""
         try:
