@@ -7,7 +7,7 @@
 import socket, ipaddress, random, time, threading, sys
 from scapy.all import TCP
 from scapy.all import conf, Packet
-from network   import Network
+from network   import *
 from auxiliary import Color, Argument_Parser_Manager
 
 
@@ -15,7 +15,7 @@ class Port_Scanner:
     """Performs a port scan on a specified host."""
 
     def __init__(self) -> None:
-        self._all_ports        = Network._get_ports()
+        self._all_ports        = Network_Information._get_ports()
         self._host             = None
         self._flags            = None
         self._ports_to_be_used = None
@@ -29,7 +29,7 @@ class Port_Scanner:
         """ Executes the port scanning process with error handling."""
         try:
             self._get_argument_and_flags(database.parser_manager, data)
-            self._target_ip = Network._get_ip_by_name(self._host)
+            self._target_ip = Network_Information._get_ip_by_name(self._host)
             conf.verb       = 0
             self._get_result_by_transmission_method()
             self._process_responses()
@@ -72,11 +72,11 @@ class Port_Scanner:
     def _perform_normal_scan(self) -> None:
         """Performs a normal scan on the specified target IP address."""
         self._prepare_ports(self._flags['ports'])
-        packets = [Network._create_tpc_ip_packet(self._target_ip, port) for port in self._ports_to_be_used]
+        packets = [Packets._create_tpc_ip_packet(self._target_ip, port) for port in self._ports_to_be_used]
         if self._flags['delay']: 
             self._async_sending(packets)
         else: 
-            self._responses = Network._send_and_receive_multiple_layer3_packets(packets)
+            self._responses = Sending_Methods._send_and_receive_multiple_layer3_packets(packets)
 
 
     # DELAY METHODS ------------------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ class Port_Scanner:
 
     def _async_send_packet(self, packet:Packet) -> None:
         """Sends a single TCP SYN packet asynchronously and stores the response."""
-        response = Network._send_and_receive_single_layer3_packet(packet)
+        response = Sending_Methods._send_and_receive_single_layer3_packet(packet)
         with self._lock:
             self._responses.append((packet, response))
 
@@ -123,9 +123,9 @@ class Port_Scanner:
     def _perform_decoy_method(self) -> None:
         """Performs a decoy scan method using the specified port and network interface."""
         self._prepare_ports(self._flags['decoy'])
-        interface           = Network._get_default_interface()
-        netmask             = Network._get_subnet_mask(interface)
-        self._my_ip_address = Network._get_ip_address(interface)
+        interface           = Network_Information._get_default_interface()
+        netmask             = Network_Information._get_subnet_mask(interface)
+        self._my_ip_address = Network_Information._get_ip_address(interface)
         ip_list             = self._prepare_decoy_and_real_ips(netmask)
         self._send_decoy_and_real_packets(ip_list)
 
@@ -157,27 +157,28 @@ class Port_Scanner:
     def _send_decoy_and_real_packets(self, ip_list:list) -> None:
         """Sends both decoy and real packets to the specified target IP address."""
         for ip in ip_list:
+            delay = random.uniform(1, 3)
             if ip == self._my_ip_address:
+                print(f'{Color.green("Real packet")}: {ip:<15}, Delay: {delay:.2}')
                 thread = threading.Thread(target=self._send_real_packet)
                 thread.start()
             else:
+                print(f'{Color.red("Decoy packet")}: {ip:<15}, Delay: {delay:.2}')
                 self._send_decoy_packet(ip)
-            delay = random.uniform(1, 3)
-            print(f'{Color.green("Packet sent")}: {ip}, Delay: {delay:.2}')
             time.sleep(delay)
 
 
     def _send_real_packet(self) -> None:
         """Sends a real TCP SYN packet to the specified target IP address."""
-        real_packet = Network._create_tpc_ip_packet(self._target_ip, self._ports_to_be_used[0])
-        response    = Network._send_and_receive_single_layer3_packet(real_packet)
+        real_packet = Packets._create_tpc_ip_packet(self._target_ip, self._ports_to_be_used[0])
+        response    = Sending_Methods._send_and_receive_single_layer3_packet(real_packet)
         self._responses = [(real_packet, response)]
 
 
     def _send_decoy_packet(self, decoy_ip:str) -> None:
         """Sends a decoy TCP SYN packet to the specified target IP address."""
-        decoy_packet = Network._create_tpc_ip_packet(self._target_ip, self._ports_to_be_used, decoy_ip)
-        Network._send_a_single_layer3_packet(decoy_packet)
+        decoy_packet = Packets._create_tpc_ip_packet(self._target_ip, self._ports_to_be_used, decoy_ip)
+        Sending_Methods._send_a_single_layer3_packet(decoy_packet)
 
 
     # PROCESS DATA -------------------------------------------------------------------------------------------

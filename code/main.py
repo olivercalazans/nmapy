@@ -11,7 +11,7 @@ It handles input processing and command execution.
 
 
 import sys
-from auxiliary import Color, DataBase
+from auxiliary       import Color, DataBase
 from port_scanner    import Port_Scanner
 from os_fingerprint  import OS_Fingerprint
 

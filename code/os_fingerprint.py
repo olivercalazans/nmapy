@@ -7,7 +7,7 @@
 import threading, sched, time, math
 from scapy.all import Packet, IP, ICMP, TCP, Raw
 from functools import reduce
-from network   import Network
+from network   import Packets, Sending_Methods
 from auxiliary import Argument_Parser_Manager, Color
 from os_fing_pkt_analysis_classes import *
 
@@ -32,7 +32,7 @@ class OS_Fingerprint:
         """Executes the fingerprinting process on the provided data."""
         try:
             self._get_argument(database.parser_manager, data)
-            print('function still under development')
+            print(f'{Color.yellow("Function still under development")}')
         except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
         except KeyboardInterrupt:   print(Color.red("Process stopped"))
         except ValueError as error: print(Color.display_error(error))
@@ -41,7 +41,7 @@ class OS_Fingerprint:
 
     def _get_argument(self, parser_manager:Argument_Parser_Manager, argument:list) -> str:
         """Parses and retrieves the target IP address from the provided arguments."""
-        arguments = parser_manager._parse("OSFingerprint", argument)
+        arguments       = parser_manager._parse("OSFingerprint", argument)
         self._target_ip = arguments.target
 
 
@@ -94,7 +94,7 @@ class OS_Fingerprint:
 
     def _send_packet(self, packet:Packet) -> None:
         initial_time = time.perf_counter()
-        response     = Network._send_a_single_layer3_packet(packet)
+        response     = Sending_Methods._send_a_single_layer3_packet(packet)
         final_time   = time.perf_counter()
         self._collect_isns_and_time(response, final_time - initial_time)
 
@@ -190,7 +190,7 @@ class OS_Fingerprint_Packets(): # ==============================================
     @staticmethod
     def _udp_packet(target_ip:str, closed_port:int) -> Packet:
         """ UDP (U1) """
-        packet    = Network._create_udp_ip_packet(target_ip, closed_port)
+        packet    = Packets._create_udp_ip_packet(target_ip, closed_port)
         packet.id = 0x1042
         packet    = packet / Raw(load=b'C' * 300)
         return packet

@@ -11,8 +11,8 @@ from scapy.all import conf, get_if_addr
 from auxiliary import Color
 
 
-class Network:
-    """Contains common network-related methods used by multiple classes."""
+
+class Network_Information:
 
     @staticmethod
     def _get_default_interface() -> str:
@@ -58,60 +58,7 @@ class Network:
         try:    return socket.gethostbyname(hostname)
         except: return Color.display_error(f'Invalid hostname ({hostname})')
 
-
-    # PACKETS ------------------------------------------------------------------------------------------------
-    @staticmethod
-    def _create_tpc_ip_packet(target_ip:str, port:int, source_ip=None) -> Packet:
-        """Creates a TCP packet encapsulated in an IP packet with a SYN flag."""
-        return IP(src=source_ip, dst=target_ip) / TCP(dport=port, flags="S")
-
-
-    @staticmethod
-    def _create_udp_ip_packet(target_ip:str, port:int, source_ip=None) -> Packet:
-        """Creates a UDP packet encapsulated in an IP packet."""
-        return IP(src=source_ip, dst=target_ip, ttl=64) / UDP(dport=port)
-
-
-    @staticmethod
-    def _create_icmp_ip_packet(target_ip:str) -> Packet:
-        """Creates an ICMP packet encapsulated in an IP packet."""
-        return IP(dst=target_ip) / ICMP()
-
-
-    @staticmethod
-    def _create_arp_packet(network) -> Packet:
-        """Creates an ARP request packet to be sent over the network."""
-        return ARP(pdst=str(network)) / Ether(dst="ff:ff:ff:ff:ff:ff")
-
-
-    # SENDING METHODS ---------------------------------------------------------------------------------------
-    @staticmethod
-    def _send_and_receive_single_layer3_packet(packet:Packet) -> Packet|None:
-        """Sends a single packet at the network layer (Layer 3) and waits for a response."""
-        return sr1(packet, timeout=3, verbose=0)
-
-
-    @staticmethod
-    def _send_and_receive_multiple_layer3_packets(packets:Packet, interval=0.1) -> list[Packet]:
-        """Sends multiple packets at the network layer (Layer 3) and waits for responses."""
-        answered, _ = sr(packets, timeout=5, inter=interval, verbose=0)
-        return answered
-
-
-    @staticmethod
-    def _send_a_single_layer3_packet(packet:Packet) -> None:
-        """Sends a single packet at the network layer (Layer 3) without waiting for a response."""
-        send(packet, verbose=0)
-
-
-    @staticmethod
-    def _send_and_receive_layer2_packet(packet:Ether) -> list:
-        """Sends a packet at the data link layer (Layer 2) and waits for a response."""
-        answered, _ = srp(packet, timeout=2, verbose=False)
-        return answered
-
-
-    # PORTS -------------------------------------------------------------------------------------------------
+    
     @staticmethod
     def _get_ports() -> dict:
         return { 
@@ -138,3 +85,63 @@ class Network:
             7070 : 'realserver',
             27017: 'MongoDB'
         }
+
+
+
+
+
+class Packets: # =============================================================================================
+
+    @staticmethod
+    def _create_tpc_ip_packet(target_ip:str, port:int, source_ip=None) -> Packet:
+        """Creates a TCP packet encapsulated in an IP packet with a SYN flag."""
+        return IP(src=source_ip, dst=target_ip) / TCP(dport=port, flags="S")
+
+
+    @staticmethod
+    def _create_udp_ip_packet(target_ip:str, port:int, source_ip=None) -> Packet:
+        """Creates a UDP packet encapsulated in an IP packet."""
+        return IP(src=source_ip, dst=target_ip, ttl=64) / UDP(dport=port)
+
+
+    @staticmethod
+    def _create_icmp_ip_packet(target_ip:str) -> Packet:
+        """Creates an ICMP packet encapsulated in an IP packet."""
+        return IP(dst=target_ip) / ICMP()
+
+
+    @staticmethod
+    def _create_arp_packet(network) -> Packet:
+        """Creates an ARP request packet to be sent over the network."""
+        return ARP(pdst=str(network)) / Ether(dst="ff:ff:ff:ff:ff:ff")
+
+
+
+
+
+class Sending_Methods: # =====================================================================================
+
+    @staticmethod
+    def _send_and_receive_single_layer3_packet(packet:Packet) -> Packet|None:
+        """Sends a single packet at the network layer (Layer 3) and waits for a response."""
+        return sr1(packet, timeout=3, verbose=0)
+
+
+    @staticmethod
+    def _send_and_receive_multiple_layer3_packets(packets:Packet, interval=0.1) -> list[Packet]:
+        """Sends multiple packets at the network layer (Layer 3) and waits for responses."""
+        answered, _ = sr(packets, timeout=5, inter=interval, verbose=0)
+        return answered
+
+
+    @staticmethod
+    def _send_a_single_layer3_packet(packet:Packet) -> None:
+        """Sends a single packet at the network layer (Layer 3) without waiting for a response."""
+        send(packet, verbose=0)
+
+
+    @staticmethod
+    def _send_and_receive_layer2_packet(packet:Ether) -> list:
+        """Sends a packet at the data link layer (Layer 2) and waits for a response."""
+        answered, _ = srp(packet, timeout=2, verbose=False)
+        return answered

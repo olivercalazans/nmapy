@@ -117,14 +117,6 @@ class Color: # =================================================================
         return '\033[33m' + message + '\033[0m'
 
     @staticmethod
-    def blue(message:str) -> str:
-        return '\033[34m' + message + '\033[0m'
-
-    @staticmethod
-    def pink(message:str) -> str:
-        return '\033[35m' + message + '\033[0m'
-
-    @staticmethod
     def display_unexpected_error(error:str) -> str:
         return Color.red('Unexpected error') + f'\nERROR: {error}'
 
