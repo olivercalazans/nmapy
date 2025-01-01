@@ -5,10 +5,11 @@
 
 
 import threading, sched, time, math
-from scapy.all import TCP, Packet
+from scapy.all import Packet, IP, ICMP, TCP, Raw
 from functools import reduce
-from network   import OS_Fingerprint_Packets, Network
+from network   import Network
 from auxiliary import Argument_Parser_Manager, Color
+from os_fing_pkt_analysis_classes import *
 
 
 class OS_Fingerprint:
@@ -113,7 +114,7 @@ class OS_Fingerprint:
 
 
     def _calculate_gcd(self) -> None:
-        self._gdc = reduce(math.gcd, self._diff1)
+        self._gcd = reduce(math.gcd, self._diff1)
 
 
     def _calculate_sequence_rates(self) -> None:
@@ -130,27 +131,66 @@ class OS_Fingerprint:
         self._isr = round(8 * math.log2(avg_rate))
 
 
-    # TCP ISN sequence predictability index (SP) -------------------------------------------------------------
-    def _calculate_sp(self) -> None:
-        if len(self._seq_rates) < 4:
-            raise ValueError("At least 4 responses are required to calculate SP.")
-        if self._gcd > 9: normalized_rates = [rate / self._gcd for rate in self._seq_rates]
-        else:             normalized_rates = self._seq_rates
-        mean     = self._calculate_mean(normalized_rates)
-        variance = self._calculate_variance(mean, normalized_rates)
-        std_dev  = self._calculate_standard_deviation(variance)
-        if std_dev <= 1: self._sp = 0
-        else:            self._sp = int(round(math.log2(std_dev) * 8))
+    def _get_sp(self) -> None:
+        with Sequence_Predictability_Index(self._seq_rates, self._gcd) as SPI:
+            self._sp = SPI._calculate_sp()
+
+
+
+
+
+class OS_Fingerprint_Packets(): # ============================================================================
+
+    @staticmethod
+    def _sequence_generation_packets(target_ip:str, open_port:int) -> Packet:
+        """ Sequence generation (SEQ, OPS, WIN, and T1) """
+        return (
+            IP(dst=target_ip) / TCP(dport=open_port, window=1,   options=[('WScale', 10), ('NOP', None), ('MSS', 1460), ('Timestamp', (0xFFFFFFFF, 0)), ('SAckOK', b''),]),
+            IP(dst=target_ip) / TCP(dport=open_port, window=63,  options=[('MSS', 1400),  ('WScale', 0), ('SAckOK', b''), ('Timestamp', (0xFFFFFFFF, 0)), ('EOL', None)]),
+            IP(dst=target_ip) / TCP(dport=open_port, window=4,   options=[('Timestamp', (0xFFFFFFFF, 0)), ('NOP', None), ('NOP', None), ('WScale', 5), ('NOP', None), ('MSS', 640)]),
+            IP(dst=target_ip) / TCP(dport=open_port, window=4,   options=[('SAckOK', b''), ('Timestamp', (0xFFFFFFFF, 0)), ('WScale', 10), ('EOL', None)]),
+            IP(dst=target_ip) / TCP(dport=open_port, window=16,  options=[('MSS', 536), ('SAckOK', b''), ('Timestamp', (0xFFFFFFFF, 0)), ('WScale', 10), ('EOL', None)]),
+            IP(dst=target_ip) / TCP(dport=open_port, window=512, options=[('MSS', 265), ('SAckOK', b''), ('Timestamp', (0xFFFFFFFF, 0))])
+        )
 
 
     @staticmethod
-    def _calculate_mean(normalized_rates:list) -> float:
-        return sum(normalized_rates) / len(normalized_rates)
+    def _icmp_echo_packets(target_ip:str) -> Packet:
+        """ ICMP echo (IE) """
+        return (
+            IP(dst=target_ip, tos=0, flags='DF') / ICMP(type=8, code=9, id=12345, seq=295) / Raw(load=b'\x00' * 120),
+            IP(dst=target_ip, tos=4)       /       ICMP(type=8, code=0, id=12346, seq=296) / Raw(load=b'\x00' * 150)
+            )
+
 
     @staticmethod
-    def _calculate_variance(mean:float , normalized_rates:list) -> float:
-        return sum((x - mean) ** 2 for x in normalized_rates) / len(normalized_rates)
+    def _ecn_syn_packet(target_ip:str, open_port:int) -> Packet:
+        """ TCP explicit congestion notification (ECN) """
+        TCP_OPTIONS        = [('WScale', 10), ('NOP', None), ('MSS', 1460), ('SACKOK', b''), ('NOP', None), ('NOP', None)]
+        packet             = IP(dst=target_ip) / TCP(dport=open_port, flags="S", window=3, options=TCP_OPTIONS)
+        packet[TCP].flags |= 0x18    # 0x18 = CWR (0b00010000) + ECE (0b00001000)
+        return packet
+
 
     @staticmethod
-    def _calculate_standard_deviation(variance:float) -> float:
-        return math.sqrt(variance)
+    def _t2_through_t7_tcp_packets(target_ip:str, open_port:int, closed_port:int) -> Packet:
+        """ TCP (T2–T7) """
+        COMMON_TCP_OPTIONS        = [('NOP', None), ('MSS', 265), ('Timestamp', (0xFFFFFFFF, 0)), ('SAckOK', b'')]
+        COMMOM_WSCALE_AND_OPTIONS = [('WScale', 10)] + COMMON_TCP_OPTIONS    # Equivalent in hex (03030A0102040109080AFFFFFFFF000000000402)
+        return (
+            IP(dst=target_ip, flags='DF') / TCP(dport=open_port,   flags='',     window=128,   options=COMMOM_WSCALE_AND_OPTIONS),
+            IP(dst=target_ip)       /       TCP(dport=open_port,   flags='SFUP', window=256,   options=COMMOM_WSCALE_AND_OPTIONS),
+            IP(dst=target_ip, flags='DF') / TCP(dport=open_port,   flags='A',    window=1024,  options=COMMOM_WSCALE_AND_OPTIONS),
+            IP(dst=target_ip)       /       TCP(dport=closed_port, flags='S',    window=31337, options=COMMOM_WSCALE_AND_OPTIONS),
+            IP(dst=target_ip, flags='DF') / TCP(dport=closed_port, flags='A',    window=32768, options=COMMOM_WSCALE_AND_OPTIONS),
+            IP(dst=target_ip)       /       TCP(dport=closed_port, flags='FPU',  window=65535, options=[('WScale', 15)] + COMMON_TCP_OPTIONS)
+        )
+
+
+    @staticmethod
+    def _udp_packet(target_ip:str, closed_port:int) -> Packet:
+        """ UDP (U1) """
+        packet    = Network._create_udp_ip_packet(target_ip, closed_port)
+        packet.id = 0x1042
+        packet    = packet / Raw(load=b'C' * 300)
+        return packet
