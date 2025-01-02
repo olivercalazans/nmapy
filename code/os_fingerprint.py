@@ -6,7 +6,6 @@
 
 import threading, sched, time, math
 from scapy.all import Packet, IP, ICMP, TCP, Raw
-from functools import reduce
 from network   import Packets, Sending_Methods
 from auxiliary import Argument_Parser_Manager, Color
 from os_fing_pkt_analysis_classes import *
@@ -17,12 +16,11 @@ class OS_Fingerprint:
         self._target_ip   = None
         self._open_port   = None
         self._closed_port = None
-        self._WRAP_LIMIT  = 2 ** 32
         self._lock        = threading.Lock()
-        self._diff1       = list()
+        self._diff1       = None
+        self._gcd         = None
         self._isns        = list()
         self._times       = list()
-        self._gcd         = None
         self._seq_rates   = list()
         self._isr         = None
         self._sp          = None
@@ -81,8 +79,6 @@ class OS_Fingerprint:
         if len(self._isns) < 2:
             print("Insufficient responses to process.")
             return None
-        self._calculate_diff1()
-        self._calculate_gcd()
         self._calculate_sequence_rates()
         self._calculate_isr()
 
@@ -112,16 +108,10 @@ class OS_Fingerprint:
                 self._isns.append(response[TCP].seq)
                 self._times.append(response_time)
 
-
-    def _calculate_diff1(self, isns:list) -> None:
-        for i in range(len(isns) - 1):
-            diff         = abs(isns[i + 1] - isns[i])
-            wrapped_diff = self._WRAP_LIMIT - diff
-            self._diff1.append(min(diff, wrapped_diff))
-
-
-    def _calculate_gcd(self) -> None:
-        self._gcd = reduce(math.gcd, self._diff1)
+    
+    def _get_diff1_and_gcd(self) -> None:
+        with TCP_ISN_Greatest_Common_Divisor() as GCD:
+            self._diff1, self._gcd = GCD._calculate_diff1_and_gcd(self._isns)
 
 
     def _calculate_sequence_rates(self) -> None:
@@ -139,7 +129,7 @@ class OS_Fingerprint:
 
 
     def _get_sp(self) -> None:
-        with Sequence_Predictability_Index(self._seq_rates, self._gcd) as SPI:
+        with TCP_ISN_Sequence_Predictability_Index(self._seq_rates, self._gcd) as SPI:
             self._sp = SPI._calculate_sp()
 
 
