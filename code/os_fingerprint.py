@@ -21,7 +21,7 @@ class OS_Fingerprint:
         self._gcd         = None
         self._isns        = list()
         self._times       = list()
-        self._seq_rates   = list()
+        self._seq_rates   = None
         self._isr         = None
         self._sp          = None
 
@@ -110,22 +110,13 @@ class OS_Fingerprint:
 
     
     def _get_diff1_and_gcd(self) -> None:
-        with TCP_ISN_Greatest_Common_Divisor() as GCD:
-            self._diff1, self._gcd = GCD._calculate_diff1_and_gcd(self._isns)
+        with TCP_ISN_Greatest_Common_Divisor(self._isns) as GCD:
+            self._diff1, self._gcd = GCD._calculate_diff1_and_gcd()
 
 
-    def _calculate_sequence_rates(self) -> None:
-        for i in range(len(self._diff1)):
-            time_diff = self._times[i + 1] - self._times[i]
-            if time_diff > 0:
-                self._seq_rates.append(self._diff1[i] / time_diff)
-
-
-    def _calculate_isr(self) -> None:
-        if not self._seq_rates: return 0
-        avg_rate = sum(self._seq_rates) / len(self._seq_rates)
-        if avg_rate < 1: return 0
-        self._isr = round(8 * math.log2(avg_rate))
+    def _get_seq_rates_and_isr(self) -> None:
+        with TCP_ISN_Counter_Rate(self._diff1, self._times) as CR:
+            self._seq_rates, self._isr = CR._calculate_seq_rates_and_isr()
 
 
     def _get_sp(self) -> None:

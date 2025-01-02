@@ -12,10 +12,9 @@ from functools import reduce
 class TCP_ISN_Greatest_Common_Divisor: # =====================================================================
     
     def __init__(self, isns:list):
-        self._WRAP_LIMIT  = 2 ** 32
-        self._isns        = isns
-        self._diff1       = list()
-        self._gcd         = None
+        self._isns       = isns
+        self._diff1      = list()
+        self._gcd        = None
 
     def __enter__(self):
         return self
@@ -31,14 +30,61 @@ class TCP_ISN_Greatest_Common_Divisor: # =======================================
 
 
     def _calculate_diff1(self) -> None:
+        WRAP_LIMIT = 2 ** 32
         for i in range(len(self._isns) - 1):
             diff         = abs(self._isns[i + 1] - self._isns[i])
-            wrapped_diff = self._WRAP_LIMIT - diff
+            wrapped_diff = WRAP_LIMIT - diff
             self._diff1.append(min(diff, wrapped_diff))
 
 
     def _calculate_gcd(self) -> None:
         self._gcd = reduce(math.gcd, self._diff1)
+
+
+
+
+
+class TCP_ISN_Counter_Rate: # ================================================================================
+    
+    def __init__(self, diff1:list, times:list):
+        self._diff1     = diff1
+        self._times     = times
+        self._seq_rates = list()
+        self._isr       = None
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+    
+
+    def _calculate_seq_rates_and_isr(self) -> tuple[list, float]:
+        self._calculate_sequence_rates()
+        self._calculate_isr()
+        return (self._seq_rates, self._isr)
+    
+
+    def _calculate_sequence_rates(self) -> None:
+        for i in range(len(self._diff1)):
+            time_diff = self._times[i + 1] - self._times[i]
+
+            if time_diff > 0:
+                self._seq_rates.append(self._diff1[i] / time_diff)
+
+
+    def _calculate_isr(self) -> None:
+        if not self._seq_rates:
+            return 0
+        
+        avg_rate = sum(self._seq_rates) / len(self._seq_rates)
+        
+        if avg_rate < 1:
+            return 0
+        
+        self._isr = round(8 * math.log2(avg_rate))
+
+
 
 
 
