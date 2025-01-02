@@ -72,15 +72,13 @@ class OS_Fingerprint:
         return OS_Fingerprint_Packets._udp_packet(self._target_ip, self._closed_port)
 
 
-    # RESPONSE TESTS =========================================================================================
+    # ========================================================================================================
 
     def _process_data(self) -> None:
         self._collect_isns_with_time()
         if len(self._isns) < 2:
             print("Insufficient responses to process.")
             return None
-        self._calculate_sequence_rates()
-        self._calculate_isr()
 
 
     def _collect_isns_with_time(self) -> None:
@@ -108,7 +106,9 @@ class OS_Fingerprint:
                 self._isns.append(response[TCP].seq)
                 self._times.append(response_time)
 
-    
+
+    # RESPONSE TESTS =========================================================================================
+
     def _get_diff1_and_gcd(self) -> None:
         with TCP_ISN_Greatest_Common_Divisor(self._isns) as GCD:
             self._diff1, self._gcd = GCD._calculate_diff1_and_gcd()
