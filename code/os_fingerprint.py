@@ -16,11 +16,10 @@ class OS_Fingerprint:
         self._target_ip   = None
         self._open_port   = None
         self._closed_port = None
-        self._lock        = threading.Lock()
+        self._isns        = None
+        self._times       = None
         self._diff1       = None
         self._gcd         = None
-        self._isns        = list()
-        self._times       = list()
         self._seq_rates   = None
         self._isr         = None
         self._sp          = None
@@ -28,7 +27,7 @@ class OS_Fingerprint:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         return False
 
@@ -72,40 +71,11 @@ class OS_Fingerprint:
         return OS_Fingerprint_Packets._udp_packet(self._target_ip, self._closed_port)
 
 
-    # ========================================================================================================
+    # SENDING PACKETS ========================================================================================
 
-    def _process_data(self) -> None:
-        self._collect_isns_with_time()
-        if len(self._isns) < 2:
-            print("Insufficient responses to process.")
-            return None
-
-
-    def _collect_isns_with_time(self) -> None:
-        scheduler = sched.scheduler(time.time, time.sleep)
-        for i, packet in enumerate(self._get_sequence_generation_packets()):
-            scheduler.enter(i * 0.5, 1, self._create_thread, argument=(packet,))
-        scheduler.run()
-
-
-    def _create_thread(self, packet:Packet) -> None:
-        thread = threading.Thread(target=self._send_packet, args=(packet,))
-        thread.start()
-
-
-    def _send_packet(self, packet:Packet) -> None:
-        initial_time = time.perf_counter()
-        response     = Sending_Methods._send_a_single_layer3_packet(packet)
-        final_time   = time.perf_counter()
-        self._collect_isns_and_time(response, final_time - initial_time)
-
-
-    def _collect_isns_and_time(self, response:Packet, response_time:float) -> None:
-        with self._lock:
-            if response and TCP in response:
-                self._isns.append(response[TCP].seq)
-                self._times.append(response_time)
-
+    def _get_isns_and_times(self) -> None:
+        with ISNs_And_Times(self._get_sequence_generation_packets()) as ISN:
+            self._isns, self._times = ISN._get_isns_and_times()
 
     # RESPONSE TESTS =========================================================================================
 
@@ -182,3 +152,57 @@ class OS_Fingerprint_Packets(): # ==============================================
         packet.id = 0x1042
         packet    = packet / Raw(load=b'C' * 300)
         return packet
+
+
+
+
+
+class ISNs_And_Times: # ======================================================================================
+
+    def __init__(self, packets: list[Packet]):
+        self._packets = packets
+        self._LOCK    = threading.Lock()
+        self._threads = list()
+        self._isns    = list()
+        self._times   = list()
+
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+
+
+    def _get_isns_and_times(self) -> tuple[list, list]:
+        self._schedule_sendings()
+        for thread in self._threads:
+            thread.join(timeout=10)
+        return (self._isns, self._times)
+
+
+    def _schedule_sendings(self) -> None:
+        scheduler = sched.scheduler(time.time, time.sleep)
+        for i, packet in enumerate(self._packets):
+            scheduler.enter(i * 0.5, 1, self._create_thread, argument=(packet,))
+        scheduler.run()
+
+
+    def _create_thread(self, packet:Packet) -> None:
+        thread = threading.Thread(target=self._send_packet, args=(packet,))
+        self._threads.append(thread)
+        thread.start()
+
+
+    def _send_packet(self, packet:Packet) -> None:
+        initial_time = time.perf_counter()
+        response     = Sending_Methods._send_a_single_layer3_packet(packet)
+        final_time   = time.perf_counter()
+        self._collect_isns_and_time(response, final_time - initial_time)
+
+
+    def _collect_isns_and_time(self, response:Packet, response_time:float) -> None:
+        with self._LOCK:
+            if response and TCP in response:
+                self._isns.append(response[TCP].seq)
+                self._times.append(response_time)
