@@ -1,12 +1,14 @@
-# DataSeeker
-DataSeeker is a Python-based command-line tool designed to gather information about networks and devices. With only one external dependency, it provides a simple and efficient interface for network exploration. While the tool is optimized for Linux systems, it can also be used on Windows through WSL (Windows Subsystem for Linux).
+<p align="center">
+  <img src="assets/logo.png" alt="Logo do Projeto" width="800">
+</p>
 
 <br>
 
-## Tech Stack
-![Python](https://img.shields.io/badge/Python-blue?style=for-the-badge)
-![Scapy](https://img.shields.io/badge/Scapy-brightgreen?style=for-the-badge)
-![Linux](https://img.shields.io/badge/Linux-black?style=for-the-badge)
+# About DataSeeker 
+**DataSeeker** is a Python-based command-line tool designed to gather information about networks and devices. Built on the powerful features of Nmap, it is tailored for use in Linux environments, providing a simple and efficient interface for network exploration with only one external dependency. What it can do:
+
+![Portscan](https://img.shields.io/badge/Port_scan-Ready_to_use-brightgreen?style=for-the-badge)
+![OSFingerprint](https://img.shields.io/badge/OS_Fingerprint-Under_development-FF4500?style=for-the-badge)
 
 
 <br>
@@ -17,8 +19,7 @@ For detailed documentation on installation, usage, and more about DataSeeker, vi
 <br>
 
 ## Installation
-Simply run the **setup.sh** script, and everything will be set up for you.
-For detailed information, please refer to the [Wiki](https://github.com/olivercalazans/DataSeeker/wiki/Installation).
+To make it easier to use this project, a bash script has been created to handle the entire installation. Simply run the [setup.sh](code/setup.sh) script, and everything will be set up for you. If you prefer to run the code manually, follow the steps in the [Wiki](https://github.com/olivercalazans/DataSeeker/wiki/Installation).
 
 <br>
 
