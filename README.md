@@ -23,6 +23,11 @@ To make it easier to use this project, a bash script has been created to handle 
 
 <br>
 
+## Dependencies
+This project has a single dependency: the [Scapy](https://scapy.net/) library, which enables easy manipulation of network packets. Although the code is designed to run on Linux systems, it can also be used on Windows via WSL (Windows Subsystem for Linux).
+
+<br>
+
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
