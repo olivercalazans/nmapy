@@ -1,50 +1,112 @@
 #!/bin/bash
 
-# Define the file name for the wrapper script
-FILE="dataseeker"
+# Ensure the script is executed with root privileges
+if [ "$EUID" -ne 0 ]; then
+  echo "This script must be run as root. Please use 'sudo' to execute it."
+  exec sudo "$0" "$@"
+fi
 
-# Find the path to the directory containing the os_fingerprint.py file
-PATH1=$(find $HOME -name os_fingerprint.py -exec dirname {} \; 2>/dev/null)
 
-# Get the parent directory of PATH1
-PATH2=${PATH1%/*}
+# Define variables for directories and visual indicators
+HOME_DIR=$(eval echo "~$SUDO_USER")              # Home directory of the user running the script
+DESTINY_DIR="$HOME_DIR/.dataseeker"              # Destination directory for the application
+OK='[  \033[0;32mOK\033[0m  ] '                  # Visual indicator for successful operations
+ERROR='[ \033[0;31mERROR\033[0m ]'               # Visual indicator for errors
+WARNING='[\033[38;5;214mWARNING\033[0m]'         # Visual indicator for warnings
 
-# Define the installation directory path
-DIR="$HOME/.dataseeker"
 
-# Create the wrapper script with the necessary commands to run the Python script
-echo "#!/bin/bash" > $FILE
-echo "sudo $DIR/seeker/bin/python3 $DIR/main.py \"\$@\"" >> $FILE
+# Create a wrapper script to execute the application
+printf "Creating wrapper script..."
+COMMAND_NAME="dataseeker"
+echo "#!/bin/bash" > $COMMAND_NAME
+echo "sudo \$HOME/.dataseeker/seeker/bin/python3 \$HOME/.dataseeker/main.py \"\$@\"" >> $COMMAND_NAME
 
-# Move the wrapper script to /usr/bin for global access
-sudo mv $FILE /usr/bin
 
-# Grant execution permissions to the wrapper script
-sudo chmod +x /usr/bin/$FILE
+# Move the wrapper script to /usr/bin for global access and set executable permissions
+sudo mv $COMMAND_NAME /usr/bin
+sudo chmod +x /usr/bin/$COMMAND_NAME
+printf "\r${OK} Wrapper script created\n"
 
-# Create the main installation directory and subdirectory for the code
-mkdir -p $DIR
 
-# Copy all Python files from the found directory to the installation directory
-cp "$PATH1"/*.py "$DIR"
+# Define script source and target directories
+SCRIPTS_DIR=$(dirname "$(realpath "$0")")        # Directory containing the current script
+SOURCE_DIR=${SCRIPTS_DIR%/*}                     # Parent directory of the script's directory
+FILES=("main.py" "auxiliary.py" "network.py"     # List of required Python scripts
+       "os_fing_pkt_analysis_classes.py"
+       "os_fingerprint.py" "port_scanner.py")
 
-# Copy the LICENSE file from the parent directory to the installation directory, suppressing errors
-cp "$PATH2/LICENSE" $DIR 2> /dev/null
 
-# Install required packages for Python virtual environment and pip
-sudo apt install python3-venv python3-pip -y
+# Create the destination directory for the application
+printf "Creating directory..."
+mkdir -p "$DESTINY_DIR"
 
-# Create a Python virtual environment inside the installation directory
-python3 -m venv "$DIR/seeker"
+
+# Verify if all required files exist and copy them to the destination directory
+FILES_NOT_FOUND=""
+for file in "${FILES[@]}"; do
+    if [ ! -e "$SCRIPTS_DIR/$file" ]; then
+        FILES_NOT_FOUND="$FILES_NOT_FOUND $file"
+    fi
+done
+
+
+# If no files are missing, copy them to the destination
+if [ -z "$FILES_NOT_FOUND" ]; then
+    for file in "${FILES[@]}"; do
+        cp "$SCRIPTS_DIR/$file" "$DESTINY_DIR"
+    done
+else
+    printf "\n${ERROR} Files not found: $FILES_NOT_FOUND\n"
+    exit 1
+fi
+printf "\r${OK} Directory created\n"
+
+
+# Copy the LICENSE file if it exists
+if [ -e "$SOURCE_DIR/LICENSE" ]; then
+    cp "$SOURCE_DIR/LICENSE" "$DESTINY_DIR" 2> /dev/null
+else
+    printf "${WARNING} LICENSE not found\n"
+fi
+
+
+# Install required system packages: pip and python3-venv
+printf "Installing pip and python3-venv..."
+if sudo apt install python3-venv python3-pip -y > /dev/null 2>&1; then
+    printf "\r${OK} pip and python3-venv installed\n"
+else
+    printf "\r${ERROR} Failed to install required packages. Exiting.\n"
+    exit 1
+fi
+
+
+# Create a Python virtual environment
+printf "Creating virtual environment..."
+if python3 -m venv "$DESTINY_DIR/seeker" > /dev/null 2>&1; then
+    printf "\r${OK} Virtual environment created successfully\n"
+else
+    printf "\r${ERROR} Failed to create virtual environment. Exiting.\n"
+    exit 1
+fi
+
 
 # Activate the virtual environment
-source "$DIR/seeker/bin/activate"
+source "$DESTINY_DIR/seeker/bin/activate"
 
-# Install the 'scapy' package inside the virtual environment
-pip install scapy
 
-# Deactivate the virtual environment after the installation is complete
+# Install Scapy in the virtual environment
+printf "Installing Scapy within virtual environment..."
+if pip install scapy > /dev/null 2>&1; then
+    printf "\r${OK} Scapy installed within virtual environment\n"
+else
+    printf "\r${ERROR} Failed to install Scapy within virtual environment. Exiting.\n"
+    exit 1
+fi
+
+
+# Deactivate the virtual environment
 deactivate
 
-# Print a completion message
-echo 'INSTALLATION COMPLETED'
+
+# Display installation completion message
+echo -e "\033[0;32mINSTALLATION COMPLETED\033[0m"
