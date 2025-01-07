@@ -10,7 +10,7 @@ It handles input processing and command execution.
 """
 
 
-import sys
+import sys, subprocess
 from auxiliary       import Color, DataBase
 from port_scanner    import Port_Scanner
 from os_fingerprint  import OS_Fingerprint
@@ -90,6 +90,12 @@ class Main: # ==================================================================
 
 class Command_List: # ========================================================================================
     """Displays a list of all available commands."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
 
     @staticmethod
     def _execute(__, _) -> None:
