@@ -11,7 +11,7 @@ It handles input processing and command execution.
 
 
 import sys, subprocess
-from auxiliary       import Color, DataBase
+from auxiliary       import Color, DataBase, Argument_Parser_Manager
 from port_scanner    import Port_Scanner
 from os_fingerprint  import OS_Fingerprint
 
@@ -80,6 +80,7 @@ class Main: # ==================================================================
         """Returns the class dictionary."""
         return {
             "help":   Command_List(),
+            "sys":    Sys_Command(),
             "pscan":  Port_Scanner(),
             "osfing": OS_Fingerprint(),
         }
@@ -100,9 +101,44 @@ class Command_List: # ==========================================================
     @staticmethod
     def _execute(__, _) -> None:
         for command in (
+            f'{Color.green("sys")}......: Executes a system command',
             f'{Color.green("pscan")}....: Port scanner',
             f'{Color.green("osfing")}...: OS Fingerprint',
         ): print(command)
+
+
+
+
+
+class Sys_Command: # =========================================================================================
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+
+
+    @staticmethod
+    def _execute(database, command:list):
+        try:
+            command = " ".join(command)
+            command = Sys_Command._get_argument(database.parser_manager, [command])
+            result  = subprocess.run(command, shell=True, capture_output=True, text=True)
+            if result.returncode == 0:
+                print(result.stdout)
+            else:
+                print(f'{Color.display_error(result.stderr)}')
+        except Exception as error:
+            print(f'{Color.display_unexpected_error(error)}')
+
+    
+    @staticmethod
+    def _get_argument(parser_manager:Argument_Parser_Manager, command:str) -> None:
+        """Parses and retrieves the target IP address from the provided arguments."""
+        result = parser_manager._parse("SysCommand", command)
+        return result.command
+
 
 
 

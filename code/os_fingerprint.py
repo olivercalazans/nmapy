@@ -46,7 +46,7 @@ class OS_Fingerprint:
     def _get_argument(self, parser_manager:Argument_Parser_Manager, argument:list) -> str:
         """Parses and retrieves the target IP address from the provided arguments."""
         arguments       = parser_manager._parse("OSFingerprint", argument)
-        self._target_ip = arguments.target
+        self._target_ip = arguments.host
 
 
     # PACKETS ================================================================================================

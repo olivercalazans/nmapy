@@ -63,9 +63,14 @@ class Argument_Definitions: # ==================================================
     """This class contains the definitions for all argument parsers used in the application."""
 
     @staticmethod
+    def _sys_command_arguments():
+        return "SysCommand", [("arg", "command", "System command")]
+
+
+    @staticmethod
     def _portscanner_arguments():
         return "PortScanner", [
-            ("arg",   "host", "Host name"),
+            ("arg",   "host", "Target IP"),
             ("bool",  "-r", "--random-order", "Use the ports in random order"),
             ("value", "-p", "--port",  str, "Specify a port to scan"),
             ("value", "-D", "--decoy", str, "Uses decoy method"),
@@ -75,7 +80,7 @@ class Argument_Definitions: # ==================================================
 
     @staticmethod
     def _os_fingerprint_arguments():
-        return "OSFingerprint", [("arg", "target", "Target IP")]
+        return "OSFingerprint", [("arg", "host", "Target IP")]
 
 
 
