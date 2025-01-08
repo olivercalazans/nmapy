@@ -19,7 +19,11 @@ WARNING='[\033[38;5;214mWARNING\033[0m]'         # Visual indicator for warnings
 printf "Creating wrapper script..."
 COMMAND_NAME="dataseeker"
 echo "#!/bin/bash" > $COMMAND_NAME
-echo "sudo \$HOME/.dataseeker/seeker/bin/python3 \$HOME/.dataseeker/main.py \"\$@\"" >> $COMMAND_NAME
+echo "if [ \"\$EUID\" -ne 0 ]; then" >> $COMMAND_NAME
+echo "  exec sudo \"\$0\" \"\$@\"" >> $COMMAND_NAME
+echo "fi" >> $COMMAND_NAME
+echo "HOME_DIR=\$(eval echo "~\$SUDO_USER")" >> $COMMAND_NAME
+echo "\$HOME_DIR/.dataseeker/seeker/bin/python3 \$HOME_DIR/.dataseeker/main.py \"\$@\"" >> $COMMAND_NAME
 
 
 # Move the wrapper script to /usr/bin for global access and set executable permissions
