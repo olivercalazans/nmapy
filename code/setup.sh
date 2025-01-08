@@ -15,6 +15,16 @@ ERROR='[ \033[0;31mERROR\033[0m ]'               # Visual indicator for errors
 WARNING='[\033[38;5;214mWARNING\033[0m]'         # Visual indicator for warnings
 
 
+# Install required system packages: pip and python3-venv
+printf "Installing pip and python3-venv..."
+if sudo apt install python3-venv python3-pip -y > /dev/null 2>&1; then
+    printf "\r${OK} pip and python3-venv installed\n"
+else
+    printf "\r${ERROR} Failed to install required packages. Exiting.\n"
+    exit 1
+fi
+
+
 # Create a wrapper script to execute the application
 printf "Creating wrapper script..."
 COMMAND_NAME="dataseeker"
@@ -71,16 +81,6 @@ if [ -e "$SOURCE_DIR/LICENSE" ]; then
     cp "$SOURCE_DIR/LICENSE" "$DESTINY_DIR" 2> /dev/null
 else
     printf "${WARNING} LICENSE not found\n"
-fi
-
-
-# Install required system packages: pip and python3-venv
-printf "Installing pip and python3-venv..."
-if sudo apt install python3-venv python3-pip -y > /dev/null 2>&1; then
-    printf "\r${OK} pip and python3-venv installed\n"
-else
-    printf "\r${ERROR} Failed to install required packages. Exiting.\n"
-    exit 1
 fi
 
 
