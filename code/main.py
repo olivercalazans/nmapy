@@ -129,10 +129,10 @@ class Sys_Command: # ===========================================================
                 print(result.stdout)
             else:
                 print(f'{Color.display_error(result.stderr)}')
-        except Exception as error:
-            print(f'{Color.display_unexpected_error(error)}')
+        except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
+        except Exception as error:  print(f'{Color.display_unexpected_error(error)}')
 
-    
+
     @staticmethod
     def _get_argument(parser_manager:Argument_Parser_Manager, command:str) -> None:
         """Parses and retrieves the target IP address from the provided arguments."""
