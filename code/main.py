@@ -124,11 +124,14 @@ class Sys_Command: # ===========================================================
         try:
             command = " ".join(command)
             command = Sys_Command._get_argument(database.parser_manager, [command])
-            result  = subprocess.run(command, shell=True, capture_output=True, text=True)
-            if result.returncode == 0:
-                print(result.stdout)
-            else:
-                print(f'{Color.display_error(result.stderr)}')
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            for line in process.stdout:
+                print(line, end="")
+            process.stdout.close()
+            process.wait()
+            if process.returncode != 0:
+                print(f'{Color.display_error(process.stderr.read())}')
+            process.stderr.close()
         except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
         except Exception as error:  print(f'{Color.display_unexpected_error(error)}')
 
@@ -138,7 +141,6 @@ class Sys_Command: # ===========================================================
         """Parses and retrieves the target IP address from the provided arguments."""
         result = parser_manager._parse("SysCommand", command)
         return result.command
-
 
 
 
