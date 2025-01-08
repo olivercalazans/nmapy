@@ -80,7 +80,7 @@ class Main: # ==================================================================
         """Returns the class dictionary."""
         return {
             "help":   Command_List(),
-            "sys":    Sys_Command(),
+            "sys":    System_Command(),
             "pscan":  Port_Scanner(),
             "osfing": OS_Fingerprint(),
         }
@@ -110,7 +110,7 @@ class Command_List: # ==========================================================
 
 
 
-class Sys_Command: # =========================================================================================
+class System_Command: # =========================================================================================
 
     def __enter__(self):
         return self
@@ -123,7 +123,7 @@ class Sys_Command: # ===========================================================
     def _execute(database, command:list):
         try:
             command = " ".join(command)
-            command = Sys_Command._get_argument(database.parser_manager, [command])
+            command = System_Command._get_argument(database.parser_manager, [command])
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             for line in process.stdout:
                 print(line, end="")
