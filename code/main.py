@@ -133,6 +133,7 @@ class Sys_Command: # ===========================================================
                 print(f'{Color.display_error(process.stderr.read())}')
             process.stderr.close()
         except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
+        except KeyboardInterrupt:   print(Color.red("Process stopped"))
         except Exception as error:  print(f'{Color.display_unexpected_error(error)}')
 
 
