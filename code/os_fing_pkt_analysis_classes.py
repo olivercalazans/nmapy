@@ -16,6 +16,7 @@ class TCP_ISN_Greatest_Common_Divisor: # =======================================
         self._diff1      = list()
         self._gcd        = None
 
+
     def __enter__(self):
         return self
     
@@ -51,6 +52,7 @@ class TCP_ISN_Counter_Rate: # ==================================================
         self._times     = times
         self._seq_rates = list()
         self._isr       = None
+
 
     def __enter__(self):
         return self
@@ -96,6 +98,7 @@ class TCP_ISN_Sequence_Predictability_Index: # =================================
         self._mean      = None
         self._variance  = None
     
+
     def __enter__(self):
         return self
     
@@ -126,3 +129,61 @@ class TCP_ISN_Sequence_Predictability_Index: # =================================
 
     def _calculate_standard_deviation(self) -> float:
         return math.sqrt(self._variance)
+    
+
+
+
+
+class IP_ID_Sequence_Analyzer: # =============================================================================
+
+    def __init__(self, ip_ids:list[int]):
+        self._ip_ids = ip_ids
+
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+    
+
+    def _analyze(self) -> str:
+        if not self._ip_ids:
+            raise ValueError("No IP ID values provided for analysis.")
+
+        differences = self._calculate_differences()
+
+        # Rule: All ID numbers are zero
+        if all(id_ == 0 for id_ in self._ip_ids):
+            return "Z"
+
+        # Rule: Any increment >= 20,000 -> Random (RD)
+        if any(diff >= 20000 for diff in differences):
+            return "RD"
+
+        # Rule: All IDs are identical
+        if all(id_ == self._ip_ids[0] for id_ in self._ip_ids):
+            return hex(self._ip_ids[0])
+
+        # Rule: Differences > 1,000 and not divisible by 256 -> Random Positive Increments (RI)
+        if any(diff > 1000 and diff % 256 != 0 for diff in differences):
+            return "RI"
+
+        # Rule: Differences divisible by 256 and <= 5,120 -> Broken Increment (BI)
+        if all(diff % 256 == 0 and diff <= 5120 for diff in differences):
+            return "BI"
+
+        # Rule: Differences < 10 -> Incremental (I)
+        if all(diff < 10 for diff in differences):
+            return "I"
+
+        # No matching rules
+        return "Test omitted"
+
+
+    def _calculate_differences(self) -> list[int]:
+        differences = []
+        for i in range(1, len(self._ip_ids)):
+            diff = (self._ip_ids[i] - self._ip_ids[i - 1]) % 65536
+            differences.append(diff)
+        return differences

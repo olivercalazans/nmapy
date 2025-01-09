@@ -23,6 +23,7 @@ class OS_Fingerprint:
         self._seq_rates   = None
         self._isr         = None
         self._sp          = None
+        self._ip_id       = None
 
 
     def __enter__(self):
@@ -93,6 +94,10 @@ class OS_Fingerprint:
         with TCP_ISN_Sequence_Predictability_Index(self._seq_rates, self._gcd) as SPI:
             self._sp = SPI._calculate_sp()
 
+
+    def _get_sp(self) -> None:
+        with IP_ID_Sequence_Analyzer() as IPID:
+            self._ip_id = IPID._analyze()
 
 
 
