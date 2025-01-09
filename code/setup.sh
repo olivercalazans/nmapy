@@ -27,18 +27,16 @@ fi
 
 # Create a wrapper script to execute the application
 printf "Creating wrapper script..."
-COMMAND_NAME="dataseeker"
-echo "#!/bin/bash" > $COMMAND_NAME
-echo "if [ \"\$EUID\" -ne 0 ]; then" >> $COMMAND_NAME
-echo "  exec sudo \"\$0\" \"\$@\"" >> $COMMAND_NAME
-echo "fi" >> $COMMAND_NAME
-echo "HOME_DIR=\$(eval echo "~\$SUDO_USER")" >> $COMMAND_NAME
-echo "\$HOME_DIR/.dataseeker/seeker/bin/python3 \$HOME_DIR/.dataseeker/main.py \"\$@\"" >> $COMMAND_NAME
-
-
-# Move the wrapper script to /usr/bin for global access and set executable permissions
-sudo mv $COMMAND_NAME /usr/bin
-sudo chmod +x /usr/bin/$COMMAND_NAME
+WRAPPER_FILE="dataseeker"
+cat <<'EOF' > "/usr/bin/$WRAPPER_FILE"
+#!/bin/bash
+if [ "$EUID" -ne 0 ]; then
+  exec sudo "$0" "$@"
+fi
+HOME_DIR=$(eval echo "~$SUDO_USER")
+$HOME_DIR/.dataseeker/seeker/bin/python3 $HOME_DIR/.dataseeker/main.py "$@"
+EOF
+sudo chmod +x "/usr/bin/$WRAPPER_FILE"
 printf "\r${OK} Wrapper script created\n"
 
 
