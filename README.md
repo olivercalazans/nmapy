@@ -8,6 +8,7 @@
 **DataSeeker** is a Python-based command-line tool designed to gather information about networks and devices. Built on the powerful features of Nmap, it is tailored for use in Linux environments, providing a simple and efficient interface for network exploration with only one external dependency. What it can do:
 
 ![Portscan](https://img.shields.io/badge/Port_scan-Ready_to_use-brightgreen?style=for-the-badge)
+![BannerGrabbing](https://img.shields.io/badge/Banner_Grabbing-Ready_to_use-brightgreen?style=for-the-badge)
 ![OSFingerprint](https://img.shields.io/badge/OS_Fingerprint-Under_development-FF4500?style=for-the-badge)
 
 
