@@ -7,23 +7,25 @@
 import threading, sched, time, math
 from scapy.all import Packet, IP, ICMP, TCP, Raw
 from network   import Packets, Sending_Methods
-from auxiliary import Argument_Parser_Manager, Color
+from auxiliary import Color
 from os_fing_pkt_analysis_classes import *
 
 
 class OS_Fingerprint:
-    def __init__(self) -> None:
-        self._target_ip   = None
-        self._open_port   = None
-        self._closed_port = None
-        self._isns        = None
-        self._times       = None
-        self._diff1       = None
-        self._gcd         = None
-        self._seq_rates   = None
-        self._isr         = None
-        self._sp          = None
-        self._ip_id       = None
+    def __init__(self, database, data:list) -> None:
+        self._parser_manager = database.parser_manager
+        self._data           = data
+        self._target_ip      = None
+        self._open_port      = None
+        self._closed_port    = None
+        self._isns           = None
+        self._times          = None
+        self._diff1          = None
+        self._gcd            = None
+        self._seq_rates      = None
+        self._isr            = None
+        self._sp             = None
+        self._ip_id          = None
 
 
     def __enter__(self):
@@ -33,10 +35,10 @@ class OS_Fingerprint:
         return False
 
 
-    def _execute(self, database, data:list) -> None:
+    def _execute(self) -> None:
         """Executes the fingerprinting process on the provided data."""
         try:
-            self._get_argument(database.parser_manager, data)
+            self._get_argument()
             print(f'{Color.yellow("Function still under development")}')
         except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
         except KeyboardInterrupt:   print(Color.red("Process stopped"))
@@ -44,9 +46,9 @@ class OS_Fingerprint:
         except Exception as error:  print(Color.display_unexpected_error(error))
 
 
-    def _get_argument(self, parser_manager:Argument_Parser_Manager, argument:list) -> str:
+    def _get_argument(self) -> str:
         """Parses and retrieves the target IP address from the provided arguments."""
-        arguments       = parser_manager._parse("OSFingerprint", argument)
+        arguments       = self._parser_manager._parse("OSFingerprint", self._data)
         self._target_ip = arguments.host
 
 

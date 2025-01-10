@@ -8,13 +8,15 @@ import socket, ipaddress, random, time, threading, sys
 from scapy.all import TCP
 from scapy.all import conf, Packet
 from network   import *
-from auxiliary import Color, Argument_Parser_Manager
+from auxiliary import Color
 
 
 class Port_Scanner:
     """Performs a port scan on a specified host."""
 
-    def __init__(self) -> None:
+    def __init__(self, database, data:list) -> None:
+        self._parser_manager   = database.parser_manager
+        self._data             = data
         self._all_ports        = Network_Information._get_ports()
         self._host             = None
         self._flags            = None
@@ -32,10 +34,10 @@ class Port_Scanner:
         return False
 
 
-    def _execute(self, database, data:list) -> None:
+    def _execute(self) -> None:
         """ Executes the port scanning process with error handling."""
         try:
-            self._get_argument_and_flags(database.parser_manager, data)
+            self._get_argument_and_flags()
             self._target_ip = Network_Information._get_ip_by_name(self._host)
             conf.verb       = 0
             self._get_result_by_transmission_method()
@@ -47,9 +49,9 @@ class Port_Scanner:
         except Exception as error:  print(Color.display_unexpected_error(error))
 
 
-    def _get_argument_and_flags(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
+    def _get_argument_and_flags(self) -> None:
         """Parses and retrieves the hostname, port, and verbosity flag from the arguments."""
-        arguments   = parser_manager._parse("PortScanner", data)
+        arguments   = self._parser_manager._parse("PortScanner", self._data)
         self._host  = arguments.host
         self._flags = {
             'ports':   arguments.port,

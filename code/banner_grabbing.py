@@ -10,7 +10,7 @@ from auxiliary import Color
 
 class Banner_Grabbing:
     
-    def __init__(self, database, data:list):
+    def __init__(self, database, data:list) -> None:
         self._parser_manager = database.parser_manager
         self._data           = data
         self._host           = None
@@ -25,7 +25,7 @@ class Banner_Grabbing:
         return False
 
 
-    def _execute(self):
+    def _execute(self) -> None:
         try:
             self._get_argument_and_flags()
             self._grab_banners_on_the_protocol()
@@ -41,20 +41,21 @@ class Banner_Grabbing:
         self._port     = arguments.port
     
 
-    def _grab_banners_on_the_protocol(self):
-        with self._protocol_dictionary().get(self._protocol) as protocol:
-            try:
-                port = self._port if self._port else protocol['port']
-                protocol['class']._execute_banner_grabbing(self._host, port)
-            except Exception as error: print(f'{Color.red("Error while trying to execute the banner grabbing")}.\nERROR: {error}')
+    def _grab_banners_on_the_protocol(self) -> None:
+        try:
+            protocol = self._protocol_dictionary().get(self._protocol)
+            port     = self._port if self._port else protocol['port']
+            with protocol['class']() as instance:
+                instance._execute_banner_grabbing(self._host, port)
+        except Exception as error: print(f'{Color.red("Error while trying to execute the banner grabbing")}.\nERROR: {error}')
 
 
     @staticmethod
     def _protocol_dictionary() -> dict:
         return {
-            'http':  {'class': HTTP_Banner_grabbing(),  'port': 80},
-            'https': {'class': HTTPS_Banner_Grabbing(), 'port': 443},
-            'dns':   {'class': DNS_Banner_Grabbing(),   'port': 22}
+            'http':  {'class': HTTP_Banner_grabbing,  'port': 80},
+            'https': {'class': HTTPS_Banner_Grabbing, 'port': 443},
+            'ssh':   {'class': SSH_Banner_Grabbing,   'port': 22}
         }
         
 
@@ -128,7 +129,7 @@ class HTTPS_Banner_Grabbing:
 
 
 
-class DNS_Banner_Grabbing:
+class SSH_Banner_Grabbing:
 
     def __enter__(self):
         return self

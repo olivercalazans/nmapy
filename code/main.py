@@ -72,20 +72,22 @@ class Main: # ==================================================================
 
     def _run_command(self, command:str, arguments:str) -> None:
         """Executes the command by calling the corresponding class method."""
-        with self._get_strategy_dictionary().get(command) as strategy:
-            try:   strategy._execute(self._database, arguments)
-            except Exception as error: print(f'{Color.red("Error while trying to execute the command")}.\nERROR: {error}')
+        try:
+            strategy_class = self._get_strategy_dictionary().get(command)
+            with strategy_class(self._database, arguments) as strategy:
+                strategy._execute()
+        except Exception as error: print(f'{Color.red("Error while trying to execute the command")}.\nERROR: {error}')
 
 
     @staticmethod
     def _get_strategy_dictionary() -> dict:
         """Returns the class dictionary."""
         return {
-            "help":   Command_List(),
-            "sys":    System_Command(),
-            "pscan":  Port_Scanner(),
-            "banner": Banner_Grabbing(),
-            "osfing": OS_Fingerprint(),
+            "help":   Command_List,
+            "sys":    System_Command,
+            "pscan":  Port_Scanner,
+            "banner": Banner_Grabbing,
+            "osfing": OS_Fingerprint,
         }
 
 
@@ -95,6 +97,9 @@ class Main: # ==================================================================
 class Command_List: # ========================================================================================
     """Displays a list of all available commands."""
 
+    def __init__(self, _, __):
+        pass
+
     def __enter__(self):
         return self
 
@@ -102,7 +107,7 @@ class Command_List: # ==========================================================
         return False
 
     @staticmethod
-    def _execute(__, _) -> None:
+    def _execute() -> None:
         for command in (
             f'{Color.green("sys")}......: Executes a system command',
             f'{Color.green("pscan")}....: Port scanner',
@@ -116,6 +121,9 @@ class Command_List: # ==========================================================
 
 class System_Command: # =========================================================================================
 
+    def __init__(self, _, __):
+        pass
+    
     def __enter__(self):
         return self
 
