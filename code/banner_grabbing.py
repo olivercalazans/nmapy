@@ -9,7 +9,7 @@ from auxiliary import Color
 
 
 class Banner_Grabbing:
-    
+
     def __init__(self, database, data:list) -> None:
         self._parser_manager = database.parser_manager
         self._data           = data
@@ -17,10 +17,10 @@ class Banner_Grabbing:
         self._protocol       = None
         self._port           = None
 
-    
+
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         return False
 
@@ -39,7 +39,7 @@ class Banner_Grabbing:
         self._host     = arguments.host
         self._protocol = arguments.protocol
         self._port     = arguments.port
-    
+
 
     def _grab_banners_on_the_protocol(self) -> None:
         try:
@@ -62,12 +62,11 @@ class Banner_Grabbing:
 
 
 
-
 class HTTP_Banner_grabbing:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         return False
 
@@ -80,12 +79,12 @@ class HTTP_Banner_grabbing:
                 sock.send(request.encode())
 
                 response = sock.recv(4096).decode(errors="ignore")
-                print("[+] Resposta do servidor HTTP:")
+                print("[+] HTTP server response:")
                 print(response)
-                
+
                 for line in response.split("\r\n"):
                     if line.lower().startswith("server:"):
-                        print(f"[+] Banner HTTP encontrado: {line}")
+                        print(f"[+] HTTP banner found: {line}")
         except Exception as error:
             print(f"[-] Error: {error}")
 
@@ -105,25 +104,21 @@ class HTTPS_Banner_Grabbing:
     @staticmethod
     def _execute_banner_grabbing(host:str, port:int):
         try:
-            # Criar um socket seguro (SSL/TLS)
             context = ssl.create_default_context()
             with socket.create_connection((host, port), timeout=5) as sock:
                 with context.wrap_socket(sock, server_hostname=host) as ssock:
-                    # Enviar uma requisição HTTPS simples
                     request = f"HEAD / HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
                     ssock.send(request.encode())
 
-                    # Receber e imprimir a resposta
                     response = ssock.recv(4096).decode(errors="ignore")
-                    print(f"[+] Resposta do servidor HTTPS:\n{response}")
+                    print(f"[+] HTTPS server response:\n{response}")
 
-                    # Opcional: Exibir informações do certificado SSL
                     cert = ssock.getpeercert()
-                    print("\n[+] Certificado SSL do servidor:")
+                    print("\n[+] SSL certificate of the server:")
                     for key, value in cert.items():
                         print(f"  {key}: {value}")
-        except Exception as e:
-            print(f"[-] Erro: {e}")
+        except Exception as error:
+            print(f"[-] Error: {error}")
 
 
 
@@ -133,7 +128,7 @@ class SSH_Banner_Grabbing:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         return False
 
@@ -143,6 +138,6 @@ class SSH_Banner_Grabbing:
         try:
             with socket.create_connection((host, port), timeout=5) as sock:
                 banner = sock.recv(1024).decode(errors="ignore")
-                print(f"[+] Banner do servidor SSH:\n{banner}")
-        except Exception as e:
-            print(f"[-] Erro: {e}")
+                print(f"[+] SSH server banner:\n{banner}")
+        except Exception as error:
+            print(f"[-] Error: {error}")
