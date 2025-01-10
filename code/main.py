@@ -150,8 +150,8 @@ class System_Command: # ========================================================
 
     def _get_argument(self) -> None:
         """Parses and retrieves the target IP address from the provided arguments."""
-        result = self._parser_manager._parse("SysCommand", [self._command])
-        return result.command
+        result        = self._parser_manager._parse("SysCommand", [self._command])
+        self._command = result.command
 
 
 
