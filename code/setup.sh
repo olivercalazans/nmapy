@@ -45,7 +45,8 @@ SCRIPTS_DIR=$(dirname "$(realpath "$0")")        # Directory containing the curr
 SOURCE_DIR=${SCRIPTS_DIR%/*}                     # Parent directory of the script's directory
 FILES=("main.py" "auxiliary.py" "network.py"     # List of required Python scripts
        "os_fing_pkt_analysis_classes.py"
-       "os_fingerprint.py" "port_scanner.py")
+       "os_fingerprint.py" "port_scanner.py"
+       "banner_grabbing.py")
 
 
 # Create the destination directory for the application

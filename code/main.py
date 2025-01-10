@@ -121,8 +121,9 @@ class Command_List: # ==========================================================
 
 class System_Command: # =========================================================================================
 
-    def __init__(self, _, __):
-        pass
+    def __init__(self, database, data:list):
+        self._parser_manager = database.parser_manager
+        self._command        = " ".join(data)
     
     def __enter__(self):
         return self
@@ -131,12 +132,10 @@ class System_Command: # ========================================================
         return False
 
 
-    @staticmethod
-    def _execute(database, command:list):
+    def _execute(self):
         try:
-            command = " ".join(command)
-            command = System_Command._get_argument(database.parser_manager, [command])
-            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            self._get_argument()
+            process = subprocess.Popen(self._command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             for line in process.stdout:
                 print(line, end="")
             process.stdout.close()
@@ -149,10 +148,9 @@ class System_Command: # ========================================================
         except Exception as error:  print(f'{Color.display_unexpected_error(error)}')
 
 
-    @staticmethod
-    def _get_argument(parser_manager:Argument_Parser_Manager, command:str) -> None:
+    def _get_argument(self) -> None:
         """Parses and retrieves the target IP address from the provided arguments."""
-        result = parser_manager._parse("SysCommand", command)
+        result = self._parser_manager._parse("SysCommand", [self._command])
         return result.command
 
 
