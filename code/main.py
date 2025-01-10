@@ -13,7 +13,9 @@ It handles input processing and command execution.
 import sys, subprocess
 from auxiliary       import Color, DataBase, Argument_Parser_Manager
 from port_scanner    import Port_Scanner
+from banner_grabbing import Banner_Grabbing
 from os_fingerprint  import OS_Fingerprint
+
 
 
 
@@ -82,6 +84,7 @@ class Main: # ==================================================================
             "help":   Command_List(),
             "sys":    System_Command(),
             "pscan":  Port_Scanner(),
+            "banner": Banner_Grabbing(),
             "osfing": OS_Fingerprint(),
         }
 
@@ -103,6 +106,7 @@ class Command_List: # ==========================================================
         for command in (
             f'{Color.green("sys")}......: Executes a system command',
             f'{Color.green("pscan")}....: Port scanner',
+            f'{Color.green("banner")}...: Banner Grabbing',
             f'{Color.green("osfing")}...: OS Fingerprint',
         ): print(command)
 

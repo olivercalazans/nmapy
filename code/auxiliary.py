@@ -47,7 +47,8 @@ class Argument_Parser_Manager: # ===============================================
                 case 'bool':  class_parser.add_argument(arg[1], arg[2], action="store_true", help=arg[3])
                 case 'value': class_parser.add_argument(arg[1], arg[2], type=arg[3], help=arg[4])
                 case 'opt':   class_parser.add_argument(arg[1], arg[2], nargs='?', const=True, default=False, help=arg[3])
-                case _:       class_parser.add_argument(arg[1], type=str, help=arg[2])
+                case 'arg':   class_parser.add_argument(arg[1], type=str, help=arg[2])
+                case _:       class_parser.add_argument(arg[1], type=str, choices=arg[2], help=arg[3])
 
 
     def _parse(self, subparser_id:str, data:list) -> argparse.Namespace:
@@ -70,7 +71,7 @@ class Argument_Definitions: # ==================================================
     @staticmethod
     def _portscanner_arguments():
         return "PortScanner", [
-            ("arg",   "host", "Target IP"),
+            ("arg",   "host", "Target IP/Hostname"),
             ("bool",  "-r", "--random-order", "Use the ports in random order"),
             ("value", "-p", "--port",  str, "Specify a port to scan"),
             ("value", "-D", "--decoy", str, "Uses decoy method"),
@@ -79,8 +80,18 @@ class Argument_Definitions: # ==================================================
 
 
     @staticmethod
+    def _banner_grabbing_arguments():
+        PROTOCOLS = ['http', 'https', 'ssh']
+        return "BannerGrabbing", [
+            ("arg",    "host",     "Target IP/Hostname"),
+            ("choice", "protocol", PROTOCOLS, "Protocol"),
+            ("value",  "-p", "--port", str, "Specify a port to grab the banners")
+        ]
+
+
+    @staticmethod
     def _os_fingerprint_arguments():
-        return "OSFingerprint", [("arg", "host", "Target IP")]
+        return "OSFingerprint", [("arg", "host", "Target IP/Hostname")]
 
 
 
