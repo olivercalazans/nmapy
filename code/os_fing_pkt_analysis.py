@@ -134,7 +134,7 @@ class TCP_ISN_Sequence_Predictability_Index: # =================================
 
 
 
-class IP_ID_Sequence_Analyzer: # =============================================================================
+class IP_ID_Sequence_Generation_Algorithm: # =================================================================
 
     def __init__(self, ip_ids:list[int]):
         self._ip_ids = ip_ids
@@ -153,31 +153,24 @@ class IP_ID_Sequence_Analyzer: # ===============================================
 
         differences = self._calculate_differences()
 
-        # Rule: All ID numbers are zero
         if all(id_ == 0 for id_ in self._ip_ids):
             return "Z"
 
-        # Rule: Any increment >= 20,000 -> Random (RD)
         if any(diff >= 20000 for diff in differences):
             return "RD"
 
-        # Rule: All IDs are identical
         if all(id_ == self._ip_ids[0] for id_ in self._ip_ids):
             return hex(self._ip_ids[0])
 
-        # Rule: Differences > 1,000 and not divisible by 256 -> Random Positive Increments (RI)
         if any(diff > 1000 and diff % 256 != 0 for diff in differences):
             return "RI"
 
-        # Rule: Differences divisible by 256 and <= 5,120 -> Broken Increment (BI)
         if all(diff % 256 == 0 and diff <= 5120 for diff in differences):
             return "BI"
 
-        # Rule: Differences < 10 -> Incremental (I)
         if all(diff < 10 for diff in differences):
             return "I"
 
-        # No matching rules
         return "Test omitted"
 
 
@@ -187,3 +180,133 @@ class IP_ID_Sequence_Analyzer: # ===============================================
             diff = (self._ip_ids[i] - self._ip_ids[i - 1]) % 65536
             differences.append(diff)
         return differences
+    
+
+
+
+
+class Shared_IP_ID_Sequence_Boolean: # =======================================================================
+
+    def __init__(self, tcp_ids:list, icmp_ids:list, ti:str, ii:str) -> None:
+        self._tcp_ids  = tcp_ids
+        self._icmp_ids = icmp_ids
+        self._ti       = ti
+        self._ii       = ii
+
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+    
+    
+    def _is_shared_sequence(self) -> str | None:
+        if self._ti not in {"RI", "BI", "I"} or self._ii not in {"RI", "BI", "I"} or self._ti != self._ii:
+            return None
+
+        if len(self._tcp_ids) < 2 or len(self._icmp_ids) < 1:
+            raise ValueError("Insufficient data: At least two TCP IDs and one ICMP ID are required.")
+
+        avg = (self._tcp_ids[-1] - self._tcp_ids[0]) / (len(self._tcp_ids) - 1)
+
+        shared_threshold = self._tcp_ids[-1] + (3 * avg)
+
+        if self._icmp_ids[0] < shared_threshold:
+            return "S"
+        return "O"
+
+
+
+
+
+class TCP_Timestamp_Option_Algorithm: # ======================================================================
+
+    def __init__(self, timestamps:list[int], time_deltas:list[float]):
+        self._timestamp   = timestamps
+        self._time_deltas = time_deltas
+
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+
+    def _analyze_ts(self) -> str:
+        if len(self._timestamp) != len(self._time_deltas) + 1:
+            raise ValueError("The number of timestamps must be one more than the number of time intervals.")
+
+        if any(ts is None for ts in self._timestamp):
+            return "U"
+        if any(ts == 0 for ts in self._timestamp):
+            return "0"
+
+        rates = [
+            (self._timestamp[i + 1] - self._timestamp[i]) / self._timestamp[i]
+            for i in range(len(self._time_deltas))
+        ]
+
+        avg_rate = sum(rates) / len(rates)
+
+        if 0 <= avg_rate <= 5.66:
+            return "1"
+        elif 70 <= avg_rate <= 150:
+            return "7"
+        elif 150 <= avg_rate <= 350:
+            return "8"
+        else:
+            ts_value = round(math.log2(avg_rate))
+            return chr(65 + ts_value - 1)
+
+        return "U"
+
+
+
+
+
+class TCP_Options: # =========================================================================================
+
+    def __init__(self, tcp_options: list[dict[str, any]]) -> None:
+        self._tcp_options = tcp_options
+        self._OPTION_MAP  = {
+            "EOL": "L",
+            "NOP": "N",
+            "MSS": "M",
+            "WS": "W",
+            "TS": "T",
+            "SACK": "S"
+        }
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+    
+
+    def _analyze_tcp_options(self) -> str:
+        option_string = ""
+
+        for option in self._tcp_options:
+            option_name = option.get("name")
+            option_value = option.get("value", None)
+
+            char = self._OPTION_MAP.get(option_name)
+
+            if not char:
+                continue
+
+            option_string += char
+
+            if option_name == "MSS" and option_value is not None:
+                option_string += f"{option_value:X}"  # MSS value in hexadecimal
+            elif option_name == "WS" and option_value is not None:
+                option_string += str(option_value)    # WS value in decimal
+            elif option_name == "TS" and option_value is not None:
+                tsval, tsecr = option_value
+                tsval_bit = "1" if tsval else "0"
+                tsecr_bit = "1" if tsecr else "0"
+                option_string += f"{tsval_bit}{tsecr_bit}"
+
+        return option_string

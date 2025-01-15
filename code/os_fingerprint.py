@@ -25,6 +25,10 @@ class OS_Fingerprint:
         self._isr            = None
         self._sp             = None
         self._ip_id          = None
+        self._ti             = None
+        self._ii             = None
+        self._ts             = None
+        self._tcp_options    = None
 
 
     def __enter__(self):
@@ -89,6 +93,17 @@ class OS_Fingerprint:
         with ECN_Syn_Packet(self._get_ecn_syn_packet()) as ECN:
             ...
 
+    
+    def _get_t2_through_t7_responses(self) -> None:
+        with T2_Through_T7_Packets(self._get_t2_through_t7_tcp_packets()) as TCP_1_7:
+            ...
+            
+
+    def _get_udp_response(self) -> None:
+        with UDP_Packet(self._get_udp_packet()) as UDP:
+            ...
+
+            
     # RESPONSE TESTS =========================================================================================
 
     def _get_diff1_and_gcd(self) -> None:
@@ -107,5 +122,20 @@ class OS_Fingerprint:
 
 
     def _get_sp(self) -> None:
-        with IP_ID_Sequence_Analyzer() as IPID:
+        with IP_ID_Sequence_Generation_Algorithm() as IPID:
             self._ip_id = IPID._analyze()
+
+    
+    def _get_ss(self) -> None:
+        with Shared_IP_ID_Sequence_Boolean() as SS:
+            self._ss = SS._is_shared_sequence()
+    
+
+    def _get_ts(self) -> None:
+        with TCP_Timestamp_Option_Algorithm() as TIMESTAMP:
+            self._ts = TIMESTAMP._analyze_ts()
+
+    
+    def _get_tcp_options(self) -> None:
+        with TCP_Options() as OPTS:
+            self._tcp_options = OPTS._analyze_tcp_options()

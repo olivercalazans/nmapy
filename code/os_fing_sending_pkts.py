@@ -126,16 +126,17 @@ class ISNs_And_Times: # ========================================================
 
 class ICMP_Testes: # =========================================================================================
 
+    def __init__(self, packets:list[Packet]):
+        self._packets = packets
+
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         return False
     
-
-    @staticmethod
-    def _icmp_responses(packets:Packets) -> Packets:
-        return Sending_Methods._send_and_receive_multiple_layer3_packets(packets)
+    def _send_icmp(self) -> Packets:
+        return Sending_Methods._send_and_receive_multiple_layer3_packets(self._packets)
     
 
 
@@ -143,13 +144,50 @@ class ICMP_Testes: # ===========================================================
 
 class ECN_Syn_Packet: # ======================================================================================
 
+    def __init__(self, packet:Packet):
+        self._packet = packet
+
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         return False
     
+    def _send_ecn_syn_packet(self) -> Packet:
+        return Sending_Methods._send_and_receive_single_layer3_packet(self._packet)
+    
 
-    @staticmethod
-    def _send_ecn_syn_packet(packet) -> Packet:
-        return Sending_Methods._send_and_receive_single_layer3_packet(packet)
+
+
+
+class T2_Through_T7_Packets: # ===============================================================================
+
+    def __init__(self, packets:list[Packet]):
+        self._packets = packets
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+    
+    def _send_t2_through_t7_packets(self) -> Packets:
+        return Sending_Methods._send_and_receive_multiple_layer3_packets(self._packets)
+    
+
+
+
+
+class UDP_Packet: # ==========================================================================================
+
+    def __init__(self, packet:Packet):
+        self._packet = packet
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+    
+    def _send_udp_packet(self) -> Packet:
+        return Sending_Methods._send_and_receive_single_layer3_packet(self._packet)
