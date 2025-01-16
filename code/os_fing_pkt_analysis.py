@@ -10,7 +10,7 @@ from functools import reduce
 
 
 class TCP_ISN_Greatest_Common_Divisor: # =====================================================================
-    
+
     def __init__(self, isns:list):
         self._isns       = isns
         self._diff1      = list()
@@ -19,11 +19,11 @@ class TCP_ISN_Greatest_Common_Divisor: # =======================================
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         return False
-    
-    
+
+
     def _calculate_diff1_and_gcd(self) -> tuple[list, int]:
         self._calculate_diff1()
         self._calculate_gcd()
@@ -46,7 +46,7 @@ class TCP_ISN_Greatest_Common_Divisor: # =======================================
 
 
 class TCP_ISN_Counter_Rate: # ================================================================================
-    
+
     def __init__(self, diff1:list, times:list):
         self._diff1     = diff1
         self._times     = times
@@ -56,16 +56,16 @@ class TCP_ISN_Counter_Rate: # ==================================================
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         return False
-    
+
 
     def _calculate_seq_rates_and_isr(self) -> tuple[list, float]:
         self._calculate_sequence_rates()
         self._calculate_isr()
         return (self._seq_rates, self._isr)
-    
+
 
     def _calculate_sequence_rates(self) -> None:
         for i in range(len(self._diff1)):
@@ -78,12 +78,12 @@ class TCP_ISN_Counter_Rate: # ==================================================
     def _calculate_isr(self) -> None:
         if not self._seq_rates:
             return 0
-        
+
         avg_rate = sum(self._seq_rates) / len(self._seq_rates)
-        
+
         if avg_rate < 1:
             return 0
-        
+
         self._isr = round(8 * math.log2(avg_rate))
 
 
@@ -97,11 +97,11 @@ class TCP_ISN_Sequence_Predictability_Index: # =================================
         self._gcd       = gcd
         self._mean      = None
         self._variance  = None
-    
+
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         return False
 
@@ -109,14 +109,14 @@ class TCP_ISN_Sequence_Predictability_Index: # =================================
     def _calculate_sp(self) -> float | int:
         if len(self._seq_rates) < 4:
             raise ValueError("At least 4 responses are required to calculate SP.")
-        
+
         if self._gcd > 9: 
             self._seq_rates = [rate / self._gcd for rate in self._seq_rates]
-        
+
         self._mean         = self._calculate_mean()
         self._variance     = self._calculate_variance()
         standard_deviation = self._calculate_standard_deviation()
-        
+
         if standard_deviation <= 1: return 0
         else:                       return int(round(math.log2(standard_deviation) * 8))
 
@@ -129,7 +129,7 @@ class TCP_ISN_Sequence_Predictability_Index: # =================================
 
     def _calculate_standard_deviation(self) -> float:
         return math.sqrt(self._variance)
-    
+
 
 
 
@@ -139,13 +139,13 @@ class IP_ID_Sequence_Generation_Algorithm: # ===================================
     def __init__(self, ip_ids:list[int]):
         self._ip_ids = ip_ids
 
-    
+
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         return False
-    
+
 
     def _analyze(self) -> str:
         if not self._ip_ids:
@@ -180,7 +180,7 @@ class IP_ID_Sequence_Generation_Algorithm: # ===================================
             diff = (self._ip_ids[i] - self._ip_ids[i - 1]) % 65536
             differences.append(diff)
         return differences
-    
+
 
 
 
@@ -196,11 +196,11 @@ class Shared_IP_ID_Sequence_Boolean: # =========================================
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         return False
-    
-    
+
+
     def _is_shared_sequence(self) -> str | None:
         if self._ti not in {"RI", "BI", "I"} or self._ii not in {"RI", "BI", "I"} or self._ti != self._ii:
             return None
@@ -229,7 +229,7 @@ class TCP_Timestamp_Option_Algorithm: # ========================================
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         return False
 
@@ -280,10 +280,10 @@ class TCP_Options: # ===========================================================
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         return False
-    
+
 
     def _analyze_tcp_options(self) -> str:
         option_string = ""
@@ -310,3 +310,29 @@ class TCP_Options: # ===========================================================
                 option_string += f"{tsval_bit}{tsecr_bit}"
 
         return option_string
+
+
+
+
+
+class TCP_Initial_Window_Size: # =============================================================================
+
+    def __init__(self, packets:list[dict[str, int]]):
+        self._packets = packets
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
+    
+
+    def _analyze_window_sizes(self) -> list[int]:
+        window_sizes = []
+
+        for packet in self._packets:
+            window_size = packet.get("win_size")
+            if window_size is not None:
+                window_sizes.append(window_size)
+
+        return window_sizes

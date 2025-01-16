@@ -29,6 +29,7 @@ class OS_Fingerprint:
         self._ii             = None
         self._ts             = None
         self._tcp_options    = None
+        self._win_sizes      = None
 
 
     def __enter__(self):
@@ -139,3 +140,8 @@ class OS_Fingerprint:
     def _get_tcp_options(self) -> None:
         with TCP_Options() as OPTS:
             self._tcp_options = OPTS._analyze_tcp_options()
+
+    
+    def _get_win_size_w1_through_w6(self) -> None:
+        with TCP_Initial_Window_Size() as WINSIZE:
+            self._win_sizes = WINSIZE._analyze_window_sizes()
