@@ -4,45 +4,27 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-"""
-This file contains classes used to manage and interact with the user interface.
-It handles input processing and command execution.
-"""
-
-
 import sys, subprocess
-from auxiliary       import Color, DataBase, Argument_Parser_Manager
+from auxiliary       import Color, Argument_Parser_Manager
 from port_scanner    import Port_Scanner
 from banner_grabbing import Banner_Grabbing
 from os_fingerprint  import OS_Fingerprint
 
 
-
-
 class Main: # ================================================================================================
-    """Handles user interaction by receiving input and verifying if the given command exists."""
 
     def __init__(self) -> None:
-        """Initializes the Main class, setting up the stop flag and auxiliary data."""
-        self._stop_flag = False
-        self._database  = DataBase()
-
-
-    @property
-    def _stop(self) -> None:
-        """Stops the loop that receives user input by setting the stop flag to True."""
-        self._stop_flag = True
+        self._stop_flag      = False
+        self._parser_manager = Argument_Parser_Manager()
 
 
     def _handle_user(self) -> None:
-        """This method is used to do error handling of the loop"""
         try:   self._loop()
         except KeyboardInterrupt:  sys.exit()
         except Exception as error: print(Color.display_unexpected_error(error))
 
 
     def _loop(self) -> None:
-        """Loop that receives input data from user."""
         print("\nFor more information and detailed documentation, please visit the GitHub repository:")
         print("https://github.com/olivercalazans/DataSeeker")
         while not self._stop_flag:
@@ -54,34 +36,30 @@ class Main: # ==================================================================
 
     @staticmethod
     def _separates_command_from_arguments(input_data:list) -> tuple[str, list|None]:
-        """Separates the input data into command and arguments."""
         command    = input_data[0]
         arguments  = input_data[1:] or None
         return (command, arguments)
 
 
     def _check_if_the_method_exists(self, command:str, arguments:tuple) -> None:
-        """Checks if the provided command exists in the strategy dictionary and executes it."""
         if command in self._get_strategy_dictionary():
             self._run_command(command, arguments)
         elif command == 'exit':
-            self._stop
+            self._stop_flag = True
         else:
             print(f'{Color.yellow("Unknown command")} "{command}"')
 
 
     def _run_command(self, command:str, arguments:str) -> None:
-        """Executes the command by calling the corresponding class method."""
         try:
             strategy_class = self._get_strategy_dictionary().get(command)
-            with strategy_class(self._database, arguments) as strategy:
+            with strategy_class(self._parser_manager, arguments) as strategy:
                 strategy._execute()
         except Exception as error: print(f'{Color.red("Error while trying to execute the command")}.\nERROR: {error}')
 
 
     @staticmethod
     def _get_strategy_dictionary() -> dict:
-        """Returns the class dictionary."""
         return {
             "help":   Command_List,
             "sys":    System_Command,
@@ -95,7 +73,6 @@ class Main: # ==================================================================
 
 
 class Command_List: # ========================================================================================
-    """Displays a list of all available commands."""
 
     def __init__(self, _, __):
         pass
@@ -121,8 +98,8 @@ class Command_List: # ==========================================================
 
 class System_Command: # =========================================================================================
 
-    def __init__(self, database, data:list):
-        self._parser_manager = database.parser_manager
+    def __init__(self, parser_manager:Argument_Parser_Manager, data:list):
+        self._parser_manager = parser_manager
         self._command        = " ".join(data)
     
     def __enter__(self):
@@ -149,7 +126,6 @@ class System_Command: # ========================================================
 
 
     def _get_argument(self) -> None:
-        """Parses and retrieves the target IP address from the provided arguments."""
         result        = self._parser_manager._parse("SysCommand", [self._command])
         self._command = result.command
 

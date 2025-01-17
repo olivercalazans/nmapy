@@ -5,9 +5,9 @@
 
 
 import threading, sched, time
-from scapy.all import Packet, IP, ICMP, TCP, Raw
-from network   import Packets, Sending_Methods
-from os_fing_pkt_analysis import *
+from scapy.sendrecv import sr1, sr
+from scapy.all      import Packet, IP, ICMP, TCP, Raw
+from network        import Packets
 
 
 class OS_Fingerprint_Packets(): # ============================================================================
@@ -109,7 +109,7 @@ class ISNs_And_Times: # ========================================================
 
     def _send_packet(self, packet:Packet) -> None:
         initial_time = time.perf_counter()
-        response     = Sending_Methods._send_a_single_layer3_packet(packet)
+        response     = sr1(packet, timeout=3, verbose=0)
         final_time   = time.perf_counter()
         self._collect_isns_and_time(response, final_time - initial_time)
 
@@ -126,7 +126,7 @@ class ISNs_And_Times: # ========================================================
 
 class ICMP_Testes: # =========================================================================================
 
-    def __init__(self, packets:list[Packet]):
+    def __init__(self, packets:list[Packet]) -> None:
         self._packets = packets
 
     def __enter__(self):
@@ -135,8 +135,9 @@ class ICMP_Testes: # ===========================================================
     def __exit__(self, exc_type, exc_value, traceback):
         return False
     
-    def _send_icmp(self) -> Packets:
-        return Sending_Methods._send_and_receive_multiple_layer3_packets(self._packets)
+    def _send_icmp(self) -> tuple[Packets]:
+        answered, unanswered = sr(self._packets, inter=0.1, timeout=3, verbose=0)
+        return (answered, unanswered)
     
 
 
@@ -144,7 +145,7 @@ class ICMP_Testes: # ===========================================================
 
 class ECN_Syn_Packet: # ======================================================================================
 
-    def __init__(self, packet:Packet):
+    def __init__(self, packet:Packet) -> None:
         self._packet = packet
 
     def __enter__(self):
@@ -154,7 +155,7 @@ class ECN_Syn_Packet: # ========================================================
         return False
     
     def _send_ecn_syn_packet(self) -> Packet:
-        return Sending_Methods._send_and_receive_single_layer3_packet(self._packet)
+        return sr1(self._packet, timeout=3, verbose=0)
     
 
 
@@ -171,8 +172,9 @@ class T2_Through_T7_Packets: # =================================================
     def __exit__(self, exc_type, exc_value, traceback):
         return False
     
-    def _send_t2_through_t7_packets(self) -> Packets:
-        return Sending_Methods._send_and_receive_multiple_layer3_packets(self._packets)
+    def _send_t2_through_t7_packets(self) -> tuple[Packets]:
+        answered, unanswered = sr(self._packets, inter=0.1, timeout=3, verbose=0)
+        return (answered, unanswered)
     
 
 
@@ -190,4 +192,4 @@ class UDP_Packet: # ============================================================
         return False
     
     def _send_udp_packet(self) -> Packet:
-        return Sending_Methods._send_and_receive_single_layer3_packet(self._packet)
+        return sr1(self._packet, timeout=3, verbose=0)

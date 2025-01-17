@@ -5,16 +5,17 @@
 
 
 import socket, ipaddress, random, time, threading, sys
-from scapy.all import TCP
-from scapy.all import conf, Packet
-from network   import *
-from auxiliary import Color
+from scapy.sendrecv import sr1, sr, send
+from scapy.all      import TCP
+from scapy.all      import conf, Packet
+from network        import *
+from auxiliary      import Color, Argument_Parser_Manager
 
 
 class Port_Scanner:
 
-    def __init__(self, database, data:list) -> None:
-        self._parser_manager   = database.parser_manager
+    def __init__(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
+        self._parser_manager   = parser_manager
         self._data             = data
         self._all_ports        = Network_Information._get_ports()
         self._host             = None
@@ -136,7 +137,7 @@ class Normal_Scan: # ===========================================================
         if self._flags['delay']: 
             self._async_sending()
         else:
-            self._responses = Sending_Methods._send_and_receive_multiple_layer3_packets(self._packets)
+            self._responses, _ = sr(self._packets, inter=0.1, timeout=3, verbose=0)
         return self._responses
 
 
@@ -170,7 +171,7 @@ class Normal_Scan: # ===========================================================
 
 
     def _async_send_packet(self, packet:Packet) -> None:
-        response = Sending_Methods._send_and_receive_single_layer3_packet(packet)
+        response = sr1(packet, timeout=3, verbose=0)
         with self._lock:
             self._responses.append((packet, response))
 
@@ -232,10 +233,10 @@ class Decoy: # =================================================================
 
     def _send_real_packet(self) -> None:
         real_packet    = Packets._create_tpc_ip_packet(self._target_ip, self._port)
-        response       = Sending_Methods._send_and_receive_single_layer3_packet(real_packet)
+        response       = sr1(real_packet, timeout=3, verbose=0)
         self._response = [(real_packet, response)]
 
 
     def _send_decoy_packet(self, decoy_ip:str) -> None:
         decoy_packet = Packets._create_tpc_ip_packet(self._target_ip, self._port, decoy_ip)
-        Sending_Methods._send_a_single_layer3_packet(decoy_packet)
+        send(decoy_packet, verbose=0)

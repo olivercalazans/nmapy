@@ -5,13 +5,13 @@
 
 
 import socket, ssl
-from auxiliary import Color
+from auxiliary import Color, Argument_Parser_Manager
 
 
 class Banner_Grabbing:
 
-    def __init__(self, database, data:list) -> None:
-        self._parser_manager = database.parser_manager
+    def __init__(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
+        self._parser_manager = parser_manager
         self._data           = data
         self._host           = None
         self._protocol       = None
@@ -34,7 +34,6 @@ class Banner_Grabbing:
 
 
     def _get_argument_and_flags(self) -> None:
-        """Parses and retrieves the hostname, port, and verbosity flag from the arguments."""
         arguments      = self._parser_manager._parse("BannerGrabbing", self._data)
         self._host     = arguments.host
         self._protocol = arguments.protocol
@@ -62,7 +61,7 @@ class Banner_Grabbing:
 
 
 
-class HTTP_Banner_grabbing:
+class HTTP_Banner_grabbing: # ================================================================================
 
     def __enter__(self):
         return self
@@ -92,7 +91,7 @@ class HTTP_Banner_grabbing:
 
 
 
-class HTTPS_Banner_Grabbing:
+class HTTPS_Banner_Grabbing: # ===============================================================================
 
     def __enter__(self):
         return self
@@ -124,7 +123,7 @@ class HTTPS_Banner_Grabbing:
 
 
 
-class SSH_Banner_Grabbing:
+class SSH_Banner_Grabbing: # =================================================================================
 
     def __enter__(self):
         return self

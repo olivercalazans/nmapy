@@ -5,14 +5,14 @@
 
 
 from scapy.all import Packet
-from auxiliary import Color
+from auxiliary import Color, Argument_Parser_Manager
 from os_fing_pkt_analysis import *
 from os_fing_sending_pkts import *
 
 
 class OS_Fingerprint:
-    def __init__(self, database, data:list) -> None:
-        self._parser_manager = database.parser_manager
+    def __init__(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
+        self._parser_manager = parser_manager
         self._data           = data
         self._target_ip      = None
         self._open_port      = None

@@ -8,7 +8,6 @@ import math
 from functools import reduce
 
 
-
 class TCP_ISN_Greatest_Common_Divisor: # =====================================================================
 
     def __init__(self, isns:list):

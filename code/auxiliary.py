@@ -4,26 +4,13 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-"""
-This file contains classes that are used by many other classes and
-data that are essential for all. They are included to avoid code 
-repetition and to streamline processes.
-"""
-
-
 import argparse
-
 
 
 class Argument_Parser_Manager: # =============================================================================
     """This class builds the argument parser for all command classes."""
 
     def __init__(self) -> None:
-        """
-        Initializes the Argument Parser Manager.
-        This constructor sets up the main argument parser and initializes 
-        the subparsers for handling different command classes.
-        """
         self._parser         = argparse.ArgumentParser(description="Argument Manager")
         self._subparser      = self._parser.add_subparsers(dest="class")
         self._argument_class = Argument_Definitions()
@@ -31,7 +18,6 @@ class Argument_Parser_Manager: # ===============================================
 
 
     def _add_all_commands(self) -> None:
-        """Reads all argument definitions from the Argument_Definitions class and adds them to the parser."""
         for method_name in dir(self._argument_class):
             method = getattr(self._argument_class, method_name)
             if callable(method) and method_name.endswith('_arguments'):
@@ -40,7 +26,6 @@ class Argument_Parser_Manager: # ===============================================
 
 
     def _add_arguments(self, class_name:str, argument_list:list[dict]) -> None:
-        """Adds arguments and flags for a specific command class to the parser."""
         class_parser = self._subparser.add_parser(class_name)
         for arg in argument_list:
             match arg[0]:
@@ -52,7 +37,6 @@ class Argument_Parser_Manager: # ===============================================
 
 
     def _parse(self, subparser_id:str, data:list) -> argparse.Namespace:
-        """Parses the given data using the specified subparser ID."""
         data.insert(0, subparser_id)
         return self._parser.parse_args(data)
 
@@ -61,7 +45,6 @@ class Argument_Parser_Manager: # ===============================================
 
 
 class Argument_Definitions: # ================================================================================
-    """This class contains the definitions for all argument parsers used in the application."""
 
     @staticmethod
     def _sys_command_arguments():
@@ -98,28 +81,7 @@ class Argument_Definitions: # ==================================================
 
 
 
-class DataBase: # ======================================================================================
-    """
-    Stores auxiliary data and instances needed for other classes.
-    This includes managing argument parsers and storing databases like the MAC dictionary.
-    """
-
-    def __init__(self) -> None:
-        """Initializes the DataBase class by setting up the argument parser manager and loading necessary data."""
-        self._parser_manager   = Argument_Parser_Manager()
-
-
-    @property
-    def parser_manager(self) -> Argument_Parser_Manager:
-        """Returns the Argument_Parser_Manager instance for handling argument parsing."""
-        return self._parser_manager
-
-
-
-
-
-class Color: # =================================================================================================
-    """This class provides utility methods to format messages for better visibility."""
+class Color: # ===============================================================================================
 
     @staticmethod
     def green(message:str) -> str:
