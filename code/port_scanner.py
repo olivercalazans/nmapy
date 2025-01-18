@@ -5,11 +5,11 @@
 
 
 import socket, ipaddress, random, time, threading, sys
-from scapy.sendrecv import sr1, sr, send
-from scapy.all      import TCP
-from scapy.all      import conf, Packet
-from network        import *
-from auxiliary      import Color, Argument_Parser_Manager
+from scapy.layers.inet import TCP
+from scapy.sendrecv    import sr1, sr, send
+from scapy.all         import conf, Packet
+from network           import *
+from auxiliary         import Color, Argument_Parser_Manager
 
 
 class Port_Scanner:

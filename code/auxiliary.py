@@ -8,7 +8,6 @@ import argparse
 
 
 class Argument_Parser_Manager: # =============================================================================
-    """This class builds the argument parser for all command classes."""
 
     def __init__(self) -> None:
         self._parser         = argparse.ArgumentParser(description="Argument Manager")

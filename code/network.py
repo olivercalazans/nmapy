@@ -5,9 +5,10 @@
 
 
 import socket, ipaddress, fcntl, struct
-from scapy.all import Packet, Ether, ARP, IP, TCP, UDP, ICMP
-from scapy.all import conf, get_if_addr
-from auxiliary import Color
+from scapy.layers.l2   import ARP, Ether
+from scapy.layers.inet import IP, TCP, UDP, ICMP
+from scapy.all         import Packet, conf, get_if_addr
+from auxiliary         import Color
 
 
 class Network_Information:
