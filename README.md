@@ -15,7 +15,11 @@
 <br>
 
 ## Documentation
-For detailed documentation on installation, usage, and more about DataSeeker, visit our [Wiki](https://github.com/olivercalazans/DataSeeker/wiki).
+For detailed documentation about DataSeeker, visit our [Wiki](https://github.com/olivercalazans/DataSeeker/wiki).
+The documentation includes:
+  - Overview of the code
+  - Installation instructions
+  - List of available commands
   
 <br>
 
