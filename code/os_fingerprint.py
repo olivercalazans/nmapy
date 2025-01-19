@@ -182,32 +182,25 @@ class OS_Fingerprint:
         if not packet.haslayer(TCP):
             return [None, None, None, None, None, None]
 
-        tcp_syn_ack_ack         = packet[TCP].ack    if hasattr(packet[TCP], 'ack')    else None
-        tcp_syn_ack_window_size = packet[TCP].window if hasattr(packet[TCP], 'window') else None
+        ack         = packet[TCP].ack    if hasattr(packet[TCP], 'ack')    else None
+        window_size = packet[TCP].window if hasattr(packet[TCP], 'window') else None
 
-        tcp_syn_ack_options_order = []
-        tcp_syn_ack_wscale        = 'NONE'
-        tcp_syn_ack_tsval         = 0
-        tcp_syn_ack_tsecr         = 0
+        options_order = []
+        wscale        = 'NONE'
+        tsval         = 0
+        tsecr         = 0
         if hasattr(packet[TCP], 'options'):
             for option in packet[TCP].options:
-                tcp_syn_ack_options_order.append(option[0])
+                options_order.append(option[0])
                 if option[0] == 'WScale':
-                    tcp_syn_ack_wscale = option[1]
+                    wscale = option[1]
                 if option[0] == 'Timestamp':
                     if isinstance(option[1], tuple):
-                        tcp_syn_ack_tsval, tcp_syn_ack_tsecr = option[1]
+                        tsval, tsecr = option[1]
                     else:
-                        tcp_syn_ack_tsval = option[1]
+                        tsval = option[1]
 
-        return [
-            tcp_syn_ack_ack,
-            tcp_syn_ack_window_size,
-            tcp_syn_ack_options_order,
-            tcp_syn_ack_wscale,
-            tcp_syn_ack_tsval,
-            tcp_syn_ack_tsecr
-        ]
+        return [ack, window_size, options_order, wscale, tsval, tsecr]
 
 
 
