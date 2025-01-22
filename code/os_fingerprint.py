@@ -4,7 +4,7 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import asyncio, random
+import asyncio, random, os, pickle
 from scapy.layers.inet import IP, ICMP, TCP, UDP
 from scapy.sendrecv    import sr1
 from scapy.packet      import Packet, Raw
@@ -16,8 +16,10 @@ class OS_Fingerprint:
         self._parser_manager = parser_manager
         self._data           = data
         self._target_ip      = None
+        self._os_db          = None
         self._packets        = None
         self._responses      = None
+        self._probes_info    = list()
 
 
     def __enter__(self):
@@ -33,6 +35,7 @@ class OS_Fingerprint:
             print(f'{Color.yellow("Function still under development")}')
             #self._create_packets()
             #asyncio.run(self._get_responses())
+            #self._perform_probes()
         except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
         except KeyboardInterrupt:   print(Color.red("Process stopped"))
         except ValueError as error: print(Color.display_error(error))
@@ -43,21 +46,28 @@ class OS_Fingerprint:
         arguments       = self._parser_manager._parse("OSFingerprint", self._data)
         self._target_ip = arguments.host
 
+    
+    def _read_database(self) -> None:
+        FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/os_db.pkl'
+        try:
+            with open(FILE_PATH, 'rb') as file:
+                self._os_db = pickle.load(file)
+        except FileNotFoundError:      raise ValueError("os_db.pkl not found, it is impossible to execute OS Fingerpinting")
+        except pickle.UnpicklingError: raise ValueError(f"Error loading the database file. Please check if '{FILE_PATH}' is a valid pickle file")
+
 
     def _create_packets(self) -> None:
-        port_high = random.randint(1024, 65535)
+        port_high     = random.randint(1024, 65535)
+        IP_LAYER      = IP(dst=self._target_ip)
+        OPEN_PORT     = 22
         self._packets = (
-            IP(dst=self._target_ip) / ICMP(type=8, code=0),
-            IP(dst=self._target_ip) / ICMP(type=13, code=0),
-            IP(dst=self._target_ip) / ICMP(type=17, code=0),
-            IP(dst=self._target_ip) / TCP(dport=port_high, flags="S"),
-            IP(dst=self._target_ip) / TCP(dport=port_high, flags="A", sport=port_high), 
-            IP(dst=self._target_ip) / TCP(dport=port_high, flags="F", sport=port_high),
-            IP(dst=self._target_ip) / TCP(dport=80, flags="S"),
-            IP(dst=self._target_ip) / TCP(dport=80, flags="A", sport=80),
-            IP(dst=self._target_ip) / TCP(dport=80, flags="F", sport=80),
-            IP(dst=self._target_ip) / UDP(dport=port_high),
-            IP(dst=self._target_ip) / UDP(dport=53)
+            IP_LAYER / ICMP(),
+            IP_LAYER / ICMP(type=13),
+            IP_LAYER / ICMP(type=17),
+            IP_LAYER / ICMP(type=15),
+            IP_LAYER / UDP(dport=port_high),
+            IP_LAYER / TCP(dport=OPEN_PORT, flags="S"),
+            IP_LAYER / TCP(dport=OPEN_PORT, flags="R")
         )
 
 
@@ -67,14 +77,23 @@ class OS_Fingerprint:
 
 
     def _perform_probes(self) -> None:
-        ...
+        self._icmp_echo_probe()
+        self._icmp_timestamp_probe()
+        self._icmp_addr_mask_probe()
+        self._icmp_info_probe()
+        self._udp_unreach_header_probe()
+        self._udp_unreach_probe()
+        self._tcp_syn_ack_probe()
+        self._tcp_header_syn_ack_probe()
+        self._tcp_rst_ack_probe()
 
 
 
-    @staticmethod
-    def _icmp_echo_probe(packet:Packet) -> list[str|int|None]:
+    def _icmp_echo_probe(self) -> None:
+        packet = self._responses['icmp_echo']
+
         if not packet.haslayer(ICMP):
-            return ['n', None, None, None, None, None]
+            self._probes_info += ['n', None, None, None, None, None]
 
         echo_code = packet[ICMP].code       if hasattr(packet[ICMP], 'code') else None,
         ip_id     = packet[IP].id           if hasattr(packet[IP], 'id')     else None
@@ -82,50 +101,54 @@ class OS_Fingerprint:
         df_bits   = packet[IP].flags == 0x2 if packet[IP].flags is not None  else None
         reply_ttl = packet[IP].ttl          if hasattr(packet[IP], 'ttl')    else None
 
-        return [ 'y', echo_code, ip_id, tos_bits, df_bits, reply_ttl]
+        self._probes_info += ['y', echo_code, ip_id, tos_bits, df_bits, reply_ttl]
 
 
 
-    @staticmethod
-    def _icmp_timestamp_probe(packet:Packet) -> list[str|int|None]:
+    def _icmp_timestamp_probe(self) -> None:
+        packet = self._responses['icmp_timestamp']
+
         if not packet.haslayer(ICMP) or packet[ICMP].type != 14:
-            return ['n', None, None]
+            self._probes_info += ['n', None, None]
 
         ttl   = packet[IP].ttl if hasattr(packet[IP], 'ttl') else None
         ip_id = packet[IP].id  if hasattr(packet[IP], 'id')  else None
 
-        return ['y', ttl, ip_id]
+        self._probes_info += ['y', ttl, ip_id]
 
 
 
-    @staticmethod
-    def _icmp_addr_mask_probe(packet:Packet) -> list[str|int|None]:
+    def _icmp_addr_mask_probe(self) -> None:
+        packet = self._responses['icmp_addr_mask']
+
         if not packet.haslayer(ICMP) or packet[ICMP].type != 17:
-            return ['n', None, None]
+            self._probes_info += ['n', None, None]
 
         ttl   = packet[IP].ttl if hasattr(packet[IP], 'ttl') else None
         ip_id = packet[IP].id  if hasattr(packet[IP], 'id')  else None
 
-        return ['y', ttl, ip_id]
+        self._probes_info += ['y', ttl, ip_id]
 
 
 
-    @staticmethod
-    def _icmp_info_probe(packet:Packet) -> list[str|int|None]:
+    def _icmp_info_probe(self) -> None:
+        packet = self._responses['icmp_info']
+
         if not packet.haslayer(ICMP) or packet[ICMP].type != 15:
-            return ['n', None, None]
+            self._probes_info += ['n', None, None]
 
         ttl   = packet[IP].ttl if hasattr(packet[IP], 'ttl') else None
         ip_id = packet[IP].id  if hasattr(packet[IP], 'id')  else None
 
-        return ['y', ttl, ip_id]
+        self._probes_info += ['y', ttl, ip_id]
 
 
 
-    @staticmethod
-    def _ip_header_of_the_udp_unreach_probe(packet:Packet) -> list[str|int|None]:
+    def _udp_unreach_header_probe(self) -> None:
+        packet = self._responses['udp']
+
         if not packet.haslayer(ICMP) or packet[ICMP].type != 3:
-            return ['n', None, None, None, None, None]
+            self._probes_info += ['n', None, None, None, None, None]
 
         if packet[ICMP].code == 3:
 
@@ -135,16 +158,17 @@ class OS_Fingerprint:
             df_bits         = packet[IP].flags == 0x2
             ip_id           = packet[IP].id              if hasattr(packet[IP], 'id')          else None
 
-            return ['y', echoed_dtsize, reply_ttl, precedence_bits, df_bits, ip_id]
+            self._probes_info += ['y', echoed_dtsize, reply_ttl, precedence_bits, df_bits, ip_id]
 
-        return ['n', None, None, None, None, None]
+        self._probes_info += ['n', None, None, None, None, None]
 
 
 
-    @staticmethod
-    def _original_data_echoed_with_udp_unreach_probe(packet: Packet) -> list:
+    def _udp_unreach_probe(self) -> None:
+        packet = self._responses['udp']
+
         if not packet.haslayer(ICMP) or packet[ICMP].type != 3 or packet[ICMP].code != 3:
-            return ['n', None, None, None, None]
+            self._probes_info += ['n', None, None, None, None]
 
         ip_layer  = packet.getlayer(IP)
         udp_layer = packet.getlayer(UDP) if packet.haslayer(UDP) else None
@@ -155,14 +179,15 @@ class OS_Fingerprint:
         total_len   = 'OK' if len(packet) > 20 else '<20'
         ip_flags    = 'OK' if ip_layer.flags == 0 else 'FLIPPED'
 
-        return ['y', udp_cksum, ip_cksum, ip_id_check, total_len, ip_flags]
+        self._probes_info += ['y', udp_cksum, ip_cksum, ip_id_check, total_len, ip_flags]
 
 
 
-    @staticmethod
-    def _ip_header_of_the_tcp_syn_ack_probe(packet: Packet) -> list:
+    def _tcp_syn_ack_probe(self) -> None:
+        packet = self._responses['tcp_syn']
+
         if not packet.haslayer(TCP) or packet[IP].proto != 6:
-            return [None, None, None, None]
+            self._probes_info += [None, None, None, None]
 
         if packet[TCP].flags & 0x12 == 0x12:
 
@@ -171,16 +196,17 @@ class OS_Fingerprint:
             ip_id = packet[IP].id  if hasattr(packet[IP], 'id')  else None
             ttl   = packet[IP].ttl if hasattr(packet[IP], 'ttl') else None
 
-            return [tos, df, ip_id, ttl]
+            self._probes_info += [tos, df, ip_id, ttl]
 
-        return [None, None, None, None]
+        self._probes_info += [None, None, None, None]
 
 
 
-    @staticmethod
-    def _tcp_header_syn_ack_probe(packet: Packet) -> list:
+    def _tcp_header_syn_ack_probe(self) -> None:
+        packet = self._responses['tcp_syn']
+
         if not packet.haslayer(TCP):
-            return [None, None, None, None, None, None]
+            self._probes_info += [None, None, None, None, None, None]
 
         ack         = packet[TCP].ack    if hasattr(packet[TCP], 'ack')    else None
         window_size = packet[TCP].window if hasattr(packet[TCP], 'window') else None
@@ -200,14 +226,14 @@ class OS_Fingerprint:
                     else:
                         tsval = option[1]
 
-        return [ack, window_size, options_order, wscale, tsval, tsecr]
+        self._probes_info += [ack, window_size, options_order, wscale, tsval, tsecr]
 
 
 
-    @staticmethod
-    def _tcp_rst_ack_probe(packet: Packet) -> list:
+    def _tcp_rst_ack_probe(self) -> list:
+        packet = self._responses['tcp_rst']
         if not packet.haslayer(TCP) or packet[TCP].flags not in ['R', 'A']: 
-            return ['n', None, None, None, None, None]
+            self._probes_info += ['n', None, None, None, None, None]
 
         reply          = 'y' if packet[TCP].flags == 'R' or packet[TCP].flags == 'A' else 'n'
         df             = packet[IP].flags == 0x2
@@ -216,7 +242,7 @@ class OS_Fingerprint:
         ip_id_strategy = 'I' if ip_id_1 == 0 else 'R' if ip_id_2 != 0 else '0'
         ttl            = packet[IP].ttl if hasattr(packet[IP], 'ttl') else None
 
-        return [reply, df, ip_id_1, ip_id_2, ip_id_strategy, ttl]
+        self._probes_info += [reply, df, ip_id_1, ip_id_2, ip_id_strategy, ttl]
 
 
 
@@ -229,14 +255,10 @@ class OS_Sending: # ============================================================
             'icmp_echo':      None,
             'icmp_timestamp': None,
             'icmp_addr_mask': None,
-            'tcp_syn1':       None,
-            'tcp_ack1':       None,
-            'tcp_fin1':       None,
-            'tcp_syn2':       None,
-            'tcp_ack2':       None,
-            'tcp_fin2':       None,
-            'udp1':           None,
-            'udp2':           None
+            'icmp_info':      None,
+            'udp':            None,
+            'tcp_syn':        None,
+            'tcp_rst':        None
         }
 
     def __enter__(self):
@@ -254,4 +276,4 @@ class OS_Sending: # ============================================================
 
 
     async def _get_response(self, packet:Packet, key:str) -> None:
-        self._responses[key] = sr1(packet, timeout=5, verbose=0)
+        self._responses[key] = sr1(packet, timeout=3, verbose=0)

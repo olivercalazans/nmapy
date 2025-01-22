@@ -58,7 +58,7 @@ class Argument_Definitions: # ==================================================
             ("value", "-p", "--port",  str, "Specify a port to scan"),
             ("value", "-D", "--decoy", str, "Uses decoy method"),
             ("opt",   "-d", "--delay", "Add a delay between packet transmissions."),
-            ("bool",  "-s", "--show-all", "Show all ports and their status"),
+            ("bool",  "-s", "--show-all", "Display all statuses, both open and closed."),
         ]
 
 
