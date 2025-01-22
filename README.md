@@ -1,9 +1,3 @@
-<p align="center">
-  <img src="assets/logo.png" alt="Logo do Projeto" width="800">
-</p>
-
-<br>
-
 # About DataSeeker 
 **DataSeeker** is a Python-based command-line tool designed to gather information about networks and devices. It is tailored for use in Linux environments, providing a simple and efficient interface for network exploration with only one external dependency. What it can do:
 
