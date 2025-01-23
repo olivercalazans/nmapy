@@ -99,7 +99,7 @@ class Color: # =================================================================
         return Color.red('Unexpected error') + f'\nERROR: {error}'
 
     @staticmethod
-    def display_error(message:str) -> str:
+    def display_error(message='') -> str:
         return Color.yellow('ERROR: ') + message
 
     @staticmethod

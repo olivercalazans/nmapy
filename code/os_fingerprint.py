@@ -4,7 +4,7 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import asyncio, random, os, pickle
+import asyncio, random, os, sys
 from scapy.layers.inet import IP, ICMP, TCP, UDP
 from scapy.sendrecv    import sr1
 from scapy.packet      import Packet, Raw
@@ -16,7 +16,7 @@ class OS_Fingerprint:
         self._parser_manager = parser_manager
         self._data           = data
         self._target_ip      = None
-        self._os_db          = None
+        self._os_database    = dict()
         self._packets        = None
         self._responses      = None
         self._probes_info    = list()
@@ -32,13 +32,15 @@ class OS_Fingerprint:
     def _execute(self) -> None:
         try:
             self._get_argument()
-            print(f'{Color.yellow("Function still under development")}')
-            #self._create_packets()
-            #asyncio.run(self._get_responses())
-            #self._perform_probes()
+            #print(f'{Color.yellow("Function still under development")}')
+            self._read_database()
+            self._create_packets()
+            asyncio.run(self._get_responses())
+            self._perform_probes()
+            self._display_result()
         except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
         except KeyboardInterrupt:   print(Color.red("Process stopped"))
-        except ValueError as error: print(Color.display_error(error))
+        except ValueError as error: print(Color.display_error(), error)
         except Exception as error:  print(Color.display_unexpected_error(error))
 
 
@@ -48,12 +50,14 @@ class OS_Fingerprint:
 
     
     def _read_database(self) -> None:
-        FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/os_db.pkl'
+        FILE_PATH  = os.path.dirname(os.path.abspath(__file__)) + '/os_db.txt'
         try:
-            with open(FILE_PATH, 'rb') as file:
-                self._os_db = pickle.load(file)
-        except FileNotFoundError:      raise ValueError("os_db.pkl not found, it is impossible to execute OS Fingerpinting")
-        except pickle.UnpicklingError: raise ValueError(f"Error loading the database file. Please check if '{FILE_PATH}' is a valid pickle file")
+            with open(FILE_PATH, 'r') as file:
+                for line in file:
+                    key, value = line.split(':')
+                    self._os_database[eval(key)] = value
+        except FileNotFoundError: 
+            raise ValueError("os_db.pkl not found, it is impossible to execute OS Fingerpinting")
 
 
     def _create_packets(self) -> None:
@@ -76,6 +80,7 @@ class OS_Fingerprint:
             self._responses = await responses._perform_sending(self._packets)
 
 
+    # PROBES -------------------------------------------------------------------------------------------------
     def _perform_probes(self) -> None:
         self._icmp_echo_probe()
         self._icmp_timestamp_probe()
@@ -91,6 +96,7 @@ class OS_Fingerprint:
 
     def _icmp_echo_probe(self) -> None:
         packet = self._responses['icmp_echo']
+        print(packet)
 
         if not packet.haslayer(ICMP):
             self._probes_info += ['n', None, None, None, None, None]
@@ -107,6 +113,7 @@ class OS_Fingerprint:
 
     def _icmp_timestamp_probe(self) -> None:
         packet = self._responses['icmp_timestamp']
+        print(packet)
 
         if not packet.haslayer(ICMP) or packet[ICMP].type != 14:
             self._probes_info += ['n', None, None]
@@ -120,6 +127,7 @@ class OS_Fingerprint:
 
     def _icmp_addr_mask_probe(self) -> None:
         packet = self._responses['icmp_addr_mask']
+        print(packet)
 
         if not packet.haslayer(ICMP) or packet[ICMP].type != 17:
             self._probes_info += ['n', None, None]
@@ -133,6 +141,7 @@ class OS_Fingerprint:
 
     def _icmp_info_probe(self) -> None:
         packet = self._responses['icmp_info']
+        print(packet)
 
         if not packet.haslayer(ICMP) or packet[ICMP].type != 15:
             self._probes_info += ['n', None, None]
@@ -146,6 +155,7 @@ class OS_Fingerprint:
 
     def _udp_unreach_header_probe(self) -> None:
         packet = self._responses['udp']
+        print(packet)
 
         if not packet.haslayer(ICMP) or packet[ICMP].type != 3:
             self._probes_info += ['n', None, None, None, None, None]
@@ -166,6 +176,7 @@ class OS_Fingerprint:
 
     def _udp_unreach_probe(self) -> None:
         packet = self._responses['udp']
+        print(packet)
 
         if not packet.haslayer(ICMP) or packet[ICMP].type != 3 or packet[ICMP].code != 3:
             self._probes_info += ['n', None, None, None, None]
@@ -185,6 +196,7 @@ class OS_Fingerprint:
 
     def _tcp_syn_ack_probe(self) -> None:
         packet = self._responses['tcp_syn']
+        print(packet)
 
         if not packet.haslayer(TCP) or packet[IP].proto != 6:
             self._probes_info += [None, None, None, None]
@@ -204,6 +216,7 @@ class OS_Fingerprint:
 
     def _tcp_header_syn_ack_probe(self) -> None:
         packet = self._responses['tcp_syn']
+        print(packet)
 
         if not packet.haslayer(TCP):
             self._probes_info += [None, None, None, None, None, None]
@@ -232,6 +245,8 @@ class OS_Fingerprint:
 
     def _tcp_rst_ack_probe(self) -> list:
         packet = self._responses['tcp_rst']
+        print(packet)
+
         if not packet.haslayer(TCP) or packet[TCP].flags not in ['R', 'A']: 
             self._probes_info += ['n', None, None, None, None, None]
 
@@ -243,6 +258,13 @@ class OS_Fingerprint:
         ttl            = packet[IP].ttl if hasattr(packet[IP], 'ttl') else None
 
         self._probes_info += [reply, df, ip_id_1, ip_id_2, ip_id_strategy, ttl]
+
+    
+    # DISPLAY ------------------------------------------------------------------------------------------------
+    def _display_result(self) -> None:
+        result = self._os_database.get(tuple(self._probes_info), None)
+        if not result: print('No maching results')
+        else:          print(result)
 
 
 
