@@ -51,6 +51,8 @@ FILES=("main.py"                                 # List of required Python scrip
        "banner_grabbing.py"
        "os_db.txt"
        "arg_parser.py"
+       "sys_command.py"
+       "command_list.py"
        )
 
 
