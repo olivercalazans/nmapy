@@ -5,10 +5,11 @@
 
 
 import sys, subprocess
-from auxiliary       import Color, Argument_Parser_Manager
+from arg_parser      import Argument_Parser_Manager
 from port_scanner    import Port_Scanner
 from banner_grabbing import Banner_Grabbing
 from os_fingerprint  import OS_Fingerprint
+from display         import Display
 
 
 class Main: # ================================================================================================
@@ -21,7 +22,7 @@ class Main: # ==================================================================
     def _handle_user(self) -> None:
         try:   self._loop()
         except KeyboardInterrupt:  sys.exit()
-        except Exception as error: print(Color.display_unexpected_error(error))
+        except Exception as error: print(Display.unexpected_error(error))
 
 
     def _loop(self) -> None:
@@ -47,7 +48,7 @@ class Main: # ==================================================================
         elif command == 'exit':
             self._stop_flag = True
         else:
-            print(f'{Color.yellow("Unknown command")} "{command}"')
+            print(f'{Display.yellow("Unknown command")} "{command}"')
 
 
     def _run_command(self, command:str, arguments:str) -> None:
@@ -55,7 +56,7 @@ class Main: # ==================================================================
             strategy_class = self._get_strategy_dictionary().get(command)
             with strategy_class(self._parser_manager, arguments) as strategy:
                 strategy._execute()
-        except Exception as error: print(f'{Color.red("Error while trying to execute the command")}.\nERROR: {error}')
+        except Exception as error: print(f'{Display.red("Error while trying to execute the command")}.\nERROR: {error}')
 
 
     @staticmethod
@@ -86,10 +87,10 @@ class Command_List: # ==========================================================
     @staticmethod
     def _execute() -> None:
         for command in (
-            f'{Color.green("sys")}......: Executes a system command',
-            f'{Color.green("pscan")}....: Port scanner',
-            f'{Color.green("banner")}...: Banner Grabbing',
-            f'{Color.green("osfing")}...: OS Fingerprint',
+            f'{Display.green("sys")}......: Executes a system command',
+            f'{Display.green("pscan")}....: Port scanner',
+            f'{Display.green("banner")}...: Banner Grabbing',
+            f'{Display.green("osfing")}...: OS Fingerprint',
         ): print(command)
 
 
@@ -118,11 +119,11 @@ class System_Command: # ========================================================
             process.stdout.close()
             process.wait()
             if process.returncode != 0:
-                print(f'{Color.display_error(process.stderr.read())}')
+                print(f'{Display.error(process.stderr.read())}')
             process.stderr.close()
-        except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
-        except KeyboardInterrupt:   print(Color.red("Process stopped"))
-        except Exception as error:  print(f'{Color.display_unexpected_error(error)}')
+        except SystemExit as error: print(Display.invalid_or_missing()) if not error.code == 0 else print()
+        except KeyboardInterrupt:   print(Display.red("Process stopped"))
+        except Exception as error:  print(f'{Display.unexpected_error(error)}')
 
 
     def _get_argument(self) -> None:

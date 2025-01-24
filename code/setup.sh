@@ -43,9 +43,15 @@ printf "\r${OK} Wrapper script created\n"
 # Define script source and target directories
 SCRIPTS_DIR=$(dirname "$(realpath "$0")")        # Directory containing the current script
 SOURCE_DIR=${SCRIPTS_DIR%/*}                     # Parent directory of the script's directory
-FILES=("main.py" "auxiliary.py" "network.py"     # List of required Python scripts
-       "os_fingerprint.py" "port_scanner.py"
-       "banner_grabbing.py" "os_db.txt")
+FILES=("main.py"                                 # List of required Python scripts
+       "display.py"
+       "network.py"
+       "os_fingerprint.py"
+       "port_scanner.py"
+       "banner_grabbing.py"
+       "os_db.txt"
+       "arg_parser.py"
+       )
 
 
 # Create the destination directory for the application

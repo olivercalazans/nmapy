@@ -8,7 +8,8 @@ import asyncio, random, os, sys
 from scapy.layers.inet import IP, ICMP, TCP, UDP
 from scapy.sendrecv    import sr1
 from scapy.packet      import Packet, Raw
-from auxiliary         import Color, Argument_Parser_Manager
+from arg_parser        import Argument_Parser_Manager
+from display           import Display
 
 
 class OS_Fingerprint:
@@ -38,10 +39,10 @@ class OS_Fingerprint:
             asyncio.run(self._get_responses())
             self._perform_probes()
             self._display_result()
-        except SystemExit as error: print(Color.display_invalid_missing()) if not error.code == 0 else print()
-        except KeyboardInterrupt:   print(Color.red("Process stopped"))
-        except ValueError as error: print(Color.display_error(), error)
-        except Exception as error:  print(Color.display_unexpected_error(error))
+        except SystemExit as error: print(Display.invalid_or_missing()) if not error.code == 0 else print()
+        except KeyboardInterrupt:   print(Display.red("Process stopped"))
+        except ValueError as error: print(Display.error(), error)
+        except Exception as error:  print(Display.unexpected_error(error))
 
 
     def _get_argument(self) -> str:
