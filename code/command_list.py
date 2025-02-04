@@ -4,7 +4,7 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-from display import Display
+from display import *
 
 
 class Command_List: # ========================================================================================
@@ -21,8 +21,8 @@ class Command_List: # ==========================================================
     @staticmethod
     def _execute() -> None:
         for command in (
-            f'{Display.green("sys")}......: Executes a system command',
-            f'{Display.green("pscan")}....: Port scanner',
-            f'{Display.green("banner")}...: Banner Grabbing',
-            f'{Display.green("osfing")}...: OS Fingerprint',
+            f'{green("sys")}......: Executes a system command',
+            f'{green("pscan")}....: Port scanner',
+            f'{green("banner")}...: Banner Grabbing',
+            f'{green("osfing")}...: OS Fingerprint',
         ): print(command)

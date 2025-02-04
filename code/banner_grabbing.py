@@ -6,7 +6,7 @@
 
 import socket, ssl
 from arg_parser import Argument_Parser_Manager
-from display    import Display
+from display    import *
 
 
 class Banner_Grabbing:
@@ -30,8 +30,8 @@ class Banner_Grabbing:
         try:
             self._get_argument_and_flags()
             self._grab_banners_on_the_protocol()
-        except SystemExit as error: print(Display.invalid_or_missing()) if not error.code == 0 else print()
-        except Exception as error:  print(f'{Display.unexpected_error(error)}')
+        except SystemExit as error: print(invalid_or_missing()) if not error.code == 0 else print()
+        except Exception as error:  print(f'{unexpected_error(error)}')
 
 
     def _get_argument_and_flags(self) -> None:
@@ -47,7 +47,7 @@ class Banner_Grabbing:
             port     = self._port if self._port else protocol['port']
             with protocol['class']() as instance:
                 instance._execute_banner_grabbing(self._host, port)
-        except Exception as error: print(f'{Display.red("Error while trying to execute the banner grabbing")}.\nERROR: {error}')
+        except Exception as error: print(f'{red("Error while trying to execute the banner grabbing")}.\nERROR: {error}')
 
 
     @staticmethod

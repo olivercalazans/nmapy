@@ -10,7 +10,7 @@ from scapy.sendrecv    import sr1, sr, send
 from scapy.all         import conf, Packet
 from network           import *
 from arg_parser        import Argument_Parser_Manager
-from display           import Display
+from display           import *
 
 
 class Port_Scanner:
@@ -41,11 +41,9 @@ class Port_Scanner:
             conf.verb       = 0
             self._get_result_by_transmission_method()
             self._process_responses()
-        except SystemExit as error: print(Display.invalid_or_missing()) if not error.code == 0 else print()
-        except KeyboardInterrupt:   print(Display.red("Process stopped"))
-        except socket.gaierror:     print(Display.error('An error occurred in resolving the host'))
-        except socket.error:        print(Display.error(f'It was not possible to connect to "{self._host}"'))
-        except Exception as error:  print(Display.unexpected_error(error))
+        except SystemExit as error: print(invalid_or_missing()) if not error.code == 0 else print()
+        except KeyboardInterrupt:   print(red("Process stopped"))
+        except Exception as error:  print(unexpected_error(error))
 
 
     def _get_argument_and_flags(self) -> None:
@@ -100,13 +98,13 @@ class Port_Scanner:
 
     def _display_result(self, response:str|None, port:int, description:str) -> None:
         match response:
-            case "SA": status = Display.green('Opened')
-            case "S":  status = Display.yellow('Potentially Open')
-            case "RA": status = Display.red('Closed')
-            case "F":  status = Display.red('Connection Closed')
-            case "R":  status = Display.red('Reset')
-            case None: status = Display.red('Filtered')
-            case _:    status = Display.red('Unknown Status')
+            case "SA": status = green('Opened')
+            case "S":  status = yellow('Potentially Open')
+            case "RA": status = red('Closed')
+            case "F":  status = red('Connection Closed')
+            case "R":  status = red('Reset')
+            case None: status = red('Filtered')
+            case _:    status = red('Unknown Status')
         if response == 'SA' or self._flags['show']:
             print(f'Status: {status:>17} -> {port:>5} - {description}')
 
@@ -223,11 +221,11 @@ class Decoy: # =================================================================
         for ip in self._decoy_ips:
             delay = random.uniform(1, 3)
             if ip == self._my_ip_address:
-                print(f'{Display.green("Real packet")}: {ip:<15}, Delay: {delay:.2}')
+                print(f'{green("Real packet")}: {ip:<15}, Delay: {delay:.2}')
                 thread = threading.Thread(target=self._send_real_packet)
                 thread.start()
             else:
-                print(f'{Display.red("Decoy packet")}: {ip:<15}, Delay: {delay:.2}')
+                print(f'{red("Decoy packet")}: {ip:<15}, Delay: {delay:.2}')
                 self._send_decoy_packet(ip)
             time.sleep(delay)
 

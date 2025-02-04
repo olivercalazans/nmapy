@@ -6,7 +6,7 @@
 
 import subprocess
 from arg_parser import Argument_Parser_Manager
-from display    import Display
+from display    import *
 
 
 class System_Command: # =========================================================================================
@@ -31,11 +31,11 @@ class System_Command: # ========================================================
             process.stdout.close()
             process.wait()
             if process.returncode != 0:
-                print(f'{Display.error(process.stderr.read())}')
+                print(f'{error_message(process.stderr.read())}')
             process.stderr.close()
-        except SystemExit as error: print(Display.invalid_or_missing()) if not error.code == 0 else print()
-        except KeyboardInterrupt:   print(Display.red("Process stopped"))
-        except Exception as error:  print(f'{Display.unexpected_error(error)}')
+        except SystemExit as error: print(invalid_or_missing()) if not error.code == 0 else print()
+        except KeyboardInterrupt:   print(red("Process stopped"))
+        except Exception as error:  print(f'{unexpected_error(error)}')
 
 
     def _get_argument(self) -> None:

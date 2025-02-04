@@ -4,12 +4,12 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import asyncio, random, os, sys
+import asyncio, random, os
 from scapy.layers.inet import IP, ICMP, TCP, UDP
 from scapy.sendrecv    import sr1
 from scapy.packet      import Packet, Raw
 from arg_parser        import Argument_Parser_Manager
-from display           import Display
+from display           import *
 
 
 class OS_Fingerprint:
@@ -39,10 +39,10 @@ class OS_Fingerprint:
             asyncio.run(self._get_responses())
             self._perform_probes()
             self._display_result()
-        except SystemExit as error: print(Display.invalid_or_missing()) if not error.code == 0 else print()
-        except KeyboardInterrupt:   print(Display.red("Process stopped"))
-        except ValueError as error: print(Display.error(), error)
-        except Exception as error:  print(Display.unexpected_error(error))
+        except SystemExit as error: print(invalid_or_missing()) if not error.code == 0 else print()
+        except KeyboardInterrupt:   print(red("Process stopped"))
+        except ValueError as error: print(error(), error)
+        except Exception as error:  print(unexpected_error(error))
 
 
     def _get_argument(self) -> str:

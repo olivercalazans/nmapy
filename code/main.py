@@ -11,7 +11,7 @@ from sys_command     import System_Command
 from port_scanner    import Port_Scanner
 from banner_grabbing import Banner_Grabbing
 from os_fingerprint  import OS_Fingerprint
-from display         import Display
+from display         import *
 
 
 class Main: # ================================================================================================
@@ -24,7 +24,7 @@ class Main: # ==================================================================
     def _handle_user(self) -> None:
         try:   self._loop()
         except KeyboardInterrupt:  sys.exit()
-        except Exception as error: print(Display.unexpected_error(error))
+        except Exception as error: print(unexpected_error(error))
 
 
     def _loop(self) -> None:
@@ -50,7 +50,7 @@ class Main: # ==================================================================
         elif command == 'exit':
             self._stop_flag = True
         else:
-            print(f'{Display.yellow("Unknown command")} "{command}"')
+            print(f'{yellow("Unknown command")} "{command}"')
 
 
     def _run_command(self, command:str, arguments:str) -> None:
@@ -58,7 +58,7 @@ class Main: # ==================================================================
             strategy_class = self._get_strategy_dictionary().get(command)
             with strategy_class(self._parser_manager, arguments) as strategy:
                 strategy._execute()
-        except Exception as error: print(f'{Display.red("Error while trying to execute the command")}.\nERROR: {error}')
+        except Exception as error: print(f'{red("Error while trying to execute the command")}.\nERROR: {error}')
 
 
     @staticmethod

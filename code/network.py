@@ -8,7 +8,7 @@ import socket, ipaddress, fcntl, struct
 from scapy.layers.l2   import ARP, Ether
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 from scapy.all         import Packet, conf, get_if_addr
-from display           import Display
+from display           import *
 
 
 class Network_Information:
@@ -50,7 +50,7 @@ class Network_Information:
     @staticmethod
     def _get_ip_by_name(hostname:str) -> str:
         try:    return socket.gethostbyname(hostname)
-        except: return Display.error(f'Invalid hostname ({hostname})')
+        except: return error_message(f'Invalid hostname ({hostname})')
 
     
     @staticmethod
