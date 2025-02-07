@@ -19,7 +19,7 @@ class Port_Scanner:
     def __init__(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
         self._parser_manager   = parser_manager
         self._data             = data
-        self._all_ports        = Network_Information._get_ports()
+        self._all_ports        = get_ports()
         self._host             = None
         self._flags            = None
         self._ports_to_be_used = None
@@ -38,7 +38,7 @@ class Port_Scanner:
     def _execute(self) -> None:
         try:
             self._get_argument_and_flags()
-            self._target_ip = Network_Information._get_ip_by_name(self._host)
+            self._target_ip = get_ip_by_name(self._host)
             conf.verb       = 0
             self._get_result_by_transmission_method()
             self._process_responses()
@@ -184,9 +184,9 @@ class Decoy: # =================================================================
     def __init__(self, target_ip:str, port:int):
         self._target_ip     = target_ip
         self._port          = port
-        self._interface     = Network_Information._get_default_interface()
-        self._netmask       = Network_Information._get_subnet_mask(self._interface)
-        self._my_ip_address = Network_Information._get_ip_address(self._interface)
+        self._interface     = get_default_interface()
+        self._netmask       = get_subnet_mask(self._interface)
+        self._my_ip_address = get_ip_address(self._interface)
         self._decoy_ips     = None
         self._response      = None
 
