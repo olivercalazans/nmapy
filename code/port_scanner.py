@@ -4,11 +4,12 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import socket, ipaddress, random, time, threading, sys
+import ipaddress, random, time, threading, sys
 from scapy.layers.inet import TCP
 from scapy.sendrecv    import sr1, sr, send
 from scapy.all         import conf, Packet
 from network           import *
+from packets           import *
 from arg_parser        import Argument_Parser_Manager
 from display           import *
 
@@ -118,7 +119,7 @@ class Normal_Scan: # ===========================================================
         self._target_ip   = target_ip
         self._ports       = ports
         self._flags       = flags
-        self._packets     = [Packets._create_tpc_ip_packet(self._target_ip, port) for port in self._ports]
+        self._packets     = [create_tpc_ip_packet(self._target_ip, port) for port in self._ports]
         self._len_packets = len(self._packets)
         self._delay       = None
         self._lock        = threading.Lock()
@@ -197,7 +198,7 @@ class Decoy: # =================================================================
         return False
     
 
-    def _perform_decoy_methods(self) -> Packets:
+    def _perform_decoy_methods(self) -> Packet:
         self._generate_random_ip_in_subnet()
         self._add_real_packet()        
         self._send_decoy_and_real_packets()
@@ -231,11 +232,11 @@ class Decoy: # =================================================================
 
 
     def _send_real_packet(self) -> None:
-        real_packet    = Packets._create_tpc_ip_packet(self._target_ip, self._port)
+        real_packet    = create_tpc_ip_packet(self._target_ip, self._port)
         response       = sr1(real_packet, timeout=3, verbose=0)
         self._response = [(real_packet, response)]
 
 
     def _send_decoy_packet(self, decoy_ip:str) -> None:
-        decoy_packet = Packets._create_tpc_ip_packet(self._target_ip, self._port, decoy_ip)
+        decoy_packet = create_tpc_ip_packet(self._target_ip, self._port, decoy_ip)
         send(decoy_packet, verbose=0)

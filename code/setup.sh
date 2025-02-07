@@ -51,6 +51,7 @@ FILES=("arg_parser.py"                           # List of required Python scrip
        "network.py"
        "os_db.txt"
        "os_fingerprint.py"
+       "packets.py"
        "port_scanner.py"
        "sys_command.py"
        )

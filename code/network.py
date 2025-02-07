@@ -5,10 +5,8 @@
 
 
 import socket, ipaddress, fcntl, struct
-from scapy.layers.l2   import ARP, Ether
-from scapy.layers.inet import IP, TCP, UDP, ICMP
-from scapy.all         import Packet, conf, get_if_addr
-from display           import *
+from scapy.all import conf, get_if_addr
+from display   import *
 
 
 class Network_Information:
@@ -79,28 +77,3 @@ class Network_Information:
             7070 : 'realserver',
             27017: 'MongoDB'
         }
-
-
-
-
-
-class Packets: # =============================================================================================
-
-    @staticmethod
-    def _create_tpc_ip_packet(target_ip:str, port:int, source_ip=None) -> Packet:
-        return IP(src=source_ip, dst=target_ip) / TCP(dport=port, flags="S")
-
-
-    @staticmethod
-    def _create_udp_ip_packet(target_ip:str, port:int, source_ip=None) -> Packet:
-        return IP(src=source_ip, dst=target_ip, ttl=64) / UDP(dport=port)
-
-
-    @staticmethod
-    def _create_icmp_ip_packet(target_ip:str) -> Packet:
-        return IP(dst=target_ip) / ICMP()
-
-
-    @staticmethod
-    def _create_arp_packet(network) -> Packet:
-        return ARP(pdst=str(network)) / Ether(dst="ff:ff:ff:ff:ff:ff")
