@@ -51,7 +51,7 @@ class OS_Fingerprint:
 
     
     def _read_database(self) -> None:
-        FILE_PATH  = os.path.dirname(os.path.abspath(__file__)) + '/os_db.txt'
+        FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/os_db.txt'
         try:
             with open(FILE_PATH, 'r') as file:
                 for line in file:

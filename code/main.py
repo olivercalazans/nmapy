@@ -18,6 +18,14 @@ class Main: # ==================================================================
     def __init__(self) -> None:
         self._stop_flag      = False
         self._parser_manager = Argument_Parser_Manager()
+        self._command        = None
+        self._arguments      = None
+        self._command_list   = {
+            "sys":    System_Command,
+            "pscan":  Port_Scanner,
+            "banner": Banner_Grabbing,
+            "osfing": OS_Fingerprint,
+        }
 
 
     def _handle_user(self) -> None:
@@ -31,45 +39,29 @@ class Main: # ==================================================================
         print("https://github.com/olivercalazans/DataSeeker")
         while not self._stop_flag:
             print('\nWrite "help" to see the commands ' + '=' * 40)
-            input_data         = input('[\033[38;5;202m' + 'DataSeeker' + '\033[0m]# ').split()
-            command, arguments = self._separates_command_from_arguments(input_data)
-            self._check_if_the_method_exists(command, arguments)
+            input_data = input('[\033[38;5;202m' + 'DataSeeker' + '\033[0m]# ').split()
+            self._separates_command_from_arguments(input_data)
+            self._check_if_the_method_exists()
 
 
-    @staticmethod
-    def _separates_command_from_arguments(input_data:list) -> tuple[str, list|None]:
-        command    = input_data[0]
-        arguments  = input_data[1:] or None
-        return (command, arguments)
+    def _separates_command_from_arguments(self, input_data:list) -> None:
+        self._command   = input_data[0]
+        self._arguments = input_data[1:] or None
 
 
-    def _check_if_the_method_exists(self, command:str, arguments:tuple) -> None:
-        if command in self._get_strategy_dictionary():
-            self._run_command(command, arguments)
-        elif command == 'help':
-            self._display_commands(self._get_strategy_dictionary())
-        elif command == 'exit':
-            self._stop_flag = True
-        else:
-            print(f'{yellow("Unknown command")} "{command}"')
+    def _check_if_the_method_exists(self) -> None:
+        if   self._command in self._command_list: self._run_command()
+        elif self._command == 'help': self._display_commands(self._command_list)
+        elif self._command == 'exit': self._stop_flag = True
+        else: print(f'{yellow("Unknown command")} "{self._command}"')
 
 
-    def _run_command(self, command:str, arguments:str) -> None:
+    def _run_command(self) -> None:
         try:
-            strategy_class = self._get_strategy_dictionary().get(command)
-            with strategy_class(self._parser_manager, arguments) as strategy:
+            strategy_class = self._command_list.get(self._command)
+            with strategy_class(self._parser_manager, self._arguments) as strategy:
                 strategy._execute()
         except Exception as error: print(f'{red("Error while trying to execute the command")}.\nERROR: {error}')
-
-
-    @staticmethod
-    def _get_strategy_dictionary() -> dict:
-        return {
-            "sys":    System_Command,
-            "pscan":  Port_Scanner,
-            "banner": Banner_Grabbing,
-            "osfing": OS_Fingerprint,
-        }
     
 
     @staticmethod
@@ -78,7 +70,6 @@ class Main: # ==================================================================
             space   = 9 - len(key)
             command = str(commands[key].__name__).replace('_', ' ')
             print(f'{green(key)}{"." * space}: {command}')
-
 
 
 

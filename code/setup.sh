@@ -45,7 +45,6 @@ SCRIPTS_DIR=$(dirname "$(realpath "$0")")        # Directory containing the curr
 SOURCE_DIR=${SCRIPTS_DIR%/*}                     # Parent directory of the script's directory
 FILES=("arg_parser.py"                           # List of required Python scripts
        "banner_grabbing.py"
-       "command_list.py"
        "display.py"
        "main.py"
        "network.py"
