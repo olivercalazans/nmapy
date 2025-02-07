@@ -6,7 +6,6 @@
 
 import sys
 from arg_parser      import Argument_Parser_Manager
-from command_list    import Command_List
 from sys_command     import System_Command
 from port_scanner    import Port_Scanner
 from banner_grabbing import Banner_Grabbing
@@ -47,6 +46,8 @@ class Main: # ==================================================================
     def _check_if_the_method_exists(self, command:str, arguments:tuple) -> None:
         if command in self._get_strategy_dictionary():
             self._run_command(command, arguments)
+        elif command == 'help':
+            self._display_commands(self._get_strategy_dictionary())
         elif command == 'exit':
             self._stop_flag = True
         else:
@@ -64,12 +65,20 @@ class Main: # ==================================================================
     @staticmethod
     def _get_strategy_dictionary() -> dict:
         return {
-            "help":   Command_List,
             "sys":    System_Command,
             "pscan":  Port_Scanner,
             "banner": Banner_Grabbing,
             "osfing": OS_Fingerprint,
         }
+    
+
+    @staticmethod
+    def _display_commands(commands:dict) -> None:
+        for key in commands:
+            space   = 9 - len(key)
+            command = str(commands[key].__name__).replace('_', ' ')
+            print(f'{green(key)}{"." * space}: {command}')
+
 
 
 
