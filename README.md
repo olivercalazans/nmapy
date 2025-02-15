@@ -22,11 +22,9 @@ To make it easier to use this project, a bash script has been created to handle 
 <br>
 
 ## Dependencies
-This project has a single dependency: the Scapy library, which enables easy manipulation of network packets. Although the code is designed to run on Linux systems, it can also be used on Windows via WSL (Windows Subsystem for Linux).
-
- - You can find about the library:
-   - GitHub: [Here](https://github.com/secdev/scapy)
-   - Official website: [Here](https://scapy.net/)
+This project has a single dependency: the Scapy library, which enables easy manipulation of network packets.  You can explore the library on [GitHub](https://github.com/secdev/scapy) or visit the [official website](https://scapy.net/) for more details.
+> [!IMPORTANT]
+> Although the code is designed to run on Linux systems, it can also be used on Windows via WSL (Windows Subsystem for Linux).
 
 <br>
 
