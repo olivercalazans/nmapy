@@ -5,12 +5,12 @@
 
 
 import sys
-from arg_parser      import Argument_Parser_Manager
-from sys_command     import System_Command
-from port_scanner    import Port_Scanner
-from banner_grabbing import Banner_Grabbing
-from os_fingerprint  import OS_Fingerprint
-from display         import *
+from arg_parser  import Argument_Parser_Manager
+from sys_command import System_Command
+from pscan       import Port_Scanner
+from bgrab       import Banner_Grabbing
+from os_fing     import OS_Fingerprint
+from display     import *
 
 
 class Main: # ================================================================================================
