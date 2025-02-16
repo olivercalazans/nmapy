@@ -6,8 +6,8 @@
 
 import asyncio, random, os
 from scapy.layers.inet import IP, ICMP, TCP, UDP
-from scapy.sendrecv    import sr1
-from scapy.packet      import Packet, Raw
+from scapy.packet      import Raw
+from os_fing_sendings  import OS_Sending
 from arg_parser        import Argument_Parser_Manager
 from display           import *
 
@@ -266,37 +266,3 @@ class OS_Fingerprint:
         result = self._os_database.get(tuple(self._probes_info), None)
         if not result: print('No maching results')
         else:          print(result)
-
-
-
-
-
-class OS_Sending: # ==========================================================================================
-
-    def __init__(self):
-        self._responses = {
-            'icmp_echo':      None,
-            'icmp_timestamp': None,
-            'icmp_addr_mask': None,
-            'icmp_info':      None,
-            'udp':            None,
-            'tcp_syn':        None,
-            'tcp_rst':        None
-        }
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        return False
-
-
-    async def _perform_sending(self, packets:list[Packet]) -> dict[Packet]:
-        for packet, key in zip(packets, self._responses.keys()):
-            await self._get_response(packet, key)
-            await asyncio.sleep(random.uniform(0.5, 2))
-        return self._responses
-
-
-    async def _get_response(self, packet:Packet, key:str) -> None:
-        self._responses[key] = sr1(packet, timeout=3, verbose=0)
