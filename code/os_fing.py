@@ -13,6 +13,7 @@ from display           import *
 
 
 class OS_Fingerprint:
+
     def __init__(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
         self._parser_manager = parser_manager
         self._data           = data

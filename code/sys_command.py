@@ -9,7 +9,7 @@ from arg_parser import Argument_Parser_Manager
 from display    import *
 
 
-class System_Command: # =========================================================================================
+class System_Command:
 
     def __init__(self, parser_manager:Argument_Parser_Manager, data:list):
         self._parser_manager = parser_manager

@@ -9,7 +9,7 @@ from scapy.sendrecv import sr1
 from scapy.packet   import Packet
 
 
-class OS_Sending: # ==========================================================================================
+class OS_Sending:
 
     def __init__(self):
         self._responses = {
