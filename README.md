@@ -2,9 +2,13 @@
 
 **DataSeeker** is a Python-based command-line tool designed to gather information about networks and devices. It is tailored for use in Linux environments, providing a simple and efficient interface for network exploration with only one external dependency. What it can do:
 
-- [x] Portscan
-- [x] Banner Grabbing
-- [ ] OS Fingerprint **(Under Development)**
+<br>
+
+<div align="center">
+  <img src="https://img.shields.io/badge/port_scan-brightgreen?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/banner_grabbing-brightgreen?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/os_fingerprint-under_development-FF4500?style=for-the-badge" />
+</div>
 
 <br>
 
