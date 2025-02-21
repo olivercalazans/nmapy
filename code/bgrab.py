@@ -45,99 +45,63 @@ class Banner_Grabbing:
         try:
             protocol = self._protocol_dictionary().get(self._protocol)
             port     = self._port if self._port else protocol['port']
-            with protocol['class']() as instance:
-                instance._execute_banner_grabbing(self._host, port)
-        except Exception as error: print(f'{red("Error while trying to execute the banner grabbing")}.\nERROR: {error}')
+            protocol['func'](self._host, port)
+        except Exception as error:
+            print(f'{red("Error while trying to execute the banner grabbing")}.\nERROR: {error}')
 
 
     @staticmethod
     def _protocol_dictionary() -> dict:
         return {
-            'http':  {'class': HTTP_Banner_grabbing,  'port': 80},
-            'https': {'class': HTTPS_Banner_Grabbing, 'port': 443},
-            'ssh':   {'class': SSH_Banner_Grabbing,   'port': 22}
+            'http':  {'func': _http_banner_grabbing,  'port': 80},
+            'https': {'func': _https_banner_grabbing, 'port': 443},
+            'ssh':   {'func': _ssh_banner_grabbing,   'port': 22}
         }
         
 
 
+# FUNCTIONS ==================================================================================================
+
+def _http_banner_grabbing(host:str, port:int) -> None:
+    try:
+        with socket.create_connection((host, port), timeout=5) as sock:
+            request = f"HEAD / HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
+            sock.send(request.encode())
+            response = sock.recv(4096).decode(errors="ignore")
+            print("[+] HTTP server response:")
+            print(response)
+            for line in response.split("\r\n"):
+                if line.lower().startswith("server:"):
+                    print(f"[+] HTTP banner found: {line}")
+    except Exception as error:
+        print(f"[-] Error: {error}")
 
 
-class HTTP_Banner_grabbing: # ================================================================================
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        return False
-
-
-    @staticmethod
-    def _execute_banner_grabbing(host:str, port:int) -> None:
-        try:
-            with socket.create_connection((host, port), timeout=5) as sock:
+def _https_banner_grabbing(host:str, port:int):
+    try:
+        context = ssl.create_default_context()
+        with socket.create_connection((host, port), timeout=5) as sock:
+            with context.wrap_socket(sock, server_hostname=host) as ssock:
                 request = f"HEAD / HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
-                sock.send(request.encode())
+                ssock.send(request.encode())
 
-                response = sock.recv(4096).decode(errors="ignore")
-                print("[+] HTTP server response:")
-                print(response)
+                response = ssock.recv(4096).decode(errors="ignore")
+                print(f"[+] HTTPS server response:\n{response}")
 
-                for line in response.split("\r\n"):
-                    if line.lower().startswith("server:"):
-                        print(f"[+] HTTP banner found: {line}")
-        except Exception as error:
-            print(f"[-] Error: {error}")
-
-
+                cert = ssock.getpeercert()
+                print("\n[+] SSL certificate of the server:")
+                for key, value in cert.items():
+                    print(f"  {key}: {value}")
+    except Exception as error:
+        print(f"[-] Error: {error}")
 
 
 
-class HTTPS_Banner_Grabbing: # ===============================================================================
-
-    def __enter__(self):
-        return self
-    
-    def __exit__(self, exc_type, exc_value, traceback):
-        return False
-
-
-    @staticmethod
-    def _execute_banner_grabbing(host:str, port:int):
-        try:
-            context = ssl.create_default_context()
-            with socket.create_connection((host, port), timeout=5) as sock:
-                with context.wrap_socket(sock, server_hostname=host) as ssock:
-                    request = f"HEAD / HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
-                    ssock.send(request.encode())
-
-                    response = ssock.recv(4096).decode(errors="ignore")
-                    print(f"[+] HTTPS server response:\n{response}")
-
-                    cert = ssock.getpeercert()
-                    print("\n[+] SSL certificate of the server:")
-                    for key, value in cert.items():
-                        print(f"  {key}: {value}")
-        except Exception as error:
-            print(f"[-] Error: {error}")
-
-
-
-
-
-class SSH_Banner_Grabbing: # =================================================================================
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        return False
-
-
-    @staticmethod
-    def _execute_banner_grabbing(host:str, port:int) -> None:
-        try:
-            with socket.create_connection((host, port), timeout=5) as sock:
-                banner = sock.recv(1024).decode(errors="ignore")
-                print(f"[+] SSH server banner:\n{banner}")
-        except Exception as error:
-            print(f"[-] Error: {error}")
+def _ssh_banner_grabbing(host:str, port:int) -> None:
+    try:
+        with socket.create_connection((host, port), timeout=5) as sock:
+            banner = sock.recv(1024).decode(errors="ignore")
+            print(f"[+] SSH server banner:\n{banner}")
+    except Exception as error:
+        print(f"[-] Error: {error}")
