@@ -6,6 +6,7 @@
 
 import random
 from scapy.layers.inet import TCP
+from scapy.packet      import Packet
 from scapy.all         import conf
 from arg_parser        import Argument_Parser_Manager as ArgParser
 from pscan_normal      import Normal_Scan
@@ -16,16 +17,15 @@ from display           import *
 
 class Port_Scanner:
 
-    def __init__(self, parser_manager:ArgParser, data:list) -> None:
-        self._parser_manager   = parser_manager
-        self._data             = data
-        self._all_ports        = get_ports()
-        self._host             = None
-        self._flags            = None
-        self._ports_to_be_used = None
-        self._target_ip        = None
-        self._responses        = None
-        self._my_ip_address    = None
+    def __init__(self, parser_manager:ArgParser) -> None:
+        self._all_ports:dict    = get_ports()
+        self._host:str          = None
+        self._flags:dict        = None
+        self._ports_to_use:list = None
+        self._target_ip:str     = None
+        self._responses:Packet  = None
+        self._my_ip_address:str = None
+        self._get_argument_and_flags(parser_manager)
 
 
     def __enter__(self):
@@ -37,7 +37,6 @@ class Port_Scanner:
 
     def _execute(self) -> None:
         try:
-            self._get_argument_and_flags()
             self._target_ip = get_ip_by_name(self._host)
             conf.verb       = 0
             self._get_result_by_transmission_method()
@@ -47,26 +46,25 @@ class Port_Scanner:
         except Exception as error:  print(unexpected_error(error))
 
 
-    def _get_argument_and_flags(self) -> None:
-        arguments   = self._parser_manager._parse("PortScanner", self._data)
-        self._host  = arguments.host
+    def _get_argument_and_flags(self, parser_manager:ArgParser) -> None:
+        self._host  = parser_manager.host
         self._flags = {
-            'show':    arguments.s,
-            'ports':   arguments.p,
-            'random':  arguments.r,
-            'delay':   arguments.d,
-            'decoy':   arguments.D,
+            'show':    parser_manager.s,
+            'ports':   parser_manager.p,
+            'random':  parser_manager.r,
+            'delay':   parser_manager.d,
+            'decoy':   parser_manager.D,
         }
 
 
     def _prepare_ports(self, specified_ports = None) -> None:
         if specified_ports: 
-            self._ports_to_be_used = [int(valor) for valor in specified_ports.split(",")]
+            self._ports_to_use = [int(valor) for valor in specified_ports.split(",")]
         else:
-            self._ports_to_be_used = list(self._all_ports.keys())
+            self._ports_to_use = list(self._all_ports.keys())
 
         if self._flags['random']: 
-            self._ports_to_be_used = random.sample(self._ports_to_be_used, len(self._ports_to_be_used))
+            self._ports_to_use = random.sample(self._ports_to_use, len(self._ports_to_use))
 
 
     def _get_result_by_transmission_method(self) -> list:
@@ -78,13 +76,13 @@ class Port_Scanner:
     
     def _perform_normal_scan(self) -> None:
         self._prepare_ports(self._flags['ports'])
-        with Normal_Scan(self._target_ip, self._ports_to_be_used, self._flags) as SCAN:
+        with Normal_Scan(self._target_ip, self._ports_to_use, self._flags) as SCAN:
             self._responses = SCAN._perform_normal_methods()
 
     
     def _perform_decoy_scan(self) -> None:
         self._prepare_ports(self._flags['decoy'])
-        with Decoy(self._target_ip, self._ports_to_be_used[0]) as DECOY:
+        with Decoy(self._target_ip, self._ports_to_use[0]) as DECOY:
             self._responses     = DECOY._perform_decoy_methods()
             self._flags['show'] = True
 

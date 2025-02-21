@@ -15,10 +15,12 @@ from display    import *
 class Main:
 
     def __init__(self) -> None:
-        self._command_list = {
+        self._command:str    = None
+        self._arguments:list = None
+        self._commands_dict  = {
             "pscan":  Port_Scanner,
             "banner": Banner_Grabbing,
-            "osfing": OS_Fingerprint,
+            "osfing": OS_Fingerprint
         }
 
 
@@ -31,28 +33,23 @@ class Main:
     def _validate_input(self) -> None:
         parser = argparse.ArgumentParser(description="DataSeeker CLI tool")
         parser.add_argument("command", type=str, help="Command name")
-        args, remaining_args = parser.parse_known_args()
-        if args.command not in self._command_list:
-            print(f'{yellow("Unknown command")} "{args.command}"')
+        arg, self._arguments = parser.parse_known_args()
+        self._command        = arg.command
+
+        if self._command not in self._commands_dict:
+            print(f'{yellow("Unknown command")} "{self._command}"')
         else:
-            self._run_command(args.command, remaining_args)
+            self._run_command()
 
 
-    def _run_command(self, command:str, remainig_args:list) -> None:
+    def _run_command(self) -> None:
         try:
-            strategy_class = self._command_list.get(command)
-            arg_parser     = Argument_Parser_Manager()
-            with strategy_class(arg_parser, remainig_args) as strategy:
+            strategy_class = self._commands_dict.get(self._command)
+            arg_parser     = Argument_Parser_Manager()._parse(self._command, self._arguments)
+            with strategy_class(arg_parser) as strategy:
                 strategy._execute()
         except Exception as error: print(f'{red("Error while trying to execute the command")}.\nERROR: {error}')
-    
 
-    @staticmethod
-    def _display_commands(commands:dict) -> None:
-        for key in commands:
-            space   = 9 - len(key)
-            command = str(commands[key].__name__).replace('_', ' ')
-            print(f'{green(key)}{"." * space}: {command}')
 
 
 

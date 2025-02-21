@@ -14,14 +14,13 @@ from display           import *
 
 class OS_Fingerprint:
 
-    def __init__(self, parser_manager:ArgParser, data:list) -> None:
-        self._parser_manager = parser_manager
-        self._data           = data
+    def __init__(self, parser_manager:ArgParser) -> None:
         self._target_ip      = None
         self._os_database    = dict()
         self._packets        = None
         self._responses      = None
         self._probes_info    = list()
+        self._get_argument(parser_manager)
 
 
     def __enter__(self):
@@ -33,7 +32,6 @@ class OS_Fingerprint:
 
     def _execute(self) -> None:
         try:
-            self._get_argument()
             #print(f'{Color.yellow("Function still under development")}')
             self._read_database()
             self._create_packets()
@@ -46,9 +44,8 @@ class OS_Fingerprint:
         except Exception as error:  print(unexpected_error(error))
 
 
-    def _get_argument(self) -> str:
-        arguments       = self._parser_manager._parse("OSFingerprint", self._data)
-        self._target_ip = arguments.host
+    def _get_argument(self, parser_manager:ArgParser) -> str:
+        self._target_ip = parser_manager.host
 
     
     def _read_database(self) -> None:

@@ -11,12 +11,11 @@ from display    import *
 
 class Banner_Grabbing:
 
-    def __init__(self, parser_manager:ArgParser, data:list) -> None:
-        self._parser_manager = parser_manager
-        self._data           = data
-        self._host           = None
-        self._protocol       = None
-        self._port           = None
+    def __init__(self, parser_manager:ArgParser) -> None:
+        self._host:str     = None
+        self._protocol:str = None
+        self._port:int     = None
+        self._get_argument_and_flags(parser_manager)
 
 
     def __enter__(self):
@@ -27,18 +26,15 @@ class Banner_Grabbing:
 
 
     def _execute(self) -> None:
-        try:
-            self._get_argument_and_flags()
-            self._grab_banners_on_the_protocol()
+        try:   self._grab_banners_on_the_protocol()
         except SystemExit as error: print(invalid_or_missing()) if not error.code == 0 else print()
         except Exception as error:  print(f'{unexpected_error(error)}')
 
 
-    def _get_argument_and_flags(self) -> None:
-        arguments      = self._parser_manager._parse("BannerGrabbing", self._data)
-        self._host     = arguments.host
-        self._protocol = arguments.protocol
-        self._port     = arguments.p
+    def _get_argument_and_flags(self, parser_manager:ArgParser) -> None:
+        self._host     = parser_manager.host
+        self._protocol = parser_manager.protocol
+        self._port     = parser_manager.p
 
 
     def _grab_banners_on_the_protocol(self) -> None:
