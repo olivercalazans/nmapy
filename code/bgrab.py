@@ -38,7 +38,7 @@ class Banner_Grabbing:
         arguments      = self._parser_manager._parse("BannerGrabbing", self._data)
         self._host     = arguments.host
         self._protocol = arguments.protocol
-        self._port     = arguments.port
+        self._port     = arguments.p
 
 
     def _grab_banners_on_the_protocol(self) -> None:
@@ -57,7 +57,7 @@ class Banner_Grabbing:
             'https': {'func': _https_banner_grabbing, 'port': 443},
             'ssh':   {'func': _ssh_banner_grabbing,   'port': 22}
         }
-        
+
 
 
 # FUNCTIONS ==================================================================================================

@@ -6,7 +6,6 @@
 
 import sys
 from arg_parser  import Argument_Parser_Manager
-from sys_command import System_Command
 from pscan       import Port_Scanner
 from bgrab       import Banner_Grabbing
 from os_fing     import OS_Fingerprint
@@ -21,7 +20,6 @@ class Main:
         self._command        = None
         self._arguments      = None
         self._command_list   = {
-            "sys":    System_Command,
             "pscan":  Port_Scanner,
             "banner": Banner_Grabbing,
             "osfing": OS_Fingerprint,

@@ -51,11 +51,11 @@ class Port_Scanner:
         arguments   = self._parser_manager._parse("PortScanner", self._data)
         self._host  = arguments.host
         self._flags = {
-            'show':    arguments.show_all,
-            'ports':   arguments.port,
-            'random':  arguments.random_order,
-            'delay':   arguments.delay,
-            'decoy':   arguments.decoy,
+            'show':    arguments.s,
+            'ports':   arguments.p,
+            'random':  arguments.r,
+            'delay':   arguments.d,
+            'decoy':   arguments.D,
         }
 
 
