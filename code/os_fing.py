@@ -7,14 +7,14 @@
 import asyncio, random, os
 from scapy.layers.inet import IP, ICMP, TCP, UDP
 from scapy.packet      import Raw
+from arg_parser        import Argument_Parser_Manager as ArgParser
 from os_fing_sendings  import OS_Sending
-from arg_parser        import Argument_Parser_Manager
 from display           import *
 
 
 class OS_Fingerprint:
 
-    def __init__(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
+    def __init__(self, parser_manager:ArgParser, data:list) -> None:
         self._parser_manager = parser_manager
         self._data           = data
         self._target_ip      = None

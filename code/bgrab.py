@@ -5,13 +5,13 @@
 
 
 import socket, ssl
-from arg_parser import Argument_Parser_Manager
+from arg_parser import Argument_Parser_Manager as ArgParser
 from display    import *
 
 
 class Banner_Grabbing:
 
-    def __init__(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
+    def __init__(self, parser_manager:ArgParser, data:list) -> None:
         self._parser_manager = parser_manager
         self._data           = data
         self._host           = None

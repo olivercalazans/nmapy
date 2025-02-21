@@ -7,16 +7,16 @@
 import random
 from scapy.layers.inet import TCP
 from scapy.all         import conf
+from arg_parser        import Argument_Parser_Manager as ArgParser
 from pscan_normal      import Normal_Scan
 from pscan_decoy       import Decoy
 from network           import *
-from arg_parser        import Argument_Parser_Manager
 from display           import *
 
 
 class Port_Scanner:
 
-    def __init__(self, parser_manager:Argument_Parser_Manager, data:list) -> None:
+    def __init__(self, parser_manager:ArgParser, data:list) -> None:
         self._parser_manager   = parser_manager
         self._data             = data
         self._all_ports        = get_ports()

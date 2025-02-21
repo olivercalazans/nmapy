@@ -25,11 +25,6 @@ class Argument_Parser_Manager:
                     case 'opt':   class_parser.add_argument(arg[1], nargs='?', const=True, default=False, help=arg[2])
                     case 'arg':   class_parser.add_argument(arg[1], type=str, help=arg[2])
                     case _:       class_parser.add_argument(arg[1], type=str, choices=arg[2], help=arg[3])
-
-
-    def _parse(self, subparser_id:str, data:list) -> argparse.Namespace:
-        data.insert(0, subparser_id)
-        return self._parser.parse_args(data)
     
 
     @staticmethod
@@ -55,3 +50,9 @@ class Argument_Parser_Manager:
                 ("arg", "host", "Target IP/Hostname")
                 ]
         }
+    
+
+    # Method that will be called by the class
+    def _parse(self, subparser_id:str, data:list) -> argparse.Namespace:
+        data.insert(0, subparser_id)
+        return self._parser.parse_args(data)
