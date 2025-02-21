@@ -13,14 +13,14 @@ from network        import *
 
 class Decoy:
     
-    def __init__(self, target_ip:str, port:int):
-        self._target_ip     = target_ip
-        self._port          = port
-        self._interface     = get_default_interface()
-        self._netmask       = get_subnet_mask(self._interface)
-        self._my_ip_address = get_ip_address(self._interface)
-        self._decoy_ips     = None
-        self._response      = None
+    def __init__(self, target_ip, port):
+        self._target_ip:str     = target_ip
+        self._port:int          = port
+        self._interface:str     = get_default_interface()
+        self._netmask:str       = get_subnet_mask(self._interface)
+        self._my_ip_address:str = get_ip_address(self._interface)
+        self._decoy_ips:list    = None
+        self._response:Packet   = None
 
 
     def __enter__(self):

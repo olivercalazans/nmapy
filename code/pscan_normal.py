@@ -12,15 +12,15 @@ from pscan_packets  import create_tpc_ip_packet
 
 class Normal_Scan:
 
-    def __init__(self, target_ip:str, ports:list|int, flags:dict) -> None:
-        self._target_ip   = target_ip
-        self._ports       = ports
-        self._flags       = flags
-        self._packets     = [create_tpc_ip_packet(self._target_ip, port) for port in self._ports]
-        self._len_packets = len(self._packets)
-        self._delay       = None
-        self._lock        = threading.Lock()
-        self._responses   = list()
+    def __init__(self, target_ip, ports, flags) -> None:
+        self._target_ip:str   = target_ip
+        self._ports:list|int  = ports
+        self._flags:dict      = flags
+        self._packets:list    = [create_tpc_ip_packet(self._target_ip, port) for port in self._ports]
+        self._len_packets:int = len(self._packets)
+        self._delay:int|float = None
+        self._lock            = threading.Lock()
+        self._responses:list  = list()
 
 
     def __enter__(self):
