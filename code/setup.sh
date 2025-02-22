@@ -27,7 +27,7 @@ fi
 
 # Create a wrapper script to execute the application
 printf "Creating wrapper script..."
-WRAPPER_FILE="dataseeker"
+WRAPPER_FILE="dtsk"
 cat <<'EOF' > "/usr/bin/$WRAPPER_FILE"
 #!/bin/bash
 if [ "$EUID" -ne 0 ]; then

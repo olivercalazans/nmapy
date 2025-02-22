@@ -4,8 +4,8 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import sys, argparse
-from arg_parser import Argument_Parser_Manager
+import sys
+from arg_parser import Argument_Parser_Manager as ArgParser
 from pscan      import Port_Scanner
 from bgrab      import Banner_Grabbing
 from os_fing    import OS_Fingerprint
@@ -31,27 +31,42 @@ class Main:
 
     
     def _validate_input(self) -> None:
-        parser = argparse.ArgumentParser(description="DataSeeker CLI tool")
-        parser.add_argument("command", type=str, help="Command name")
-        arg, self._arguments = parser.parse_known_args()
-        self._command        = arg.command
-
-        if self._command not in self._commands_dict:
-            print(f'{yellow("Unknown command")} "{self._command}"')
-        else:
-            self._run_command()
+        try: 
+            self._command   = sys.argv[1]
+            self._arguments = sys.argv[2:] if len(sys.argv) > 2 else list()
+            self._verify_if_the_command_exists()
+        except IndexError:
+            print(f'{yellow("Missing command name")}')
 
 
-    def _run_command(self) -> None:
+    def _verify_if_the_command_exists(self) -> None:
+        if    self._command in self._commands_dict: self._validate_flags()
+        elif  self._command in ('--help', '-h'):    self._display_description()
+        else: print(f'{yellow("Unknown command")} "{self._command}"')
+
+
+    def _validate_flags(self) -> None:
+        arg_parser = ArgParser()._parse(self._command, self._arguments)
+        self._run_command(arg_parser)
+
+
+    def _run_command(self, arg_parser:ArgParser) -> None:
         try:
             strategy_class = self._commands_dict.get(self._command)
-            arg_parser     = Argument_Parser_Manager()._parse(self._command, self._arguments)
             with strategy_class(arg_parser) as strategy:
                 strategy._execute()
         except Exception as error: print(f'{red("Error while trying to execute the command")}.\nERROR: {error}')
 
 
-
+    @staticmethod
+    def _display_description() -> None:
+        print('Repository: https://github.com/olivercalazans/DataSeeker\n'
+              'DataSeeker CLI is a tool for network exploration\n'
+              'Available commands:\n'
+              f'{green("pscan")}....: Portscan\n'
+              f'{green("banner")}...: Banner Grabbing\n'
+              f'{green("osfing")}...: OS Fingerprint\n'
+              )
 
 
 if __name__ == '__main__':
