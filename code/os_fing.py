@@ -4,23 +4,32 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import asyncio, random, os
+import random, os
 from scapy.layers.inet import IP, ICMP, TCP, UDP
-from scapy.packet      import Raw
+from scapy.sendrecv    import sr1
+from scapy.packet      import Packet, Raw
 from arg_parser        import Argument_Manager as ArgParser
-from os_fing_sendings  import OS_Sending
 from display           import *
 
 
 class OS_Fingerprint:
 
     def __init__(self, parser_manager:ArgParser) -> None:
+        self._get_argument(parser_manager)
         self._target_ip      = None
         self._os_database    = dict()
         self._packets        = None
         self._responses      = None
         self._probes_info    = list()
-        self._get_argument(parser_manager)
+        self._responses = {
+            'icmp_echo':      None,
+            'icmp_timestamp': None,
+            'icmp_addr_mask': None,
+            'icmp_info':      None,
+            'udp':            None,
+            'tcp_syn':        None,
+            'tcp_rst':        None
+        }
 
 
     def __enter__(self):
@@ -32,10 +41,9 @@ class OS_Fingerprint:
 
     def _execute(self) -> None:
         try:
-            #print(f'{Color.yellow("Function still under development")}')
             self._read_database()
             self._create_packets()
-            asyncio.run(self._get_responses())
+            self._get_responses()
             self._perform_probes()
             self._display_result()
         except KeyboardInterrupt:  print(red("Process stopped"))
@@ -69,10 +77,10 @@ class OS_Fingerprint:
             IP_LAYER / TCP(dport=OPEN_PORT, flags="R")
         )
 
-
-    async def _get_responses(self) -> None:
-        with OS_Sending() as responses:
-            self._responses = await responses._perform_sending(self._packets)
+    
+    def _get_responses(self, ) -> dict[Packet]:
+        for packet, key in zip(self._packets, self._responses.keys()):
+            self._responses[key] = sr1(packet, timeout=3, verbose=0)
 
 
     # PROBES -------------------------------------------------------------------------------------------------
@@ -96,13 +104,14 @@ class OS_Fingerprint:
         if not packet.haslayer(ICMP):
             self._probes_info += ['n', None, None, None, None, None]
 
-        echo_code = packet[ICMP].code       if hasattr(packet[ICMP], 'code') else None,
+        echo_code = packet[ICMP].code       if hasattr(packet[ICMP], 'code') else None
         ip_id     = packet[IP].id           if hasattr(packet[IP], 'id')     else None
         tos_bits  = packet[IP].tos          if hasattr(packet[IP], 'tos')    else None
         df_bits   = packet[IP].flags == 0x2 if packet[IP].flags is not None  else None
         reply_ttl = packet[IP].ttl          if hasattr(packet[IP], 'ttl')    else None
 
         self._probes_info += ['y', echo_code, ip_id, tos_bits, df_bits, reply_ttl]
+        print(self._probes_info)
 
 
 
@@ -117,6 +126,7 @@ class OS_Fingerprint:
         ip_id = packet[IP].id  if hasattr(packet[IP], 'id')  else None
 
         self._probes_info += ['y', ttl, ip_id]
+        print(self._probes_info)
 
 
 
@@ -131,6 +141,7 @@ class OS_Fingerprint:
         ip_id = packet[IP].id  if hasattr(packet[IP], 'id')  else None
 
         self._probes_info += ['y', ttl, ip_id]
+        print(self._probes_info)
 
 
 

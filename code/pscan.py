@@ -49,7 +49,7 @@ class Port_Scanner:
         self._host  = parser_manager.host
         self._flags = {
             'show':    parser_manager.show,
-            'ports':   parser_manager.ports,
+            'ports':   parser_manager.port,
             'random':  parser_manager.random,
             'delay':   parser_manager.delay,
             'decoy':   parser_manager.decoy,

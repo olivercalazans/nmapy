@@ -35,7 +35,7 @@ class Banner_Grabbing:
     def _get_argument_and_flags(self, parser_manager:ArgParser) -> None:
         self._host     = parser_manager.host
         self._protocol = parser_manager.protocol
-        self._port     = parser_manager.ports
+        self._port     = parser_manager.port
 
 
     def _grab_banners_on_the_protocol(self) -> None:
