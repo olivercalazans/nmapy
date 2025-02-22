@@ -39,8 +39,7 @@ def convert_mask_to_cidr_ipv4(subnet_mask:str) -> int:
 
 
 def get_ip_by_name(hostname:str) -> str:
-    try:    return socket.gethostbyname(hostname)
-    except: return error_message(f'Invalid hostname ({hostname})')
+    return socket.gethostbyname(hostname)
 
     
 def get_ports() -> dict:

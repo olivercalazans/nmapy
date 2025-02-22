@@ -8,7 +8,7 @@ import random
 from scapy.layers.inet import TCP
 from scapy.packet      import Packet
 from scapy.all         import conf
-from arg_parser        import Argument_Parser_Manager as ArgParser
+from arg_parser        import Argument_Manager as ArgParser
 from pscan_normal      import Normal_Scan
 from pscan_decoy       import Decoy
 from network           import *
@@ -41,9 +41,8 @@ class Port_Scanner:
             conf.verb       = 0
             self._get_result_by_transmission_method()
             self._process_responses()
-        except SystemExit as error: print(invalid_or_missing()) if not error.code == 0 else print()
-        except KeyboardInterrupt:   print(red("Process stopped"))
-        except Exception as error:  print(unexpected_error(error))
+        except KeyboardInterrupt:  print(red("Process stopped"))
+        except Exception as error: print(unexpected_error(error))
 
 
     def _get_argument_and_flags(self, parser_manager:ArgParser) -> None:

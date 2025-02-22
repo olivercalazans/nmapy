@@ -5,7 +5,7 @@
 
 
 import socket, ssl
-from arg_parser import Argument_Parser_Manager as ArgParser
+from arg_parser import Argument_Manager as ArgParser
 from display    import *
 
 
@@ -26,9 +26,10 @@ class Banner_Grabbing:
 
 
     def _execute(self) -> None:
-        try:   self._grab_banners_on_the_protocol()
-        except SystemExit as error: print(invalid_or_missing()) if not error.code == 0 else print()
-        except Exception as error:  print(f'{unexpected_error(error)}')
+        try:
+            self._grab_banners_on_the_protocol()
+        except Exception as error:
+            print(f'{unexpected_error(error)}')
 
 
     def _get_argument_and_flags(self, parser_manager:ArgParser) -> None:

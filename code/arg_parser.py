@@ -7,7 +7,7 @@
 import argparse
 
 
-class Argument_Parser_Manager:
+class Argument_Manager:
 
     def __init__(self) -> None:
         self._parser = argparse.ArgumentParser(description="Argument Manager")

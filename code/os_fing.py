@@ -7,7 +7,7 @@
 import asyncio, random, os
 from scapy.layers.inet import IP, ICMP, TCP, UDP
 from scapy.packet      import Raw
-from arg_parser        import Argument_Parser_Manager as ArgParser
+from arg_parser        import Argument_Manager as ArgParser
 from os_fing_sendings  import OS_Sending
 from display           import *
 
@@ -38,10 +38,9 @@ class OS_Fingerprint:
             asyncio.run(self._get_responses())
             self._perform_probes()
             self._display_result()
-        except SystemExit as error: print(invalid_or_missing()) if not error.code == 0 else print()
-        except KeyboardInterrupt:   print(red("Process stopped"))
-        except ValueError as error: print(error(), error)
-        except Exception as error:  print(unexpected_error(error))
+        except KeyboardInterrupt:  print(red("Process stopped"))
+        except FileNotFoundError:  print('os_db.txt not found')
+        except Exception as error: print(unexpected_error(error))
 
 
     def _get_argument(self, parser_manager:ArgParser) -> str:
@@ -50,13 +49,10 @@ class OS_Fingerprint:
     
     def _read_database(self) -> None:
         FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/os_db.txt'
-        try:
-            with open(FILE_PATH, 'r') as file:
-                for line in file:
-                    key, value = line.split(':')
-                    self._os_database[eval(key)] = value
-        except FileNotFoundError: 
-            raise ValueError("os_db.pkl not found, it is impossible to execute OS Fingerpinting")
+        with open(FILE_PATH, 'r') as file:
+            for line in file:
+                key, value = line.split(':')
+                self._os_database[eval(key)] = value
 
 
     def _create_packets(self) -> None:

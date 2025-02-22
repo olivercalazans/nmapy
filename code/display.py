@@ -15,9 +15,3 @@ def yellow(message:str) -> str:
 
 def unexpected_error(error:str) -> str:
     return red('Unexpected error') + f'\nERROR: {error}'
-
-def error_message(message='') -> str:
-    return yellow('ERROR: ') + message
-
-def invalid_or_missing() -> str:
-    return yellow(f'Invalid or missing argument/flag. Please, check --help')

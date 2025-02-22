@@ -5,7 +5,7 @@
 
 
 import sys
-from arg_parser import Argument_Parser_Manager as ArgParser
+from arg_parser import Argument_Manager as ArgParser
 from pscan      import Port_Scanner
 from bgrab      import Banner_Grabbing
 from os_fing    import OS_Fingerprint
