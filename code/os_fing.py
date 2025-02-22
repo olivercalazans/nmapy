@@ -119,8 +119,8 @@ class OS_Fingerprint:
         else:                  result.append('0')
 
         # DF Bit
-        if packet[IP].flags == 0x2: result.append('0')
-        else:                       result.append('1')
+        if packet[IP].flags & 0x2: result.append('1')
+        else:                      result.append('0')
 
         # Reply TTL
         result.append(packet[IP].ttl)
