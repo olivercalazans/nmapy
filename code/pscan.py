@@ -48,11 +48,11 @@ class Port_Scanner:
     def _get_argument_and_flags(self, parser_manager:ArgParser) -> None:
         self._host  = parser_manager.host
         self._flags = {
-            'show':    parser_manager.s,
-            'ports':   parser_manager.p,
-            'random':  parser_manager.r,
-            'delay':   parser_manager.d,
-            'decoy':   parser_manager.D,
+            'show':    parser_manager.show,
+            'ports':   parser_manager.ports,
+            'random':  parser_manager.random,
+            'delay':   parser_manager.delay,
+            'decoy':   parser_manager.decoy,
         }
 
 

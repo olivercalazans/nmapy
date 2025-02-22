@@ -22,9 +22,9 @@ class Argument_Manager:
     def _create_arguments(self, command:str) -> None:
         for arg in self._argument_definitions(command):
             match arg[0]:
-                case 'bool':  self._parser.add_argument(arg[1], action="store_true", help=arg[2])
-                case 'value': self._parser.add_argument(arg[1], type=arg[2], help=arg[3])
-                case 'opt':   self._parser.add_argument(arg[1], nargs='?', const=True, default=False, help=arg[2])
+                case 'bool':  self._parser.add_argument(arg[1], arg[2], action="store_true", help=arg[3])
+                case 'value': self._parser.add_argument(arg[1], arg[2], type=arg[3], help=arg[4])
+                case 'opt':   self._parser.add_argument(arg[1], arg[2], nargs='?', const=True, default=False, help=arg[3])
                 case 'arg':   self._parser.add_argument(arg[1], type=str, help=arg[2])
                 case _:       self._parser.add_argument(arg[1], type=str, choices=arg[2], help=arg[3])
     
@@ -35,17 +35,17 @@ class Argument_Manager:
         DEFINITIONS = {
             "pscan": [
                 ("arg",   "host", "Target IP/Hostname"),
-                ("bool",  "-r", "Use the ports in random order"),
-                ("value", "-p", str, "Specify a port to scan"),
-                ("value", "-D", str, "Uses decoy method"),
-                ("opt",   "-d", "Add a delay between packet transmissions."),
-                ("bool",  "-s", "Display all statuses, both open and closed.")
+                ("bool",  "-r", "--random", "Use the ports in random order"),
+                ("value", "-p", "--port",  str, "Specify a port to scan"),
+                ("value", "-D", "--decoy",  str, "Uses decoy method"),
+                ("opt",   "-d", "--delay",  "Add a delay between packet transmissions."),
+                ("bool",  "-s", "--show",   "Display all statuses, both open and closed.")
                 ],
             
             "banner": [
                 ("arg",    "host",     "Target IP/Hostname"),
                 ("choice", "protocol", PROTOCOLS, "Protocol"),
-                ("value",  "-p", str, "Specify a port to grab the banners")
+                ("value",  "-p", "--port", str, "Specify a port to grab the banners")
                 ],
 
             "osfing": [
