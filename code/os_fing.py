@@ -99,19 +99,33 @@ class OS_Fingerprint:
 
     def _icmp_echo_probe(self) -> None:
         packet = self._responses['icmp_echo']
-        print(packet)
+        result = ['y']
 
-        if not packet.haslayer(ICMP):
+        if not packet or not packet.haslayer(ICMP):
             self._probes_info += ['n', None, None, None, None, None]
+            return
 
-        echo_code = packet[ICMP].code       if hasattr(packet[ICMP], 'code') else None
-        ip_id     = packet[IP].id           if hasattr(packet[IP], 'id')     else None
-        tos_bits  = packet[IP].tos          if hasattr(packet[IP], 'tos')    else None
-        df_bits   = packet[IP].flags == 0x2 if packet[IP].flags is not None  else None
-        reply_ttl = packet[IP].ttl          if hasattr(packet[IP], 'ttl')    else None
+        # ICMP echo code
+        if packet[ICMP].code > 0: result.append('!0')
+        else:                     result.append('0')
 
-        self._probes_info += ['y', echo_code, ip_id, tos_bits, df_bits, reply_ttl]
-        print(self._probes_info)
+        # ICMP IP ID
+        if not hasattr(packet[IP], 'id'): result.append('SENT')
+        elif packet[IP].id > 0:           result.append('!0')
+        else:                             result.append('0')
+
+        # TOS Bits
+        if packet[IP].tos > 0: result.append('!0')
+        else:                  result.append('0')
+
+        # DF Bit
+        if packet[IP].flags == 0x2: result.append('0')
+        else:                       result.append('1')
+
+        # Reply TTL
+        result.append(packet[IP].ttl)
+
+        self._probes_info += result
 
 
 
