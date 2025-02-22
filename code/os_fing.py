@@ -16,11 +16,11 @@ class OS_Fingerprint:
 
     def __init__(self, parser_manager:ArgParser) -> None:
         self._get_argument(parser_manager)
-        self._target_ip      = None
-        self._os_database    = dict()
-        self._packets        = None
-        self._responses      = None
-        self._probes_info    = list()
+        self._target_ip:str          = None
+        self._os_database:dict       = dict()
+        self._packets:list[Packet]   = None
+        self._responses:list[Packet] = None
+        self._probes_info            = list()
         self._responses = {
             'icmp_echo':      None,
             'icmp_timestamp': None,
@@ -41,7 +41,7 @@ class OS_Fingerprint:
 
     def _execute(self) -> None:
         try:
-            self._read_database()
+            #self._read_database()
             self._create_packets()
             self._get_responses()
             self._perform_probes()
@@ -68,8 +68,8 @@ class OS_Fingerprint:
         IP_LAYER      = IP(dst=self._target_ip)
         OPEN_PORT     = 22
         self._packets = (
-            IP_LAYER / ICMP(),
-            IP_LAYER / ICMP(type=13),
+            IP_LAYER / ICMP(),          # ICMP echo
+            IP_LAYER / ICMP(type=13),   # ICMP timestamp
             IP_LAYER / ICMP(type=17),
             IP_LAYER / ICMP(type=15),
             IP_LAYER / UDP(dport=port_high),
@@ -81,6 +81,15 @@ class OS_Fingerprint:
     def _get_responses(self, ) -> dict[Packet]:
         for packet, key in zip(self._packets, self._responses.keys()):
             self._responses[key] = sr1(packet, timeout=3, verbose=0)
+
+    
+    @staticmethod
+    def _classify_ttl(ttl:int) -> str:
+        if   ttl < 60:  return '<60'
+        elif ttl <= 64: return '<64'
+        elif ttl <=128: return '<128'
+        else:           return '<255'
+        
 
 
     # PROBES -------------------------------------------------------------------------------------------------
@@ -110,9 +119,9 @@ class OS_Fingerprint:
         else:                     result.append('0')
 
         # ICMP IP ID
-        if not hasattr(packet[IP], 'id'): result.append('SENT')
-        elif packet[IP].id > 0:           result.append('!0')
-        else:                             result.append('0')
+        if not IP in packet:    result.append('SENT')
+        elif packet[IP].id > 0: result.append('!0')
+        else:                   result.append('0')
 
         # TOS Bits
         if packet[IP].tos > 0: result.append('!0')
@@ -122,24 +131,30 @@ class OS_Fingerprint:
         if packet[IP].flags & 0x2: result.append('1')
         else:                      result.append('0')
 
-        # Reply TTL
-        result.append(packet[IP].ttl)
+        # Echo reply TTL
+        result.append(self._classify_ttl(packet[IP].ttl))
 
-        self._probes_info += result
+        self._probes_info.extend(result)
 
 
 
     def _icmp_timestamp_probe(self) -> None:
         packet = self._responses['icmp_timestamp']
-        print(packet)
+        result = ['y']
 
         if not packet.haslayer(ICMP) or packet[ICMP].type != 14:
             self._probes_info += ['n', None, None]
+            return
 
-        ttl   = packet[IP].ttl if hasattr(packet[IP], 'ttl') else None
-        ip_id = packet[IP].id  if hasattr(packet[IP], 'id')  else None
+        # Timestamp TTL
+        result.append(self._classify_ttl(packet[IP].ttl))
 
-        self._probes_info += ['y', ttl, ip_id]
+        # IP ID
+        if not IP in packet:    result.append('SENT')
+        elif packet[IP].id > 0: result.append('!0')
+        else:                   result.append('0')
+
+        self._probes_info.extend(result)
         print(self._probes_info)
 
 
