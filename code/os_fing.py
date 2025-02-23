@@ -7,7 +7,7 @@
 import random, os
 from scapy.layers.inet import IP, ICMP, TCP, UDP
 from scapy.sendrecv    import sr1
-from scapy.packet      import Packet, Raw
+from scapy.packet      import Raw
 from arg_parser        import Argument_Manager as ArgParser
 from display           import *
 
@@ -16,11 +16,10 @@ class OS_Fingerprint:
 
     def __init__(self, parser_manager:ArgParser) -> None:
         self._get_argument(parser_manager)
-        self._target_ip:str        = None
-        self._os_database:dict     = dict()
-        self._packets:list[Packet] = None
-        self._probes_info          = list()
-        self._responses            = {
+        self._target_ip:str    = None
+        self._os_database:dict = dict()
+        self._probes_info      = list()
+        self._responses        = {
             'icmp_echo':      None,
             'icmp_timestamp': None,
             'udp':            None,
@@ -39,7 +38,6 @@ class OS_Fingerprint:
     def _execute(self) -> None:
         try:
             #self._read_database()
-            self._create_packets()
             self._get_responses()
             self._perform_probes()
             self._display_result()
@@ -48,7 +46,7 @@ class OS_Fingerprint:
         except Exception as error: print(unexpected_error(error))
 
 
-    def _get_argument(self, parser_manager:ArgParser) -> str:
+    def _get_argument(self, parser_manager:ArgParser) -> None:
         self._target_ip = parser_manager.host
 
 
@@ -60,11 +58,11 @@ class OS_Fingerprint:
                 self._os_database[eval(key)] = value
 
 
-    def _create_packets(self) -> None:
-        port_high     = random.randint(1024, 65535)
-        IP_LAYER      = IP(dst=self._target_ip)
-        OPEN_PORT     = 22
-        self._packets = (
+    def _get_packets(self) -> dict:
+        port_high = random.randint(1024, 65535)
+        IP_LAYER  = IP(dst=self._target_ip)
+        OPEN_PORT = 22
+        return (
             IP_LAYER / ICMP(), #............................: ICMP echo
             IP_LAYER / ICMP(type=13), #.....................: ICMP timestamp
             IP_LAYER / UDP(dport=port_high), #..............: UDP -> ICMP Unreachable
@@ -73,8 +71,8 @@ class OS_Fingerprint:
         )
 
 
-    def _get_responses(self, ) -> dict[Packet]:
-        for packet, key in zip(self._packets, self._responses.keys()):
+    def _get_responses(self) -> None:
+        for packet, key in zip(self._get_packets(), self._responses.keys()):
             self._responses[key] = sr1(packet, timeout=3, verbose=0)
 
 
@@ -89,8 +87,6 @@ class OS_Fingerprint:
 
     # PROBES -------------------------------------------------------------------------------------------------
     def _perform_probes(self) -> None:
-        for i in self._responses:
-            print(i, self._responses[i])
         self._icmp_echo_probe()
         self._icmp_timestamp_probe()
         self._udp_unreach_header_probe()
@@ -114,9 +110,8 @@ class OS_Fingerprint:
         else:                     result.append('0')
 
         # ICMP IP ID
-        if not IP in packet:    result.append('SENT')
-        elif packet[IP].id > 0: result.append('!0')
-        else:                   result.append('0')
+        if packet[IP].id > 0: result.append('!0')
+        else:                 result.append('0')
 
         # TOS Bits
         if packet[IP].tos > 0: result.append('!0')
@@ -145,9 +140,8 @@ class OS_Fingerprint:
         result.append(self._classify_ttl(packet[IP].ttl))
 
         # IP ID
-        if not packet.haslayer(IP): result.append('SENT')
-        elif packet[IP].id > 0:     result.append('!0')
-        else:                       result.append('0')
+        if packet[IP].id > 0: result.append('!0')
+        else:                 result.append('0')
 
         self._probes_info.extend(result)
 
