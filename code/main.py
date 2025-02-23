@@ -8,7 +8,6 @@ import sys
 from arg_parser import Argument_Manager as ArgParser
 from pscan      import Port_Scanner
 from bgrab      import Banner_Grabbing
-from os_fing    import OS_Fingerprint
 from display    import *
 
 
@@ -20,7 +19,6 @@ class Main:
         self._commands_dict  = {
             "pscan":  Port_Scanner,
             "banner": Banner_Grabbing,
-            "osfing": OS_Fingerprint
         }
 
 
@@ -65,7 +63,6 @@ class Main:
               'Available commands:\n'
               f'{green("pscan")}....: Portscan\n'
               f'{green("banner")}...: Banner Grabbing\n'
-              f'{green("osfing")}...: OS Fingerprint\n'
               )
 
 

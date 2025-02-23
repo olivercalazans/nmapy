@@ -46,10 +46,6 @@ class Argument_Manager:
                 ("arg",    "host",     "Target IP/Hostname"),
                 ("choice", "protocol", PROTOCOLS, "Protocol"),
                 ("value",  "-p", "--port", str, "Specify a port to grab the banners")
-                ],
-
-            "osfing": [
-                ("arg", "host", "Target IP/Hostname")
                 ]
         }
         return DEFINITIONS[command]
