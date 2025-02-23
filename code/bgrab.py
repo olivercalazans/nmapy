@@ -67,16 +67,14 @@ def _ssh_banner_grabbing(host:str, port:int) -> None:
 
 def _http_banner_grabbing(host:str, port:int) -> None:
     with socket.create_connection((host, port), timeout=5) as sock:
-        request = f"HEAD / HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
+        request = f'HEAD / HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n'
         sock.send(request.encode())
-        response = sock.recv(4096).decode(errors="ignore")
+        response = sock.recv(4096).decode(errors='ignore')
 
         print(green('HTTP server response:'))
         for line in response.split("\r\n"):
             if line == '': continue
-            info = line.split(':', 1)
-            if len(info) > 1: print(f'  {green(info[0])}:{info[1]}')
-            else:             print(f'  {green(info[0])}')
+            print(line)
 
 
 
@@ -89,18 +87,16 @@ def _https_banner_grabbing(host:str, port:int):
         with context.wrap_socket(sock, server_hostname=host) as ssock:            
             cert = ssock.getpeercert()
             
-            print(f"{host} SSL Certificate:")
             if cert:
+                print(f'{host} SSL Certificate:')
                 for field, value in cert.items():
-                    print(f"{field}: {value}")
+                    print(f'{field}: {value}')
             else:
                 print(yellow('No SSL certificates returned'))
             
-            print("  - HTTP header (if present):")
-            ssock.send(b"GET / HTTP/1.1\r\nHost: " + host.encode() + b"\r\n\r\n")
+            print('HTTP header (if present):')
+            ssock.send(b'GET / HTTP/1.1\r\nHost: ' + host.encode() + b'\r\n\r\n')
             response = ssock.recv(1024)
             for line in response.decode(errors='ignore').split("\r\n"):
                 if line == '': continue
-                info = line.split(':', 1)
-                if len(info) > 1: print(f'  {green(info[0])}:{info[1]}')
-                else:             print(f'  {green(info[0])}')
+                print(line)
