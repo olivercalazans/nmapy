@@ -24,7 +24,6 @@ class OS_Fingerprint:
         self._responses = {
             'icmp_echo':      None,
             'icmp_timestamp': None,
-            'icmp_info':      None,
             'udp':            None,
             'tcp_syn':        None,
             'tcp_rst':        None
@@ -67,10 +66,9 @@ class OS_Fingerprint:
         IP_LAYER      = IP(dst=self._target_ip)
         OPEN_PORT     = 22
         self._packets = (
-            IP_LAYER / ICMP(),                      # ICMP echo
-            IP_LAYER / ICMP(type=13),               # ICMP timestamp
-            IP_LAYER / ICMP(type=15),
-            IP_LAYER / UDP(dport=port_high),
+            IP_LAYER / ICMP(), #............................: ICMP echo
+            IP_LAYER / ICMP(type=13), #.....................: ICMP timestamp
+            IP_LAYER / UDP(dport=port_high), #..............: UDP -> ICMP Unreachable
             IP_LAYER / TCP(dport=OPEN_PORT, flags="S"),
             IP_LAYER / TCP(dport=OPEN_PORT, flags="R")
         )
@@ -96,7 +94,6 @@ class OS_Fingerprint:
             print(i, self._responses[i])
         self._icmp_echo_probe()
         self._icmp_timestamp_probe()
-        self._icmp_info_probe()
         self._udp_unreach_header_probe()
         self._udp_unreach_probe()
         self._tcp_syn_ack_probe()
@@ -157,38 +154,21 @@ class OS_Fingerprint:
 
 
 
-    def _icmp_info_probe(self) -> None:
-        packet = self._responses['icmp_info']
-        print(packet)
-
-        if not packet.haslayer(ICMP) or packet[ICMP].type != 15:
-            self._probes_info += ['n', None, None]
-
-        ttl   = packet[IP].ttl if hasattr(packet[IP], 'ttl') else None
-        ip_id = packet[IP].id  if hasattr(packet[IP], 'id')  else None
-
-        self._probes_info += ['y', ttl, ip_id]
-
-
-
     def _udp_unreach_header_probe(self) -> None:
         packet = self._responses['udp']
+        result = ['y']
         print(packet)
 
-        if not packet.haslayer(ICMP) or packet[ICMP].type != 3:
-            self._probes_info += ['n', None, None, None, None, None]
+        if not packet or not packet.haslayer(ICMP) or packet[ICMP].type != 3:
+            self._probes_info.extend(['n', None, None, None, None, None])
 
-        if packet[ICMP].code == 3:
-
-            echoed_dtsize   = '8' if len(packet[Raw]) == 8 else '64' if len(packet[Raw]) == 64 else '>64'
-            reply_ttl       = packet[IP].ttl             if hasattr(packet[IP], 'ttl')         else None
-            precedence_bits = hex(packet[IP].precedence) if hasattr(packet[IP], 'precedence')  else None
-            df_bits         = packet[IP].flags == 0x2
-            ip_id           = packet[IP].id              if hasattr(packet[IP], 'id')          else None
-
-            self._probes_info += ['y', echoed_dtsize, reply_ttl, precedence_bits, df_bits, ip_id]
-
-        self._probes_info += ['n', None, None, None, None, None]
+        echoed_dtsize   = '8' if len(packet[Raw]) == 8 else '64' if len(packet[Raw]) == 64 else '>64'
+        reply_ttl       = packet[IP].ttl             if hasattr(packet[IP], 'ttl')         else None
+        precedence_bits = hex(packet[IP].precedence) if hasattr(packet[IP], 'precedence')  else None
+        df_bits         = packet[IP].flags == 0x2
+        ip_id           = packet[IP].id              if hasattr(packet[IP], 'id')          else None
+        
+        self._probes_info.extend(result)
 
 
 
