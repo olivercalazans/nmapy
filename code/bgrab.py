@@ -33,9 +33,9 @@ class Banner_Grabbing:
 
     def _execute(self) -> None:
         try:   self._grab_banners_on_the_protocol()
-        except ConnectionRefusedError as error: print(f'{yellow("Connection refused")}: {error}')
-        except socket.timeout as error:         print(yellow('Timeout'))
-        except socket.error as error:           print(f'{yellow("Socket error")}:\n{error}')
+        except ConnectionRefusedError as error: print(f'{err_icon()} {yellow("Connection refused")}: {error}')
+        except socket.timeout as error:         print(f'{err_icon()} {yellow("Timeout")}')
+        except socket.error as error:           print(f'{err_icon()} {yellow("Socket error")}:\n{error}')
         except Exception as error:              print(f'{unexpected_error(error)}')
 
 
@@ -56,16 +56,16 @@ class Banner_Grabbing:
         }
 
 
+# ICONS ======================================================================================================
 
-# FUNCTIONS ==================================================================================================
-
-
-def ok() -> str:
+def ok_icon() -> str:
     return f'[{green("+")}]'
 
-def error() -> str:
-    return f'[{red("-")}]'
+def err_icon() -> str:
+    return f'[{red("x")}]'
 
+
+# FUNCTIONS ==================================================================================================
 
 def ftp_banner_grabbing(host:str, port:int) -> None:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -74,8 +74,8 @@ def ftp_banner_grabbing(host:str, port:int) -> None:
             
             banner = sock.recv(1024).decode('utf-8').strip()
             
-            if banner: print(f'{ok} FTP Banner de {host}:{port} -> {banner}')
-            else:      print(f'{error} Nenhum banner recebido de {host}:{port}')
+            if banner: print(f'{ok_icon()} FTP Banner de {host}:{port} -> {banner}')
+            else:      print(f'{err_icon()} Nenhum banner recebido de {host}:{port}')
             
 
 
@@ -83,7 +83,7 @@ def ssh_banner_grabbing(host:str, port:int) -> None:
     with socket.create_connection((host, port), timeout=5) as sock:
         banner = sock.recv(1024).decode(errors="ignore")
         banner = banner.split(',')
-        print(f'{ok} SSH server banner')
+        print(f'{ok_icon()} SSH server banner')
         for line in banner:
             if not line == '': print(f'  - {line.strip()}')
 
@@ -95,7 +95,7 @@ def http_banner_grabbing(host:str, port:int) -> None:
         sock.send(request.encode())
         response = sock.recv(4096).decode(errors='ignore')
 
-        print(green(f'{ok} HTTP server response:'))
+        print(green(f'{ok_icon()} HTTP server response:'))
         for line in response.split("\r\n"):
             if line == '': continue
             print(line)
@@ -112,7 +112,7 @@ def https_banner_grabbing(host:str, port:int):
             cert = ssock.getpeercert()
 
             if cert:
-                print(f'{ok} {host} SSL Certificate:')
+                print(f'{ok_icon()} {host} SSL Certificate:')
                 for field, value in cert.items():
                     print(f'{field}: {value}')
             else:
