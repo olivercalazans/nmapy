@@ -24,7 +24,6 @@ class OS_Fingerprint:
         self._responses = {
             'icmp_echo':      None,
             'icmp_timestamp': None,
-            'icmp_addr_mask': None,
             'icmp_info':      None,
             'udp':            None,
             'tcp_syn':        None,
@@ -54,7 +53,7 @@ class OS_Fingerprint:
     def _get_argument(self, parser_manager:ArgParser) -> str:
         self._target_ip = parser_manager.host
 
-    
+
     def _read_database(self) -> None:
         FILE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/os_db.txt'
         with open(FILE_PATH, 'r') as file:
@@ -68,35 +67,35 @@ class OS_Fingerprint:
         IP_LAYER      = IP(dst=self._target_ip)
         OPEN_PORT     = 22
         self._packets = (
-            IP_LAYER / ICMP(),          # ICMP echo
-            IP_LAYER / ICMP(type=13),   # ICMP timestamp
-            IP_LAYER / ICMP(type=17),
+            IP_LAYER / ICMP(),                      # ICMP echo
+            IP_LAYER / ICMP(type=13),               # ICMP timestamp
             IP_LAYER / ICMP(type=15),
             IP_LAYER / UDP(dport=port_high),
             IP_LAYER / TCP(dport=OPEN_PORT, flags="S"),
             IP_LAYER / TCP(dport=OPEN_PORT, flags="R")
         )
 
-    
+
     def _get_responses(self, ) -> dict[Packet]:
         for packet, key in zip(self._packets, self._responses.keys()):
             self._responses[key] = sr1(packet, timeout=3, verbose=0)
 
-    
+
     @staticmethod
     def _classify_ttl(ttl:int) -> str:
         if   ttl < 60:  return '<60'
         elif ttl <= 64: return '<64'
         elif ttl <=128: return '<128'
         else:           return '<255'
-        
+
 
 
     # PROBES -------------------------------------------------------------------------------------------------
     def _perform_probes(self) -> None:
+        for i in self._responses:
+            print(i, self._responses[i])
         self._icmp_echo_probe()
         self._icmp_timestamp_probe()
-        self._icmp_addr_mask_probe()
         self._icmp_info_probe()
         self._udp_unreach_header_probe()
         self._udp_unreach_probe()
@@ -111,7 +110,7 @@ class OS_Fingerprint:
         result = ['y']
 
         if not packet or not packet.haslayer(ICMP):
-            self._probes_info += ['n', None, None, None, None, None]
+            self._probes_info.extend(['n', None, None, None, None, None])
             return
 
         # ICMP echo code
@@ -142,35 +141,19 @@ class OS_Fingerprint:
         packet = self._responses['icmp_timestamp']
         result = ['y']
 
-        if not packet.haslayer(ICMP) or packet[ICMP].type != 14:
-            self._probes_info += ['n', None, None]
+        if not packet or not packet.haslayer(ICMP) or packet[ICMP].type != 14:
+            self._probes_info.extend(['n', None, None])
             return
 
         # Timestamp TTL
         result.append(self._classify_ttl(packet[IP].ttl))
 
         # IP ID
-        if not IP in packet:    result.append('SENT')
-        elif packet[IP].id > 0: result.append('!0')
-        else:                   result.append('0')
+        if not packet.haslayer(IP): result.append('SENT')
+        elif packet[IP].id > 0:     result.append('!0')
+        else:                       result.append('0')
 
         self._probes_info.extend(result)
-        print(self._probes_info)
-
-
-
-    def _icmp_addr_mask_probe(self) -> None:
-        packet = self._responses['icmp_addr_mask']
-        print(packet)
-
-        if not packet.haslayer(ICMP) or packet[ICMP].type != 17:
-            self._probes_info += ['n', None, None]
-
-        ttl   = packet[IP].ttl if hasattr(packet[IP], 'ttl') else None
-        ip_id = packet[IP].id  if hasattr(packet[IP], 'id')  else None
-
-        self._probes_info += ['y', ttl, ip_id]
-        print(self._probes_info)
 
 
 
@@ -294,7 +277,7 @@ class OS_Fingerprint:
 
         self._probes_info += [reply, df, ip_id_1, ip_id_2, ip_id_strategy, ttl]
 
-    
+
     # DISPLAY ------------------------------------------------------------------------------------------------
     def _display_result(self) -> None:
         result = self._os_database.get(tuple(self._probes_info), None)
