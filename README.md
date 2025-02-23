@@ -7,7 +7,6 @@
 <div align="center">
   <img src="https://img.shields.io/badge/port_scan-brightgreen?style=for-the-badge" />
   <img src="https://img.shields.io/badge/banner_grabbing-brightgreen?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/os_fingerprint-under_development-FF4500?style=for-the-badge" />
 </div>
 
 <br>
