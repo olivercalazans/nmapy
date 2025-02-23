@@ -16,12 +16,11 @@ class OS_Fingerprint:
 
     def __init__(self, parser_manager:ArgParser) -> None:
         self._get_argument(parser_manager)
-        self._target_ip:str          = None
-        self._os_database:dict       = dict()
-        self._packets:list[Packet]   = None
-        self._responses:list[Packet] = None
-        self._probes_info            = list()
-        self._responses = {
+        self._target_ip:str        = None
+        self._os_database:dict     = dict()
+        self._packets:list[Packet] = None
+        self._probes_info          = list()
+        self._responses            = {
             'icmp_echo':      None,
             'icmp_timestamp': None,
             'udp':            None,
