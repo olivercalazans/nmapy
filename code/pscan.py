@@ -37,7 +37,7 @@ class Port_Scanner:
 
     def _execute(self) -> None:
         try:
-            self._target_ip = get_ip_by_name(self._host)
+            self._target_ip = socket.gethostbyname(self._host)
             conf.verb       = 0
             self._get_result_by_transmission_method()
             self._process_responses()

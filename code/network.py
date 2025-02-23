@@ -37,10 +37,6 @@ def get_network_information(ip:str, subnet_mask:str) -> ipaddress.IPv4Address:
 def convert_mask_to_cidr_ipv4(subnet_mask:str) -> int:
     return ipaddress.IPv4Network(f'0.0.0.0/{subnet_mask}').prefixlen
 
-
-def get_ip_by_name(hostname:str) -> str:
-    return socket.gethostbyname(hostname)
-
     
 def get_ports() -> dict:
     return { 

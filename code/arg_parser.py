@@ -31,7 +31,7 @@ class Argument_Manager:
 
     @staticmethod
     def _argument_definitions(command:str) -> dict:
-        PROTOCOLS   = ['http', 'https', 'ssh']
+        PROTOCOLS   = ['ftp', 'ssh', 'http', 'https']
         DEFINITIONS = {
             "pscan": [
                 ("arg",   "host", "Target IP/Hostname"),
