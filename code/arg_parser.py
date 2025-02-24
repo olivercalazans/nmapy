@@ -36,7 +36,8 @@ class Argument_Manager:
             "pscan": [
                 ("arg",   "host", "Target IP/Hostname"),
                 ("bool",  "-r", "--random", "Use the ports in random order"),
-                ("value", "-p", "--port",  str, "Specify a port to scan"),
+                ("value", "-p", "--port",   str, "Specify a port to scan"),
+                ("bool",  "-A", "--all",    "Scan all ports"),
                 ("value", "-D", "--decoy",  str, "Uses decoy method"),
                 ("opt",   "-d", "--delay",  "Add a delay between packet transmissions."),
                 ("bool",  "-s", "--show",   "Display all statuses, both open and closed.")

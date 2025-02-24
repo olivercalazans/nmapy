@@ -4,10 +4,13 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import socket, ipaddress, fcntl, struct
+import socket, ipaddress, fcntl, struct, re
 from scapy.all import conf, get_if_addr
 from display   import *
 
+
+
+# INTERFACE ==================================================================================================
 
 def get_default_interface() -> str:
     return str(conf.iface)
@@ -37,29 +40,102 @@ def get_network_information(ip:str, subnet_mask:str) -> ipaddress.IPv4Address:
 def convert_mask_to_cidr_ipv4(subnet_mask:str) -> int:
     return ipaddress.IPv4Network(f'0.0.0.0/{subnet_mask}').prefixlen
 
+
+
+# PORTS ======================================================================================================
+
+def get_ports(port_type='all') -> dict:
+    match port_type:
+        case 'common':   return get_common_ports()
+        case 'uncommon': return get_uncommon_ports()
+        case 'all':      return {**get_common_ports(), **get_uncommon_ports()}
+        case _:          return get_specific_ports(port_type)
+
+
+def get_specific_ports(string:str) -> dict:
+    ALL_PORTS = {**get_common_ports(), **get_uncommon_ports()}
+    parts     = re.split(r',', string)
+    result    = list()
+
+    for part in parts:
+        if '-' in part:
+            start, end = map(int, part.split('-'))
+            if start > end: raise ValueError(f'Invalid range: {start}-{end}')
+            result.extend(range(start, end + 1))
+        else:
+            result.append(int(part))
+
+    return {port: ALL_PORTS.get(port, 'Ephemeral Port / Dynamic Port') for port in result}
     
-def get_ports() -> dict:
-    return { 
-        21   : 'FTP - File Transfer Protocol',  
+
+    
+def get_common_ports() -> dict:
+    return {
+        20   : 'FTP - File Transfer Protocol (Data Transfer)',  
+        21   : 'FTP - File Transfer Protocol (Command)',  
         22   : 'SSH - Secure Shell',  
         23   : 'Telnet',  
-        25   : 'SMTP - Simple Mail Transfer Protocol',   
-        53   : 'DNS - Domain Name System',
-        67   : 'DHCP',
-        80   : 'HTTP - HyperText Transfer Protocol', 
-        110  : 'POP3 - Post Office Protocol version 3',
-        135  : 'msrpc',
-        139  : 'Netbios - ssn',
-        443  : 'HTTPS - HTTP Protocol over TLS/SSL',
-        445  : 'Microsoft - ds',
-        3306 : 'MySQL/MariaDB',
-        3389 : 'RDP - Remote Desktop Protocol',
-        5432 : 'PostgreSQL database system',
-        5900 : 'VNC - Virtual Network Computing',
-        6379 : 'Redis',
-        8080 : 'Jakarta Tomcat',
-        2179 : 'vmrdp',
-        3389 : 'ms-wbt-server',
-        7070 : 'realserver',
+        25   : 'SMTP - Simple Mail Transfer Protocol',  
+        53   : 'DNS - Domain Name System',  
+        67   : 'DHCP - Dynamic Host Configuration Protocol (Server)',  
+        68   : 'DHCP - Dynamic Host Configuration Protocol (Client)',  
+        80   : 'HTTP - HyperText Transfer Protocol',  
+        110  : 'POP3 - Post Office Protocol version 3',  
+        143  : 'IMAP - Internet Message Access Protocol',  
+        161  : 'SNMP - Simple Network Management Protocol',  
+        443  : 'HTTPS - HTTP Protocol over TLS/SSL',  
+        445  : 'SMB - Server Message Block',  
+        587  : 'SMTP - Submission',  
+        993  : 'IMAPS - IMAP over SSL',  
+        995  : 'POP3S - POP3 over SSL',  
+        3306 : 'MySQL/MariaDB',  
+        3389 : 'RDP - Remote Desktop Protocol',  
+        5432 : 'PostgreSQL',  
+        5900 : 'VNC - Virtual Network Computing',  
+        8080 : 'HTTP Alternative - Jakarta Tomcat',  
+        8443 : 'HTTPS Alternative - Tomcat SSL',  
+        8888 : 'HTTP Alternative',  
+        11211: 'Memcached',  
         27017: 'MongoDB'
+    }
+
+
+
+def get_uncommon_ports() -> dict:
+    return {
+        69   : 'TFTP - Trivial File Transfer Protocol',  
+        179  : 'BGP - Border Gateway Protocol',  
+        194  : 'IRC - Internet Relay Chat',  
+        465  : 'SMTPS - SMTP Secure (SSL)',  
+        514  : 'Syslog - System Logging Protocol',  
+        531  : 'RPC - Remote Procedure Call',  
+        543  : 'Klogin - Kerberos Login',  
+        550  : 'Kshell - Kerberos Shell',  
+        631  : 'IPP - Internet Printing Protocol',  
+        636  : 'LDAPS - Lightweight Directory Access Protocol over SSL',  
+        1080 : 'SOCKS Proxy',  
+        1433 : 'Microsoft SQL Server',  
+        1434 : 'Microsoft SQL Server Resolution',  
+        1500 : 'Radmin - Remote Administrator',  
+        1521 : 'Oracle DB - Oracle Database Listener',  
+        1723 : 'PPTP - Point to Point Tunneling Protocol',  
+        1883 : 'MQTT - Message Queuing Telemetry Transport',  
+        2049 : 'NFS - Network File System',  
+        2181 : 'Zookeeper',  
+        3690 : 'SVN - Subversion',  
+        3372 : 'NAT-T - Network Address Translation Traversal (IPsec)',  
+        4500 : 'NAT-T - Network Address Translation Traversal (IPsec)',  
+        5000 : 'UPnP - Universal Plug and Play',  
+        5001 : 'Synology NAS',  
+        5800 : 'VNC - Virtual Network Computing',  
+        6379 : 'Redis',  
+        7070 : 'RealServer',  
+        7777 : 'IIS - Microsoft Internet Information Services',  
+        7778 : 'IIS - Microsoft Internet Information Services',  
+        8000 : 'HTTP Alternate',  
+        10000: 'Webmin',  
+        20000: 'Webmin',  
+        50000: 'SAP',  
+        52000: 'Apple Remote Desktop',  
+        54321: 'Back Orifice',  
     }
