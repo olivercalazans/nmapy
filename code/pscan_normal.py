@@ -5,19 +5,18 @@
 
 
 import threading, sys, time, random
-from scapy.sendrecv import sr, sr1
-from scapy.packet   import Packet
-from pscan_packets  import create_tpc_ip_packet
+from scapy.layers.inet import IP, TCP, UDP
+from scapy.sendrecv    import sr, sr1
+from scapy.packet      import Packet
 
 
 class Normal_Scan:
 
-    def __init__(self, target_ip, ports, flags) -> None:
+    def __init__(self, target_ip, ports, arg_flags) -> None:
         self._target_ip:str   = target_ip
         self._ports:list|int  = ports
-        self._flags:dict      = flags
-        self._packets:list    = [create_tpc_ip_packet(self._target_ip, port) for port in self._ports]
-        self._len_packets:int = len(self._packets)
+        self._arg_flags:dict  = arg_flags
+        self._packets:list    = [self._create_tcp_packet(port) for port in self._ports]
         self._delay:int|float = None
         self._lock            = threading.Lock()
         self._responses:list  = list()
@@ -31,14 +30,24 @@ class Normal_Scan:
     
 
     def _perform_normal_methods(self) -> None:
-        if self._flags['delay']: 
+        if self._arg_flags['delay']: 
             self._async_sending()
         else:
             self._responses, _ = sr(self._packets, inter=0.1, timeout=3, verbose=0)
         return self._responses
 
 
+    # PACKETS ------------------------------------------------------------------------------------------------
+
+    def _create_tcp_packet(self, port:int) -> Packet:
+        return IP(dst=self._target_ip) / TCP(dport=port, flags="S")
+    
+    def _create_udp_packet(self, port:int) -> Packet:
+        return IP(dst=self._target_ip, ttl=64) / UDP(dport=port)
+
+
     # DELAY METHODS ------------------------------------------------------------------------------------------
+    
     def _async_sending(self) -> None:
         self._get_delay_time_list()
         threads     = []
@@ -55,16 +64,16 @@ class Normal_Scan:
 
 
     def _get_delay_time_list(self) -> None:
-        match self._flags['delay']:
-            case True: delay = [random.uniform(1, 3) for _ in range(self._len_packets)]
+        match self._arg_flags['delay']:
+            case True: delay = [random.uniform(1, 3) for _ in range(len(self._packets))]
             case _:    delay = self._create_delay_time_list()
         self._delay = delay
 
 
     def _create_delay_time_list(self) -> list:
-        values = [float(value) for value in self._flags['delay'].split('-')]
-        if len(values) > 1: return [random.uniform(values[0], values[1]) for _ in range(self._len_packets)]
-        return [values[0] for _ in range(self._len_packets)]
+        values = [float(value) for value in self._arg_flags['delay'].split('-')]
+        if len(values) > 1: return [random.uniform(values[0], values[1]) for _ in range(len(self._packets))]
+        return [values[0] for _ in range(len(self._packets))]
 
 
     def _async_send_packet(self, packet:Packet) -> None:

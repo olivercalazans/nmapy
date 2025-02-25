@@ -5,10 +5,10 @@
 
 
 import random, threading, time
-from scapy.sendrecv import sr1, send
-from scapy.packet   import Packet
-from pscan_packets  import create_tpc_ip_packet
-from network        import *
+from scapy.layers.inet import IP, TCP
+from scapy.sendrecv    import sr1, send
+from scapy.packet      import Packet
+from network           import *
 
 
 class Decoy:
@@ -64,11 +64,15 @@ class Decoy:
 
 
     def _send_real_packet(self) -> None:
-        real_packet    = create_tpc_ip_packet(self._target_ip, self._port)
+        real_packet    = self._create_tcp_packet(self._my_ip)
         response       = sr1(real_packet, timeout=3, verbose=0)
         self._response = [(real_packet, response)]
 
 
     def _send_decoy_packet(self, decoy_ip:str) -> None:
-        decoy_packet = create_tpc_ip_packet(self._target_ip, self._port, decoy_ip)
+        decoy_packet = self._create_tcp_packet(decoy_ip)
         send(decoy_packet, verbose=0)
+
+    
+    def _create_tcp_packet(self, source_ip:str) -> Packet:
+        return IP(dst=self._target_ip, src=source_ip) / TCP(dport=self._port, flags="S")

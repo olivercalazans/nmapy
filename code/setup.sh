@@ -51,7 +51,6 @@ FILES=("arg_parser.py"                           # List of required Python scrip
        "pscan.py"
        "pscan_decoy.py"
        "pscan_normal.py"
-       "pscan_packets.py"
        )
 
 
