@@ -6,7 +6,7 @@
 
 import threading, sys, time, random
 from scapy.layers.inet import IP, TCP, UDP
-from scapy.sendrecv    import sr, sr1
+from scapy.sendrecv    import sr1, sr
 from scapy.packet      import Packet
 
 
@@ -27,7 +27,7 @@ class Normal_Scan:
     
     def __exit__(self, exc_type, exc_value, traceback):
         return False
-    
+
 
     def _perform_normal_methods(self) -> None:
         if self._arg_flags['delay']: 
@@ -41,13 +41,13 @@ class Normal_Scan:
 
     def _create_tcp_packet(self, port:int) -> Packet:
         return IP(dst=self._target_ip) / TCP(dport=port, flags="S")
-    
+
     def _create_udp_packet(self, port:int) -> Packet:
         return IP(dst=self._target_ip, ttl=64) / UDP(dport=port)
 
 
     # DELAY METHODS ------------------------------------------------------------------------------------------
-    
+
     def _async_sending(self) -> None:
         self._get_delay_time_list()
         threads     = []

@@ -33,20 +33,24 @@ class Argument_Manager:
     def _argument_definitions(command:str) -> dict:
         PROTOCOLS   = ['ftp', 'ssh', 'http', 'https']
         DEFINITIONS = {
-            "pscan": [
-                ("arg",   "host", "Target IP/Hostname"),
-                ("bool",  "-r", "--random", "Use the ports in random order"),
-                ("value", "-p", "--port",   str, "Specify a port to scan"),
-                ("bool",  "-A", "--all",    "Scan all ports"),
-                ("value", "-D", "--decoy",  str, "Uses decoy method"),
-                ("opt",   "-d", "--delay",  "Add a delay between packet transmissions."),
-                ("bool",  "-s", "--show",   "Display all statuses, both open and closed.")
+            'pscan': [
+                ('arg',   'host', 'Target IP/Hostname'),
+                ('bool',  '-r', '--random', 'Use the ports in random order'),
+                ('value', '-p', '--port',   str, 'Specify a port to scan'),
+                ('bool',  '-A', '--all',    'Scan all ports'),
+                ('value', '-D', '--decoy',  str, 'Uses decoy method'),
+                ('opt',   '-d', '--delay',  'Add a delay between packet transmissions'),
+                ('bool',  '-s', '--show',   'Display all statuses, both open and closed')
                 ],
             
-            "banner": [
-                ("arg",    "host",     "Target IP/Hostname"),
-                ("choice", "protocol", PROTOCOLS, "Protocol"),
-                ("value",  "-p", "--port", str, "Specify a port to grab the banners")
+            'banner': [
+                ('arg',    'host',     'Target IP/Hostname'),
+                ('choice', 'protocol', PROTOCOLS, 'Protocol'),
+                ('value',  '-p', '--port', str, 'Specify a port to grab the banners')
+                ],
+
+            'netmap': [
+                ('bool', '-p', '--ping', 'Use ping instead of an ARP packet')
                 ]
         }
         return DEFINITIONS[command]

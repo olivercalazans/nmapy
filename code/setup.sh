@@ -47,6 +47,7 @@ FILES=("arg_parser.py"                           # List of required Python scrip
        "bgrab.py"
        "display.py"
        "main.py"
+       "netmap.py"
        "network.py"
        "pscan.py"
        "pscan_decoy.py"

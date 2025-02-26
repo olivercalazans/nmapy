@@ -8,6 +8,7 @@ import sys
 from arg_parser import Argument_Manager as ArgParser
 from pscan      import Port_Scanner
 from bgrab      import Banner_Grabbing
+from netmap     import Network_Mapper
 from display    import *
 
 
@@ -17,8 +18,9 @@ class Main:
         self._command:str    = None
         self._arguments:list = None
         self._commands_dict  = {
-            "pscan":  Port_Scanner,
-            "banner": Banner_Grabbing,
+            'pscan':  Port_Scanner,
+            'banner': Banner_Grabbing,
+            'netmap': Network_Mapper
         }
 
 
@@ -53,7 +55,8 @@ class Main:
             strategy_class = self._commands_dict.get(self._command)
             with strategy_class(arg_parser) as strategy:
                 strategy._execute()
-        except Exception as error: print(f'{red("Error while trying to execute the command")}.\nERROR: {error}')
+        except Exception as error:
+            print(f'{red("Error while trying to execute the command")}.\nERROR: {error}')
 
 
     @staticmethod
@@ -61,8 +64,9 @@ class Main:
         print('Repository: https://github.com/olivercalazans/DataSeeker\n'
               'DataSeeker CLI is a tool for network exploration\n'
               'Available commands:\n'
-              f'{green("pscan")}....: Portscan\n'
+              f'{green("pscan")}....: Portscaning\n'
               f'{green("banner")}...: Banner Grabbing\n'
+              f'{green("netmap")}...: Network Mapping\n'
               )
 
 

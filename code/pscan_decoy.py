@@ -5,6 +5,7 @@
 
 
 import random, threading, time
+from scapy.all         import conf, get_if_addr
 from scapy.layers.inet import IP, TCP
 from scapy.sendrecv    import sr1, send
 from scapy.packet      import Packet
@@ -12,23 +13,22 @@ from network           import *
 
 
 class Decoy:
-    
+
     def __init__(self, target_ip, port):
         self._target_ip:str   = target_ip
         self._port:int        = port
-        self._interface:str   = get_default_interface()
-        self._netmask:str     = get_subnet_mask(self._interface)
-        self._my_ip:str       = get_ip_address(self._interface)
+        self._netmask:str     = get_subnet_mask(conf.iface)
+        self._my_ip:str       = get_if_addr(conf.iface)
         self._decoy_ips:list  = None
         self._response:Packet = None
 
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         return False
-    
+
 
     def _perform_decoy_methods(self) -> Packet:
         self._generate_random_ip_in_subnet()
@@ -73,6 +73,6 @@ class Decoy:
         decoy_packet = self._create_tcp_packet(decoy_ip)
         send(decoy_packet, verbose=0)
 
-    
+
     def _create_tcp_packet(self, source_ip:str) -> Packet:
         return IP(dst=self._target_ip, src=source_ip) / TCP(dport=self._port, flags="S")

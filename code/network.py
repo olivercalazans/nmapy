@@ -12,15 +12,6 @@ from display   import *
 
 # INTERFACE ==================================================================================================
 
-def get_default_interface() -> str:
-    return str(conf.iface)
-
-
-def get_ip_address(interface:str) -> str:
-    try:   return get_if_addr(interface)
-    except Exception: return 'Unknown/error'
-
-
 def get_subnet_mask(interface:str) -> str|None:
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as temporary_socket:
