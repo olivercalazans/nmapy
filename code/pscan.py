@@ -49,6 +49,7 @@ class Port_Scanner:
             'all':     parser_manager.all,
             'random':  parser_manager.random,
             'delay':   parser_manager.delay,
+            'stealth': parser_manager.stealth,
             'decoy':   parser_manager.decoy,
         }
 

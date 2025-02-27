@@ -6,7 +6,7 @@
 
 import threading, sys, time, random
 from scapy.layers.inet import IP, TCP, UDP
-from scapy.sendrecv    import sr1, sr
+from scapy.sendrecv    import sr1, sr, send
 from scapy.packet      import Packet
 
 
@@ -16,7 +16,7 @@ class Normal_Scan:
         self._target_ip:str   = target_ip
         self._ports:list|int  = ports
         self._arg_flags:dict  = arg_flags
-        self._packets:list    = [self._create_tcp_packet(port) for port in self._ports]
+        self._packets:list    = [self._create_tcp_syn_packet(port) for port in self._ports]
         self._delay:int|float = None
         self._lock            = threading.Lock()
         self._responses:list  = list()
@@ -30,25 +30,47 @@ class Normal_Scan:
 
 
     def _perform_normal_methods(self) -> None:
-        if self._arg_flags['delay']: 
-            self._async_sending()
-        else:
-            self._responses, _ = sr(self._packets, inter=0.1, timeout=3, verbose=0)
+        if   self._arg_flags['delay']:   self._sendings_with_delay()
+        elif self._arg_flags['stealth']: self._responses = self._send_packets()
+        else:                            self._send_tcp_handshake_packets()
         return self._responses
 
 
     # PACKETS ------------------------------------------------------------------------------------------------
 
-    def _create_tcp_packet(self, port:int) -> Packet:
+    def _create_tcp_syn_packet(self, port:int) -> Packet:
         return IP(dst=self._target_ip) / TCP(dport=port, flags="S")
+    
+    def _create_tcp_ack_packet(self, port:int, ack:int, seq:int) -> Packet:
+        return IP(dst=self._target_ip) / TCP(dport=port, flags="A", seq=ack, ack=seq + 1)
+    
+    def _create_tcp_fin_packet(self, port:int) -> Packet:
+        return IP(dst=self._target_ip) / TCP(dport=port, flags="FA")
 
     def _create_udp_packet(self, port:int) -> Packet:
         return IP(dst=self._target_ip, ttl=64) / UDP(dport=port)
 
+    
+    # NORMAL SENDING -----------------------------------------------------------------------------------------
+
+    def _send_packets(self) -> list[Packet]:
+        responses, _ = sr(self._packets, inter=0.1, timeout=3, verbose=0)
+        return responses
+
+    
+    def _send_tcp_handshake_packets(self) -> None:
+        responses   = self._send_packets()
+        ack_packets = [self._create_tcp_ack_packet(pkt[TCP].sport, pkt.seq, pkt.ack) for _, pkt in responses]
+        fin_packets = [self._create_tcp_fin_packet(pkt[TCP].sport) for _, pkt in responses]
+        send(ack_packets, verbose=0)
+        time.sleep(1)
+        send(fin_packets, verbose=0)
+        self._responses = responses
+
 
     # DELAY METHODS ------------------------------------------------------------------------------------------
 
-    def _async_sending(self) -> None:
+    def _sendings_with_delay(self) -> None:
         self._get_delay_time_list()
         threads     = []
         for index ,packet in enumerate(self._packets):
