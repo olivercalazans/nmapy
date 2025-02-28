@@ -4,22 +4,21 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import logging, sys, signal
-from scapy.all          import conf, get_if_addr, Packet
-from scapy.layers.l2    import Ether, ARP
-from scapy.layers.inet  import IP, ICMP
-from scapy.sendrecv     import sr1, srp
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from arg_parser         import Argument_Manager as ArgParser
-from network            import *
-from display            import *
+import sys
+from scapy.all         import conf, get_if_addr, Packet
+from scapy.layers.l2   import Ether, ARP
+from scapy.layers.inet import IP, ICMP
+from scapy.sendrecv    import srp, sr
+from arg_parser        import Argument_Manager as ArgParser
+from network           import *
+from display           import *
 
 
 class Network_Mapper:
 
     def __init__(self, parser_manager:ArgParser) -> None:
         self._flags:dict = None
-        self._network    = None
+        self._my_ip:str  = get_if_addr(conf.iface)
         self._get_argument_and_flags(parser_manager)
 
 
@@ -32,11 +31,8 @@ class Network_Mapper:
 
     def _execute(self) -> None:
         try:
-            my_ip:str     = get_if_addr(conf.iface)
-            netmask:str   = get_subnet_mask(str(conf.iface))
-            self._network = get_network_information(my_ip, netmask)
-            if self._flags['ping']: self._run_ping_methods()
-            else:                   self._run_arp_methods(my_ip)
+            if self._flags['ping']: self._ping_sweep()
+            else:                   self._run_arp_methods()
         except KeyboardInterrupt:   print(yellow("Process stopped"))
         except ValueError as error: print(yellow(error))
         except Exception as error:  print(unexpected_error(error))
@@ -45,10 +41,18 @@ class Network_Mapper:
     def _get_argument_and_flags(self, parser_manager:ArgParser) -> None:
         self._flags = {'ping': parser_manager.ping}
 
+    # PACKETS -------------------------------------------------------------------------
+
+    def _get_arp_packet(self) -> Packet:
+        return Ether(dst="FF:FF:FF:FF:FF:FF") / ARP(op=1, pdst=self._my_ip)
+    
+    def _get_ping_packet(self, target_ip:ipaddress) -> Packet:
+        return IP(dst=target_ip) / ICMP()
+
 
     # ARP -----------------------------------------------------------------------------
-    def _run_arp_methods(self, my_ip:str) -> None:
-        packet       = Ether(dst="FF:FF:FF:FF:FF:FF") / ARP(op=1, pdst=my_ip)
+    def _run_arp_methods(self) -> None:
+        packet       = self._get_arp_packet()
         responses, _ = srp(packet, timeout=2, verbose=False)
         self._display_arp_result(responses)
 
@@ -60,63 +64,37 @@ class Network_Mapper:
 
 
     # PING ---------------------------------------------------------------------------
-    def _run_ping_methods(self) -> None:
-        futures = self._ping_sweep()
-        active_hosts = self._process_result(futures)
-        self._display_ping_result(active_hosts)
+
+    def _ping_sweep(self) -> None:
+        packets   = self._create_packets()
+        responses = list() 
+        for pkt_sublist in packets:
+            received, _ = sr(pkt_sublist, timeout=5, verbose=0)
+            print('recebidos')
+            print(received)
+            responses.append(received[-1])
+        print('ok')
+        self._display_ping_result(responses)
 
 
-    def _ping_sweep(self) -> dict:
-        logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
-        conf.verb = 0
-        total_hosts = self._network.num_addresses - 2
-        with ThreadPoolExecutor(max_workers=100) as executor:
-            signal.signal(signal.SIGINT, lambda signum, frame: self._handle_interrupt(signum, frame, executor))
-            futures = self._create_ping_tasks(executor)
-            try:   self._process_ping_tasks(futures, total_hosts, executor)
-            except Exception: executor.shutdown(wait=False, cancel_futures=True)
-        return futures
+    def _create_packets(self) -> list[list[Packet]]:
+        packet_list = [self._get_ping_packet(str(ip)) for ip in self._get_ip_list()]
+        return self._calculate_max_packets(packet_list)
 
 
-    def _create_ping_tasks(self, executor:ThreadPoolExecutor) -> dict:
-        return {executor.submit(self._send_ping, str(ip)): ip for ip in self._network.hosts()}
+    def _get_ip_list(self) -> list[ipaddress.IPv4Address]:
+        netmask = get_subnet_mask(str(conf.iface))
+        return get_ip_range(self._my_ip, netmask)
 
 
-    def _process_ping_tasks(self, futures:dict, total_hosts:int, executor:ThreadPoolExecutor) -> None:
-        for i, _ in enumerate(as_completed(futures), 1):
-            if executor._shutdown: break
-            self._update_progress(i, total_hosts)
-
-
-    @staticmethod
-    def _update_progress(current:int, total:int) -> None:
-        sys.stdout.write(f'\r{green("Packets sent")}: {current}/{total}')
-        sys.stdout.flush()
-
-
-    @staticmethod
-    def _send_ping(ip:str) -> bool:
-        packet = IP(dst=ip) / ICMP()
-        reply  = sr1(packet, timeout=3, verbose=0)
-        return reply is not None
-
-
-    @staticmethod
-    def _handle_interrupt(signum, frame, executor:ThreadPoolExecutor):
-        print("\nInterrupted by user. Shutting down threads...")
-        executor.shutdown(wait=False, cancel_futures=True)
-
-
-    @staticmethod
-    def _process_result(future_to_ip:dict) -> list:
-        active_hosts = []
-        for future in future_to_ip:
-            ip = future_to_ip[future]
-            try:
-                if future.result(): active_hosts.append(str(ip))
-            except Exception:
-                continue
-        return active_hosts
+    def _calculate_max_packets(self, packet_list:list[Packet]) -> list[list[Packet]]:
+        half_buffer_size = get_buffer_size() // 2
+        max_packets      = half_buffer_size // 84
+        packet_sublists  = list()
+        while packet_list:
+            packet_sublists.append(packet_list[:max_packets])
+            packet_list = packet_list[max_packets:]
+        return packet_sublists
 
 
     @staticmethod

@@ -4,13 +4,10 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import socket, ipaddress, fcntl, struct, re
-from scapy.all import conf, get_if_addr
-from display   import *
+import socket, ipaddress, fcntl, struct, re, subprocess
+from display import *
 
 
-
-# INTERFACE ==================================================================================================
 
 def get_subnet_mask(interface:str) -> str|None:
     try:
@@ -22,9 +19,9 @@ def get_subnet_mask(interface:str) -> str|None:
             )[20:24])
     except Exception:
         return None
-        
 
-def get_network_information(ip:str, subnet_mask:str) -> ipaddress.IPv4Address:
+
+def get_ip_range(ip:str, subnet_mask:str) -> ipaddress.IPv4Address:
     return ipaddress.IPv4Network(f'{ip}/{subnet_mask}', strict=False)
 
 
@@ -32,8 +29,16 @@ def convert_mask_to_cidr_ipv4(subnet_mask:str) -> int:
     return ipaddress.IPv4Network(f'0.0.0.0/{subnet_mask}').prefixlen
 
 
+def get_buffer_size() -> int:
+    result = subprocess.run(['sudo', 'sysctl', 'net.core.wmem_max'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-# PORTS ======================================================================================================
+    if result.returncode == 0:
+        result = result.stdout.split()[-1].strip()
+        return int(result)
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as temp_sock:
+        return temp_sock.getsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF)
+
 
 def get_ports(port_type='all') -> dict:
     match port_type:
@@ -57,9 +62,9 @@ def get_specific_ports(string:str) -> dict:
             result.append(int(part))
 
     return {port: ALL_PORTS.get(port, 'Ephemeral Port / Dynamic Port') for port in result}
-    
 
-    
+
+
 def get_common_ports() -> dict:
     return {
         20   : 'FTP - File Transfer Protocol (Data Transfer)',  
