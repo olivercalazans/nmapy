@@ -7,6 +7,7 @@
 <div align="center">
   <img src="https://img.shields.io/badge/port_scanning-brightgreen?style=for-the-badge" />
   <img src="https://img.shields.io/badge/banner_grabbing-brightgreen?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/network_mapping-brightgreen?style=for-the-badge" />
 </div>
 
 <br>
