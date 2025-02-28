@@ -5,7 +5,8 @@
 
 
 import socket, ipaddress, fcntl, struct, re, subprocess
-from display import *
+from scapy.all import conf
+from display   import *
 
 
 
@@ -17,6 +18,19 @@ def get_subnet_mask(interface:str) -> str|None:
                 0x891b,  # SIOCGIFNETMASK
                 struct.pack('256s', interface[:15].encode('utf-8'))
             )[20:24])
+    except Exception:
+        return None
+
+
+def get_mac_from_iface(iface="wlp2s0"):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as temp_socket:
+            addr = fcntl.ioctl(
+                temp_socket.fileno(),
+                0x8927,
+                struct.pack("256s", iface[:15].encode())
+                )[18:24]
+            return ":".join("%02x" % b for b in addr)
     except Exception:
         return None
 
