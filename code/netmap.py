@@ -4,7 +4,6 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software...
 
 
-import sys
 from scapy.all         import conf, get_if_addr, Packet
 from scapy.layers.l2   import Ether, ARP
 from scapy.layers.inet import IP, ICMP
@@ -70,8 +69,6 @@ class Network_Mapper:
         responses = list() 
         for pkt_sublist in packets:
             received, _ = sr(pkt_sublist, timeout=5, verbose=0)
-            print('recebidos')
-            print(received)
             responses.append(received[-1])
         print('ok')
         self._display_ping_result(responses)
