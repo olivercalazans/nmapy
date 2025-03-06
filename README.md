@@ -1,6 +1,6 @@
-<h1 align="center"> NMAPy </h1>
+<h1 align="center"> NetXplorer </h1>
 
-**DataSeeker** is a Python-based command-line tool designed to gather information about networks and devices. It is tailored for use in Linux environments, providing a simple and efficient interface for network exploration with only one external dependency. What it can do:
+**NetXplorer** is a command-line tool developed in Python for network analysis and exploration. Inspired by the functionality of Nmap, it allows users to gather information about active devices and services, providing a simple and efficient interface for Linux users. What it can do:
 
 <br>
 
@@ -13,7 +13,7 @@
 <br>
 
 ## Documentation
-For detailed documentation about DataSeeker, visit our [Wiki](https://github.com/olivercalazans/DataSeeker/wiki).
+For detailed documentation about NMAPy, visit our [Wiki](https://github.com/olivercalazans/netxplorer/wiki).
 The documentation includes:
   - Overview of the code
   - Installation instructions
@@ -22,7 +22,7 @@ The documentation includes:
 <br>
 
 ## Installation
-To make it easier to use this project, a bash script has been created to handle the entire installation. Simply run the [setup.sh](code/setup.sh) script, and everything will be set up for you. If you prefer to run the code manually, follow the steps in the [Wiki](https://github.com/olivercalazans/DataSeeker/wiki/Installation).
+To make it easier to use this project, a bash script has been created to handle the entire installation. Simply run the [setup.sh](code/setup.sh) script, and everything will be set up for you. If you prefer to run the code manually, follow the steps in the [Wiki](https://github.com/olivercalazans/netxplorer/wiki/Installation).
 
 <br>
 
