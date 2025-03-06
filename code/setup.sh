@@ -9,7 +9,7 @@ fi
 
 # Define variables for directories and visual indicators
 HOME_DIR=$(eval echo "~$SUDO_USER")              # Home directory of the user running the script
-DESTINY_DIR="$HOME_DIR/.dataseeker"              # Destination directory for the application
+DESTINY_DIR="$HOME_DIR/.netxplorer"              # Destination directory for the application
 OK='[  \033[0;32mOK\033[0m  ] '                  # Visual indicator for successful operations
 ERROR='[ \033[0;31mERROR\033[0m ]'               # Visual indicator for errors
 WARNING='[\033[38;5;214mWARNING\033[0m]'         # Visual indicator for warnings
@@ -27,14 +27,14 @@ fi
 
 # Create a wrapper script to execute the application
 printf "Creating wrapper script..."
-WRAPPER_FILE="dtsk"
+WRAPPER_FILE="xplorer"
 cat <<'EOF' > "/usr/bin/$WRAPPER_FILE"
 #!/bin/bash
 if [ "$EUID" -ne 0 ]; then
   exec sudo "$0" "$@"
 fi
 HOME_DIR=$(eval echo "~$SUDO_USER")
-$HOME_DIR/.dataseeker/seeker/bin/python3 $HOME_DIR/.dataseeker/main.py "$@"
+$HOME_DIR/.netxplorer/venv/bin/python3 $HOME_DIR/.netxplorer/main.py "$@"
 EOF
 sudo chmod +x "/usr/bin/$WRAPPER_FILE"
 printf "\r${OK} Wrapper script created\n"
@@ -91,7 +91,7 @@ fi
 
 # Create a Python virtual environment
 printf "Creating virtual environment..."
-if python3 -m venv "$DESTINY_DIR/seeker" > /dev/null 2>&1; then
+if python3 -m venv "$DESTINY_DIR/venv" > /dev/null 2>&1; then
     printf "\r${OK} Virtual environment created successfully\n"
 else
     printf "\r${ERROR} Failed to create virtual environment. Exiting.\n"
@@ -100,7 +100,7 @@ fi
 
 
 # Activate the virtual environment
-source "$DESTINY_DIR/seeker/bin/activate"
+source "$DESTINY_DIR/venv/bin/activate"
 
 
 # Install Scapy in the virtual environment
