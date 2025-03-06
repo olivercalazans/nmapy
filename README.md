@@ -1,6 +1,6 @@
 <h1 align="center"> NetXplorer </h1>
 
-**NetXplorer** is a command-line tool developed in Python for network analysis and exploration. Inspired by the functionality of Nmap, it allows users to gather information about active devices and services, providing a simple and efficient interface for Linux users. What it can do:
+**NetXplorer** is a command-line tool developed in Python for network analysis and exploration. It allows users to gather information about active devices and services, providing a simple and efficient interface for Linux users. What it can do:
 
 <br>
 
@@ -13,7 +13,7 @@
 <br>
 
 ## Documentation
-For detailed documentation about NMAPy, visit our [Wiki](https://github.com/olivercalazans/netxplorer/wiki).
+For detailed documentation about NetXplorer, visit our [Wiki](https://github.com/olivercalazans/netxplorer/wiki).
 The documentation includes:
   - Overview of the code
   - Installation instructions
