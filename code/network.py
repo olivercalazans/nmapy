@@ -10,27 +10,33 @@ from display   import *
 
 
 
-def get_subnet_mask(interface:str) -> str|None:
+def temporary_socket(code:int, interface:str, start:int, end:int):
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        return fcntl.ioctl(sock.fileno(), code,
+            struct.pack('256s', interface[:15].encode('utf-8'))
+        )[start:end]
+
+
+def get_ip_address(interface:str='wlp2s0') -> str|None:
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as temporary_socket:
-            return socket.inet_ntoa(fcntl.ioctl(
-                temporary_socket.fileno(),
-                0x891b,  # SIOCGIFNETMASK
-                struct.pack('256s', interface[:15].encode('utf-8'))
-            )[20:24])
+        raw_bytes = temporary_socket(0x8915, interface, 20, 24)
+        return socket.inet_ntoa(raw_bytes)
     except Exception:
         return None
 
 
-def get_mac_from_iface(iface="wlp2s0"):
+def get_subnet_mask(interface:str='wlp2s0') -> str|None:
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as temp_socket:
-            addr = fcntl.ioctl(
-                temp_socket.fileno(),
-                0x8927,
-                struct.pack("256s", iface[:15].encode())
-                )[18:24]
-            return ":".join("%02x" % b for b in addr)
+        raw_bytes = temporary_socket(0x891b, interface, 20, 24)
+        return socket.inet_ntoa(raw_bytes)
+    except Exception:
+        return None
+
+
+def get_mac_from_iface(interface:str="wlp2s0"):
+    try:
+        raw_bytes = temporary_socket(0x8927, interface, 18, 24)
+        return ":".join("%02x" % b for b in raw_bytes)
     except Exception:
         return None
 
