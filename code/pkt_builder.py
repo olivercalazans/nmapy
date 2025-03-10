@@ -13,7 +13,7 @@ from display import RawPacket
 def create_tcp_packet(dst_ip:str, port:int, src_ip:str) -> RawPacket:
     ip_header  = IP(dst_ip, src_ip, socket.IPPROTO_TCP)
     tcp_header = TCP(dst_ip, port, src_ip)
-    return ip_header + tcp_header
+    return RawPacket(ip_header + tcp_header)
 
 
 
@@ -67,7 +67,7 @@ def pseudo_header(dst_ip:str, src_ip:str, tcp_length:int) -> bytes:
 
 
 
-def checksum(msg):
+def checksum(msg) -> int:
     s = 0
     for i in range(0, len(msg), 2):
         w = (msg[i] << 8) + (msg[i+1] if i+1 < len(msg) else 0)
