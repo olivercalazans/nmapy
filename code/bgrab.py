@@ -102,7 +102,7 @@ def http_banner_grabbing(host:str, port:int) -> None:
 
 
 
-def https_banner_grabbing(host:str, port:int):
+def https_banner_grabbing(host:str, port:int) -> None:
     context = ssl.create_default_context()
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE

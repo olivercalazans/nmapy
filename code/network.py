@@ -5,7 +5,7 @@
 
 
 import socket, ipaddress, fcntl, struct, re, subprocess
-from display   import *
+from display import *
 
 
 
@@ -14,7 +14,7 @@ def get_default_iface() -> str:
     return result.stdout.strip()
 
 
-def temporary_socket(code:int, interface:str, start:int, end:int):
+def temporary_socket(code:int, interface:str, start:int, end:int) -> str:
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         return fcntl.ioctl(sock.fileno(), code,
             struct.pack('256s', interface[:15].encode('utf-8'))
@@ -37,7 +37,7 @@ def get_subnet_mask(interface:str=get_default_iface()) -> str|None:
         return None
 
 
-def get_mac_from_iface(interface:str=get_default_iface()):
+def get_mac_from_iface(interface:str=get_default_iface()) -> str|None:
     try:
         raw_bytes = temporary_socket(0x8927, interface, 18, 24)
         return ":".join("%02x" % b for b in raw_bytes)
