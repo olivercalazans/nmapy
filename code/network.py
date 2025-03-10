@@ -5,9 +5,13 @@
 
 
 import socket, ipaddress, fcntl, struct, re, subprocess
-from scapy.all import conf
 from display   import *
 
+
+
+def get_default_iface() -> str:
+    result = subprocess.run("ip route | awk '/default/ {print $5}'", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    return result.stdout.strip()
 
 
 def temporary_socket(code:int, interface:str, start:int, end:int):
@@ -17,7 +21,7 @@ def temporary_socket(code:int, interface:str, start:int, end:int):
         )[start:end]
 
 
-def get_ip_address(interface:str='wlp2s0') -> str|None:
+def get_ip_address(interface:str=get_default_iface()) -> str|None:
     try:
         raw_bytes = temporary_socket(0x8915, interface, 20, 24)
         return socket.inet_ntoa(raw_bytes)
@@ -25,7 +29,7 @@ def get_ip_address(interface:str='wlp2s0') -> str|None:
         return None
 
 
-def get_subnet_mask(interface:str='wlp2s0') -> str|None:
+def get_subnet_mask(interface:str=get_default_iface()) -> str|None:
     try:
         raw_bytes = temporary_socket(0x891b, interface, 20, 24)
         return socket.inet_ntoa(raw_bytes)
@@ -33,7 +37,7 @@ def get_subnet_mask(interface:str='wlp2s0') -> str|None:
         return None
 
 
-def get_mac_from_iface(interface:str="wlp2s0"):
+def get_mac_from_iface(interface:str=get_default_iface()):
     try:
         raw_bytes = temporary_socket(0x8927, interface, 18, 24)
         return ":".join("%02x" % b for b in raw_bytes)
