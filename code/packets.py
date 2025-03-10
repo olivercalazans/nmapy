@@ -5,14 +5,12 @@
 
 
 import socket, struct, random
-
-#s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
-#s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+from display import RawPacket
 
 
 # PACKET BUILDERS --------------------------------------------------------------------------------------------
 
-def create_tcp_packet(dst_ip:str, src_ip:str, port:int):
+def create_tcp_packet(dst_ip:str, port:int, src_ip:str) -> RawPacket:
     ip_header  = IP(dst_ip, src_ip, socket.IPPROTO_TCP)
     tcp_header = TCP(dst_ip, port, src_ip)
     return ip_header + tcp_header
@@ -21,7 +19,7 @@ def create_tcp_packet(dst_ip:str, src_ip:str, port:int):
 
 # LAYERS -----------------------------------------------------------------------------------------------------
 
-def IP(dst_ip:str, src_ip:str, protocol):
+def IP(dst_ip:str, src_ip:str, protocol) -> bytes:
     return struct.pack('!BBHHHBBH4s4s',
                        (4 << 4) + 5, #...................: IP version and IHL (Internet Header Length)
                        0, #..............................: TOS (Type of Service)
@@ -37,7 +35,7 @@ def IP(dst_ip:str, src_ip:str, protocol):
 
 
 
-def TCP(dst_ip, src_ip, dst_port, seq=0, ack_seq=0, syn_flag=True):
+def TCP(dst_ip:str, dst_port:int, src_ip:str, seq=0, ack_seq=0, syn_flag=True) -> bytes:
     src_port   = random.randint(10000, 65535)
     tcp_header = struct.pack('!HHLLBBHHH',
                              src_port, #.............: Source port
@@ -58,7 +56,7 @@ def TCP(dst_ip, src_ip, dst_port, seq=0, ack_seq=0, syn_flag=True):
 
 
 
-def pseudo_header(dst_ip:str, src_ip:str, tcp_length:int):
+def pseudo_header(dst_ip:str, src_ip:str, tcp_length:int) -> bytes:
     return struct.pack('!4s4sBBH',
                        socket.inet_aton(src_ip), #...: Source IP
                        socket.inet_aton(dst_ip), #...: Destiny IP
